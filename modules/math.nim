@@ -1,7 +1,7 @@
 # Copyright 2016 Xored Software, Inc.
 
 type
-  FVector* {.header: "Math/Vector.h", importcpp: "FVector".} = object
+  FVector* {.header: "Math/Vector.h", importcpp: "FVector", inheritable, bycopy.} = object
     X*: cfloat
     Y*: cfloat
     Z*: cfloat
@@ -40,4 +40,9 @@ type
 
 var WhiteColor* {.importc: "FColor::White", header: "Math/Color.h".}: FColor
 var ZeroVector* {.importc: "FVector::ZeroVector", header: "Math/Vector.h".}: FVector
+var ZeroRotator* {.importc: "FRotator::ZeroRotator", header: "Math/Rotator.h".}: FRotator
 var IdentityTransform* {.importc: "FTransform::Identity", header: "Math/TransformVectorized.h".}: FTransform
+
+converter vectorFromForceInit(f: EForceInit): FVector {.importcpp, constructor, header: "Math/Vector.h".}
+converter colorFromForceInit(f: EForceInit): FColor {.importcpp, constructor, header: "Math/Color.h".}
+converter vector2DFromForceInit(f: EForceInit): FVector2D {.importcpp, constructor, header: "Math/Vector2D.h".}

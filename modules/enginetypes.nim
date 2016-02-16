@@ -51,6 +51,15 @@ type
     TG_NewlySpawned,  ## Special tick group that is not actually a tick group. After every tick group this is repeatedly re-run until there are no more newly spawned items to run.
     TG_MAX
 
+  ETravelType* {.size: sizeof(cint), header: "Engine/EngineBaseTypes.h", importcpp: "ETickingGroup", pure.} = enum
+    TRAVEL_Absolute,
+      ## Absolute URL.
+    TRAVEL_Partial,
+      ## Partial (carry name, reset server).
+    TRAVEL_Relative,
+      ## Relative URL.
+    TRAVEL_MAX,
+
   EMouseCursor* {.header: "ICursor.h", importcpp: "EMouseCursor::Type", pure.} = enum
     None, ## Causes no mouse cursor to be visible
     Default, ## Default cursor (arrow)
@@ -155,6 +164,78 @@ type
     RemovedFromWorld, ## When the level it is a member of is streamed out.
     Quit ## When the application is being exited.
 
+  EObjectTypeQuery* {.size: sizeof(cint), header: "Engine/EngineTypes.h", importcpp: "EObjectTypeQuery".} = enum
+    ObjectTypeQuery1,
+    ObjectTypeQuery2,
+    ObjectTypeQuery3,
+    ObjectTypeQuery4,
+    ObjectTypeQuery5,
+    ObjectTypeQuery6,
+    ObjectTypeQuery7,
+    ObjectTypeQuery8,
+    ObjectTypeQuery9,
+    ObjectTypeQuery10,
+    ObjectTypeQuery11,
+    ObjectTypeQuery12,
+    ObjectTypeQuery13,
+    ObjectTypeQuery14,
+    ObjectTypeQuery15,
+    ObjectTypeQuery16,
+    ObjectTypeQuery17,
+    ObjectTypeQuery18,
+    ObjectTypeQuery19,
+    ObjectTypeQuery20,
+    ObjectTypeQuery21,
+    ObjectTypeQuery22,
+    ObjectTypeQuery23,
+    ObjectTypeQuery24,
+    ObjectTypeQuery25,
+    ObjectTypeQuery26,
+    ObjectTypeQuery27,
+    ObjectTypeQuery28,
+    ObjectTypeQuery29,
+    ObjectTypeQuery30,
+    ObjectTypeQuery31,
+    ObjectTypeQuery32,
+
+    ObjectTypeQuery_MAX
+
+  ETraceTypeQuery* {.size: sizeof(cint), header: "Engine/EngineTypes.h", importcpp: "ETraceTypeQuery".} = enum
+    TraceTypeQuery1,
+    TraceTypeQuery2,
+    TraceTypeQuery3,
+    TraceTypeQuery4,
+    TraceTypeQuery5,
+    TraceTypeQuery6,
+    TraceTypeQuery7,
+    TraceTypeQuery8,
+    TraceTypeQuery9,
+    TraceTypeQuery10,
+    TraceTypeQuery11,
+    TraceTypeQuery12,
+    TraceTypeQuery13,
+    TraceTypeQuery14,
+    TraceTypeQuery15,
+    TraceTypeQuery16,
+    TraceTypeQuery17,
+    TraceTypeQuery18,
+    TraceTypeQuery19,
+    TraceTypeQuery20,
+    TraceTypeQuery21,
+    TraceTypeQuery22,
+    TraceTypeQuery23,
+    TraceTypeQuery24,
+    TraceTypeQuery25,
+    TraceTypeQuery26,
+    TraceTypeQuery27,
+    TraceTypeQuery28,
+    TraceTypeQuery29,
+    TraceTypeQuery30,
+    TraceTypeQuery31,
+    TraceTypeQuery32,
+
+    TraceTypeQuery_MAX
+
   FHitResult* {.header: "Engine/EngineTypes.h", importcpp: "FHitResult".} = object
     bBlockingHit*: bool
     bStartPenetrating*: float32
@@ -187,6 +268,11 @@ type
   FStartClothSimulationFunction* {.header: "Engine/EngineTypes.h", importcpp: "FStartClothSimulationFunction".} = object of FTickFunction
   FStartPhysicsTickFunction* {.header: "Engine/EngineTypes.h", importcpp: "FStartPhysicsTickFunction".} = object of FTickFunction
 
+
+  EControllerHand* {.size: sizeof(cint), header: "InputCoreTypes.h", importcpp: "EControllerHand::Type", pure.} = enum
+    Left,
+    Right
+
 class(FRigidBodyContactInfo, header: "Engine/EngineTypes.h"):
   var contactPosition: FVector
   var contactNormal: FVector
@@ -211,9 +297,7 @@ class(FCollisionImpactData, header: "Engine/EngineTypes.h"):
   proc swapContactOrders()
     ## Iterate over ContactInfos array and swap order of information
 
-
-
-class (FTimerHandle, header: "Engine/EngineTypes.h"):
+class(FTimerHandle, header: "Engine/EngineTypes.h"):
   proc make(): FTimerHandle {.constructor.}
   proc isValid(): bool {.noSideEffect.}
   proc invalidate()
@@ -223,34 +307,50 @@ class (FTimerHandle, header: "Engine/EngineTypes.h"):
   proc `==`(other: FTimerHandle): bool {.noSideEffect.}
   proc `!=`(other: FTimerHandle): bool {.noSideEffect.}
 
-class (FKey, header: "InputCoreTypes.h"):
-  proc make(): FKey {.constructor.}
-  proc makeFromName(inName: FName): FKey {.constructor.}
-  proc makeFromUniString(inName: wstring): FKey {.constructor.}
-  proc makeFromString(inName: cstring): FKey {.constructor.}
-
+class(FPrimitiveComponentId, header: "SceneTypes.h"):
+  var primIDValue: uint32
   proc isValid(): bool {.noSideEffect.}
-  proc isModifierKey(): bool {.noSideEffect.}
-  proc isGamepadKey(): bool {.noSideEffect.}
-  proc isMouseButton(): bool {.noSideEffect.}
-  proc isFloatAxis(): bool {.noSideEffect.}
-  proc isVectorAxis(): bool {.noSideEffect.}
-  proc isBindableInBlueprints(): bool {.noSideEffect.}
-  proc shouldUpdateAxisWithoutSamples(): bool {.noSideEffect.}
-  proc getDisplayName(): FText {.noSideEffect.}
-  proc toString(): FString {.noSideEffect.}
-  proc getFName(): FName {.noSideEffect.}
-  proc getMenuCategory(): FName {.noSideEffect.}
+  proc `==`(other: var FPrimitiveComponentId): bool {.noSideEffect.}
 
-  # bool SerializeFromMismatchedTag(struct FPropertyTag const& Tag, FArchive& Ar);
-  proc exportTextItem(valueStr: FString, defaultValue: FKey, parent: ptr UObject, portFlags: int32, exportRootScope: ptr UObject): bool {.noSideEffect.}
-  proc importTextItem(buffer: wstring, portFlags: int32, parent: ptr UObject, errorText: ptr FOutputDevice): bool
-  proc postSerialize(ar: FArchive)
+proc hash(id: FPrimitiveComponentId): uint32 {.noSideEffect, header: "SceneTypes.h", importc: "GetTypeHash".}
 
-  proc `==`(other: FKey): bool {.noSideEffect.}
-  proc `!=`(other: FKey): bool {.noSideEffect.}
-  proc `<`(other: FKey): bool {.noSideEffect.}
+type FForceFeedbackChannelType {.size: sizeof(cint),
+                                 importcpp: "FForceFeedbackChannelType",
+                                 header: "GenericPlatform/IInputInterface.h", pure.} = enum
+  ## General identifiers for potential force feedback channels. These will be mapped according to the
+  ## platform specific implementation.
+  ## For example, the PS4 only listens to the XXX_LARGE channels and ignores the rest, while the XBox One could
+  ## map the XXX_LARGE to the handle motors and XXX_SMALL to the trigger motors. And iOS can map LEFT_SMALL to
+  ## its single motor.
+  LEFT_LARGE,
+  LEFT_SMALL,
+  RIGHT_LARGE,
+  RIGHT_SMALL
 
-proc hash(key: FKey): uint32 {.noSideEffect, importc: "GetTypeHash", header: "InputCoreTypes.h".}
+class(FForceFeedbackValues, header: "GenericPlatform/IInputInterface.h"):
+  var leftLarge: cfloat
+  var leftSmall: cfloat
+  var rightLarge: cfloat
+  var rightSmall: cfloat
 
-# TODO
+  proc makeFForceFeedbackValues(): FForceFeedbackValues {.constructor.}
+
+class(FHapticFeedbackValues, header: "GenericPlatform/IInputInterface.h"):
+  var frequency: cfloat
+  var amplitude: cfloat
+
+  proc makeFHapticFeedbackValues(): FHapticFeedbackValues {.constructor.}
+
+  proc makeFHapticFeedbackValues(inFrequency, inAmplitude: cfloat): FHapticFeedbackValues {.constructor.}
+
+class(IInputInterface, header: "GenericPlatform/IInputInterface.h"):
+  method setHapticFeedbackValues(controllerId: int32; hand: int32; values: var FHapticFeedbackValues)
+    ## Sets the frequency and amplitude of haptic feedback channels for a given controller id.
+    ## Some devices / platforms may support just haptics, or just force feedback.
+    ##
+    ## @param ControllerId ID of the controller to issue haptic feedback for
+    ## @param HandId     Which hand id (e.g. left or right) to issue the feedback for.  These usually correspond to EControllerHands
+    ## @param Values     Frequency and amplitude to haptics at
+
+  method setLightColor(controllerId: int32; color: FColor)
+    ## Sets the controller for the given controller.  Ignored if controller does not support a color.

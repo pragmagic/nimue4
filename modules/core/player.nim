@@ -18,3 +18,8 @@ class(UPlayer of UObject, header: "Engine/Player.h"):
     ##
     ## @param `cmd` command to execute (string of commands optionally separated by a | (pipe))
     ## @param `bWriteToLog` write out to the log
+
+class(ULocalPlayer of UPlayer, header: "Engine/LocalPlayer.h"):
+  discard
+
+# TODO

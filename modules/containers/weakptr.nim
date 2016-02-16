@@ -2,3 +2,5 @@
 
 type
   TWeakObjectPtr {.header: "UObject/WeakObjectPtrTemplates.h", importcpp: "TWeakObjectPtr".} [T] = object
+
+# TODO

@@ -189,10 +189,6 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
     ## The priority of this input component when pushed in to the stack.
     ## UPROPERTY(EditAnywhere, Category=Input)
 
-  var inputComponent: ptr UInputComponent
-    ## Component that handles input for this actor, if input is enabled.
-    ## UPROPERTY()
-
   var netCullDistanceSquared: cfloat
     ## Square of the max distance from the client's viewpoint that this actor is relevant and will be replicated.
     ## UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category=Replication)

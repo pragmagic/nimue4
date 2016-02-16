@@ -122,7 +122,10 @@ macro UEDelegate*(name: expr, kindNode: DelegateKind): stmt {.immediate.} =
   var typesAndNamesStr = ""
   for param in procParams:
     typesAndNamesStr &= ", " & toCppType(param[1])
-    typesAndNamesStr &= ", " & $(param[0].ident)
+
+    if DynamicDelegates.contains(kind):
+      # the invocation is different for dynamic delegates - names are provided as arguments
+      typesAndNamesStr &= ", " & $(param[0].ident)
 
   let codeToEmit = """/*TYPESECTION*/
 /*BEGIN_UNREAL_TYPE*/

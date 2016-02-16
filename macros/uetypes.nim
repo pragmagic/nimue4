@@ -423,6 +423,7 @@ $#
 
 macro UEClass*(definition: expr, body: stmt): stmt {.immediate.} =
   result = genType(tkClass, definition, callsite())
+  echo repr result
 
 macro UEStruct*(definition: expr, body: stmt): stmt {.immediate.} =
   result = genType(tkStruct, definition, callsite())

@@ -10,14 +10,6 @@ type
     Exclusive, ## Only exclusive resource size
     Inclusive  ## Resource size of the object and all of its references
 
-  UProperty* {.header: "UObject/UnrealTypes.h", importcpp: "UProperty", inheritable.} = object of UObject
-  UClass* {.header: "UObject/Class.h", importcpp: "UClass", inheritable.} = object of UObject
-  UField* {.header: "UObject/Class.h", importcpp: "UField", inheritable.} = object of UObject
-  UStruct* {.header: "UObject/Class.h", importcpp: "UStruct", inheritable.} = object of UField
-  UFunction* {.header: "UObject/Class.h", importcpp: "UFunction", inheritable.} = object of UStruct
-
-  UInterface* {.header: "Interface.h", importcpp: "UInterface", inheritable.} = object of UObject
-
   FObjectInitializer* {.header: "UObject/UObjectGlobals.h", importcpp: "FObjectInitializer", inheritable.} = object
 
   EObjectFlags* {.size: sizeof(cint), importcpp: "EObjectFlags", header: "UObject/ObjectBase.h".} = enum

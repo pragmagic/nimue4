@@ -102,15 +102,17 @@ proc buildProceduresFromVar(classname, ns, header: string; varIdent, varType: Ni
   #                                   statics.add((this_ident[0], ty))
   #                                   isStatic = true
   #                                   break
-  let setterName = newNimNode(nnkAccQuoted).add(varIdent, ident("="))
-  let getter = newProc(varIdent, [varType, newIdentDefs(ident("this"), ident(classname))], newEmptyNode())
+  let setterName = postfix(newNimNode(nnkAccQuoted).add(varIdent, ident("=")), "*")
+  let getter = newProc(postfix(varIdent, "*"), [varType, newIdentDefs(ident("this"), ident(classname))], newEmptyNode())
   let setter = newProc(setterName, [newEmptyNode(),
-                                  newIdentDefs(ident("this"), newNimNode(nnkVarTy).add(ident(classname))),
+                                  newIdentDefs(ident("this"), ident(classname)), # newNimNode(nnkVarTy).add(ident(classname))),
                                   newIdentDefs(ident("val"), varType)], newEmptyNode())
+
+  let cppIdent = if varType.toStrLit.strVal == "bool": $varIdent else: ($varIdent).capitalize
   let getterImportCPragma = newNimNode(nnkExprColonExpr).add(
-        ident("importcpp"), newStrLitNode("#." & ($varIdent).capitalize))
+        ident("importcpp"), newStrLitNode("#." & cppIdent))
   let setterImportCPragma = newNimNode(nnkExprColonExpr).add(
-        ident("importcpp"), newStrLitNode("#." & ($varIdent).capitalize & " = #"))
+        ident("importcpp"), newStrLitNode("#." & cppIdent & " = #"))
   let headerPragma = newNimNode(nnkExprColonExpr).add(
         ident("header"), newStrLitNode(header))
 
@@ -252,8 +254,10 @@ macro class*(className, opts: expr, body: stmt): stmt {.immediate.} =
         # Add inheritable pragma
         newType[0][0][1].add ident"inheritable"
     # Iterate through statements in class definition
-    var body        = callsite()[< callsite().len]
-    let classname_s = $ opts.className
+    var body = callsite()[< callsite().len]
+    if body.kind != nnkDo and body.kind != nnkStmtList:
+      body = newEmptyNode()
+    let classname_s = $opts.className
     # Fix for nnkDo showing up here
     if body.kind == nnkDo: body = body.body
 

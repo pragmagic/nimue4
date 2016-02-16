@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-import parseopt2, pegs, ropes, strutils, os, times, sets
+import parseopt2, pegs, ropes, strutils, os, times, sets, osproc
 
 type OptType = enum
   otTask
@@ -30,7 +30,7 @@ template withDir(dir: string; body: untyped): untyped =
     setCurrentDir(curDir)
 
 proc exec(command: string) =
-  let retCode = execShellCmd(command)
+  let retCode = execCmd(command)
   if retCode != 0:
     quit(-1)
 
@@ -124,7 +124,7 @@ proc build(engineDir, projectDir, projectName, target, mode, platform: string) =
     for file in walkDirRec(moduleDir):
       if file.endsWith(".nim"):
         # TODO: use -d:release --opt:speed for release builds
-        exec "nim cpp -c --noMain -p:\"" & getCurrentDir() & "\" --nimcache:" & nimcacheDir &
+        exec "nim cpp -c --noMain --experimental -p:\"" & getCurrentDir() & "\" --nimcache:" & nimcacheDir &
           " --os:" & platform & " " & file
         expectedFilenames.incl(file.changeFileExt("h").extractFilename())
 
