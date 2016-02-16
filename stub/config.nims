@@ -3,7 +3,7 @@ import strutils, ospaths
 mode = ScriptMode.Verbose
 
 ##### Edit these constants
-const ue4LibDir = "/Users/rmustakov/Work/kingdom/nimue4/"
+const ue4LibDir = "/Path/To/nim-ue4/"
 const engineDir = "/Users/Shared/UnrealEngine/4.10/"
 #####
 
