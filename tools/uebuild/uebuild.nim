@@ -40,6 +40,7 @@ proc extractByPeg(str: var string, peg: Peg): Rope =
   result = rope("")
   while beginPos != -1:
     let sliceToExtract = beginPos..endPos
+    # echo "Match found at: " & $(beginPos, endPos)
     result = result & str[sliceToExtract]
     str[sliceToExtract] = ""
     (beginPos, endPos) = str.findBounds(peg, matches, beginPos)
@@ -54,9 +55,10 @@ proc extractIncludes(contents: var string, filename: string): Rope =
                          ws <- (comment / \s+)* """.format(filename))
   result = extractByPeg(contents, includePeg)
 
-proc processFile(file, projectName, outDir: string) =
-  let projectIncludeString = "#include \"$#.h\"\n" % projectName
-  let exportMacro = projectName.toUpper() & "_API"
+proc processFile(file, moduleName, outDir: string) =
+  # echo "Processing " & file & "..."
+  let moduleIncludeString = "#include \"$#.h\"\n" % moduleName
+  let exportMacro = moduleName.toUpper() & "_API"
   if not file.endsWith(".cpp"):
     raise newException(ValueError, ".cpp file expected")
   let outCppDir = outDir / "Private"
@@ -68,10 +70,10 @@ proc processFile(file, projectName, outDir: string) =
     return
 
   var contents = readFile(file)
-  if outFile == file and contents.contains(projectIncludeString):
+  if outFile == file and contents.contains(moduleIncludeString):
     # file hasn't been regenerated
     return
-
+  echo file.extractFileName() & " has changed - processing..."
   createDir(outCppDir)
 
   var matches: seq[string] = @[]
@@ -90,7 +92,7 @@ proc processFile(file, projectName, outDir: string) =
       headerFileContents = headerFileContents.replace(exportMarker, exportMacro)
 
     writeFile(outHeaderDir / outFile.extractFilename().changeFileExt("h"), headerFileContents)
-  contents.insert(projectIncludeString, intBitsDefEnd + 1)
+  contents.insert(moduleIncludeString, intBitsDefEnd + 1)
   writeFile(outFile, contents)
 
 proc runUnrealBuildScript(engineDir: string; task: TaskType; target, platform, mode, uprojectFile: string) =
@@ -139,7 +141,7 @@ proc build(engineDir, projectDir, projectName, target, mode, platform: string) =
         removeFile targetDir / cppFile.extractFilename()
         removeFile targetDir / "Private" / cppFile.extractFilename()
       elif file.endsWith(".cpp"):
-        processFile(file, projectName, targetDir)
+        processFile(file, moduleName, targetDir)
 
   runUnrealBuildScript(engineDir, ttBuild, target, platform, mode, projectDir / projectName & ".uproject")
 

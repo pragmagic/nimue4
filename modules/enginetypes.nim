@@ -236,6 +236,18 @@ type
 
     TraceTypeQuery_MAX
 
+  ERadialImpulseFalloff* {.size: sizeof(cint), header: "Engine/EngineTypes.h", importcpp.} = enum
+    ## Enum for controlling the falloff of strength of a radial impulse as a function of distance from Origin.
+    RIF_Constant, ## Impulse is a constant strength, up to the limit of its range.
+    RIF_Linear, ## Impulse should get linearly weaker the further from origin.
+    RIF_MAX
+
+  EAutoPossessAI* {.size: sizeof(uint8), header: "Engine/EngineTypes.h", importcpp, pure.} = enum
+    Disabled, ## Feature is disabled (do not automatically possess AI).
+    PlacedInWorld, ## Only possess by an AI Controller if Pawn is placed in the world.
+    Spawned, ## Only possess by an AI Controller if Pawn is spawned after the world has loaded.
+    PlacedInWorldOrSpawned, ## Pawn is automatically possessed by an AI Controller whenever it is created.
+
   FHitResult* {.header: "Engine/EngineTypes.h", importcpp: "FHitResult".} = object
     bBlockingHit*: bool
     bStartPenetrating*: float32
@@ -273,7 +285,7 @@ type
     Left,
     Right
 
-class(FRigidBodyContactInfo, header: "Engine/EngineTypes.h"):
+class(FRigidBodyContactInfo, header: "Engine/EngineTypes.h", bycopy):
   var contactPosition: FVector
   var contactNormal: FVector
   var contactPenetration: cfloat
@@ -284,7 +296,7 @@ class(FRigidBodyContactInfo, header: "Engine/EngineTypes.h"):
 
   proc swapOrder()
 
-class(FCollisionImpactData, header: "Engine/EngineTypes.h"):
+class(FCollisionImpactData, header: "Engine/EngineTypes.h", bycopy):
   var contactInfos: TArray[FRigidBodyContactInfo]
     ## all the contact points in the collision
   var totalNormalImpulse: FVector
@@ -297,7 +309,7 @@ class(FCollisionImpactData, header: "Engine/EngineTypes.h"):
   proc swapContactOrders()
     ## Iterate over ContactInfos array and swap order of information
 
-class(FTimerHandle, header: "Engine/EngineTypes.h"):
+class(FTimerHandle, header: "Engine/EngineTypes.h", bycopy):
   proc make(): FTimerHandle {.constructor.}
   proc isValid(): bool {.noSideEffect.}
   proc invalidate()
@@ -307,7 +319,7 @@ class(FTimerHandle, header: "Engine/EngineTypes.h"):
   proc `==`(other: FTimerHandle): bool {.noSideEffect.}
   proc `!=`(other: FTimerHandle): bool {.noSideEffect.}
 
-class(FPrimitiveComponentId, header: "SceneTypes.h"):
+class(FPrimitiveComponentId, header: "SceneTypes.h", bycopy):
   var primIDValue: uint32
   proc isValid(): bool {.noSideEffect.}
   proc `==`(other: var FPrimitiveComponentId): bool {.noSideEffect.}
@@ -327,7 +339,7 @@ type FForceFeedbackChannelType {.size: sizeof(cint),
   RIGHT_LARGE,
   RIGHT_SMALL
 
-class(FForceFeedbackValues, header: "GenericPlatform/IInputInterface.h"):
+class(FForceFeedbackValues, header: "GenericPlatform/IInputInterface.h", bycopy):
   var leftLarge: cfloat
   var leftSmall: cfloat
   var rightLarge: cfloat
@@ -335,7 +347,7 @@ class(FForceFeedbackValues, header: "GenericPlatform/IInputInterface.h"):
 
   proc makeFForceFeedbackValues(): FForceFeedbackValues {.constructor.}
 
-class(FHapticFeedbackValues, header: "GenericPlatform/IInputInterface.h"):
+class(FHapticFeedbackValues, header: "GenericPlatform/IInputInterface.h", bycopy):
   var frequency: cfloat
   var amplitude: cfloat
 

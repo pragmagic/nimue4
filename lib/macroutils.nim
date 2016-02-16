@@ -24,8 +24,12 @@ proc hasPragma*(statement: NimNode, pname: string): bool =
 
 proc removeStrPragma*(statement: NimNode, pname: string): string =
   ## Removes the pragma from the node and returns value of the pragma
+  ## Works for routine nodes or nnkPragmaExpr
+  if not (RoutineNodes.contains(statement.kind) or statement.kind == nnkPragmaExpr):
+    return nil
+
   result = nil
-  var pragmas = statement.pragma()
+  var pragmas = if RoutineNodes.contains(statement.kind): statement.pragma() else: statement[1]
   let pname = !pname
   for index in 0 .. < pragmas.len:
     if pragmas[index].kind == nnkExprColonExpr and pragmas[index][0].ident == pname:

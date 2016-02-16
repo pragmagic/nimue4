@@ -1,4 +1,4 @@
-class(FClientReceiveData, header: "GameFramework/LocalMessage.h"):
+class(FClientReceiveData, header: "GameFramework/LocalMessage.h", bycopy):
   var localPC: ptr APlayerController
   var messageType: FName
   var MessageIndex: int32

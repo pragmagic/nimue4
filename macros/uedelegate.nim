@@ -97,6 +97,7 @@ proc exprListToParamList(callParams: NimNode, start: Natural, to: Natural): seq[
 
 macro UEDelegate*(name: expr, kindNode: DelegateKind): stmt {.immediate.} =
   assert(name.kind == nnkIdent)
+  assert(kindNode.kind == nnkIdent, "Delegate type expected")
   let kind = fromStr[DelegateKind]($(kindNode.ident))
 
   let isRetVal = RetValDelegates.contains(kind)

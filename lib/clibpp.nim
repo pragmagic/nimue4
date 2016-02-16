@@ -11,8 +11,9 @@ type TMacroOptions = tuple
     ns: string
     inheritable: bool
     isNoDef: bool
+    byCopy: bool
 
-proc makeProcedure(className, ns: string, statement: NimNode, classGenericParams: NimNode = newEmptyNode()): NimNode =
+proc makeProcedure(className, ns: string, statement: NimNode, classNameNode: NimNode, classGenericParams: NimNode = newEmptyNode()): NimNode =
     ## Generate an imported procedure definition for the input class name
     var procName = if statement[0].kind == nnkAccQuoted: $(statement[0][0].basename) else: $(statement[0].basename)
     var pragmas  = statement.pragma
@@ -76,7 +77,7 @@ proc makeProcedure(className, ns: string, statement: NimNode, classGenericParams
         # If not static, insert 'this: `className`' param
         thisNode = newNimNode(nnkIdentDefs)
             .add(newIdentNode("this"))
-            .add(newIdentNode(className))
+            .add(classNameNode.copyNimTree())
             .add(newNimNode(nnkEmpty))
 
     if thisNode != nil:
@@ -89,23 +90,11 @@ proc makeProcedure(className, ns: string, statement: NimNode, classGenericParams
       result = newNimNode(nnkProcDef)
       statement.copyChildrenTo(result)
 
-proc buildProceduresFromVar(classname, ns, header: string; varIdent, varType: NimNode): seq[NimNode] =
-  # let varType = statement[^2]
-  # let isStatic = statement.removePragma("isStatic")
-  # result = @[]
-  # for i in 0 .. statement.len - 3:
-  #   let varIdent = statement[i]
-  #   var isStatic = false
-  #   if varIdent.kind == nnkPragmaExpr:
-  #     for pragma in children(varIdent[1]):
-  #       if prgma.kind == nnkIdent and ($prgma).eqIdent("static"):
-  #                                   statics.add((this_ident[0], ty))
-  #                                   isStatic = true
-  #                                   break
+proc buildProceduresFromVar(className: NimNode; ns, header: string; varIdent, varType: NimNode): seq[NimNode] =
   let setterName = postfix(newNimNode(nnkAccQuoted).add(varIdent, ident("=")), "*")
-  let getter = newProc(postfix(varIdent, "*"), [varType, newIdentDefs(ident("this"), ident(classname))], newEmptyNode())
+  let getter = newProc(postfix(varIdent, "*"), [varType, newIdentDefs(ident("this"), className.copyNimTree())], newEmptyNode())
   let setter = newProc(setterName, [newEmptyNode(),
-                                  newIdentDefs(ident("this"), ident(classname)), # newNimNode(nnkVarTy).add(ident(classname))),
+                                  newIdentDefs(ident("this"), className.copyNimTree()), # newNimNode(nnkVarTy).add(ident(classname))),
                                   newIdentDefs(ident("val"), varType)], newEmptyNode())
 
   let cppIdent = if varType.toStrLit.strVal == "bool": $varIdent else: ($varIdent).capitalize
@@ -149,7 +138,9 @@ proc parse_opts(className: NimNode; opts: seq[NimNode]): TMacroOptions =
             of nnkIdent:
                 case ($ opt.ident).toLower
                 of "notypedef":
-                    result.isNoDef = true
+                  result.isNoDef = true
+                of "bycopy":
+                  result.byCopy = true
                 else:
                     handled = false
             else:
@@ -202,11 +193,25 @@ proc extractVarName(node: NimNode): NimNode =
     result = node
 
 proc addVarPragma(node, pragma: NimNode): NimNode =
+  assert({nnkExprColonExpr, nnkIdent}.contains(pragma.kind))
+
   if node.kind != nnkPragmaExpr:
     result = newNimNode(nnkPragmaExpr).add(node, newNimNode(nnkPragma).add(pragma))
   else:
     result = node
     result[1].add(pragma)
+
+proc extractLeftIdent(node: NimNode): NimNode =
+  if node.kind == nnkIdent:
+    result = node
+  else:
+    result = extractLeftIdent(node[0])
+
+proc flattenBracketExpr(node: NimNode): NimNode =
+  assert(node.kind == nnkBracketExpr)
+  result = newNimNode(nnkBracketExpr)
+  for c in children(node):
+    result.add(extractLeftIdent(c))
 
 macro class*(className, opts: expr, body: stmt): stmt {.immediate.} =
     ## Defines a C++ class
@@ -218,7 +223,9 @@ macro class*(className, opts: expr, body: stmt): stmt {.immediate.} =
     if className.kind == nnkInfix and className[0].ident == !"of":
       parent = className[2]
       className = className[1]
+    var classNameNode = className
     if className.kind == nnkBracketExpr:
+      classNameNode = flattenBracketExpr(className)
       var idents = newNimNode(nnkIdentDefs)
       if className[1].kind == nnkExprColonExpr:
         className[1].copyChildrenTo(idents)
@@ -252,7 +259,9 @@ macro class*(className, opts: expr, body: stmt): stmt {.immediate.} =
         newType[0][2][1] = newNimNode(nnkOfInherit).add(parent)
     elif opts.inheritable:
         # Add inheritable pragma
-        newType[0][0][1].add ident"inheritable"
+        newType[0][0][1].add(ident"inheritable")
+    if opts.byCopy:
+        newType[0][0][1].add(ident"bycopy")
     # Iterate through statements in class definition
     var body = callsite()[< callsite().len]
     if body.kind != nnkDo and body.kind != nnkStmtList:
@@ -268,7 +277,7 @@ macro class*(className, opts: expr, body: stmt): stmt {.immediate.} =
             var headerPragma = newNimNode(nnkExprColonExpr).add(
                 ident("header"),
                 opts.header.copyNimNode)
-            var member = makeProcedure(classname_s, opts.ns, statement, genericParamsNode)
+            var member = makeProcedure(classname_s, opts.ns, statement, classNameNode, genericParamsNode)
             member.pragma.add headerPragma
             if member.kind == nnkMethodDef:
               member.pragma.add(ident("base"))
@@ -295,21 +304,24 @@ macro class*(className, opts: expr, body: stmt): stmt {.immediate.} =
                                 statics.add((this_ident[0], ty))
                                 isStatic = true
                                 break
+
                     if not isStatic:
                       if opts.isNoDef:
                         let varNameNode = if this_ident.kind == nnkPragmaExpr: this_ident[0] else: this_ident
-                        let members = buildProceduresFromVar(classname_s, opts.ns, $(opts.header), varNameNode, ty)
+                        let members = buildProceduresFromVar(classNameNode, opts.ns, $(opts.header), varNameNode, ty)
                         result.add(members)
                       else:
                         fields.add((this_ident, ty))
 
-                  # recList.add id_def
-
                 for n,ty in items(fields):
                   var varNameNode = n
                   let varNameIdent = extractVarName(n)
-                  if ($varNameIdent).capitalize != $varNameIdent:
-                    varNameNode = addVarPragma(varNameNode, makeStrPragma("importcpp", ($n).capitalize))
+                  var cppName = removeStrPragma(varNameNode, "cppname")
+                  if cppName == nil:
+                    cppName = ($varNameIdent).capitalize
+                  if cppName != $varNameIdent:
+                    varNameNode = addVarPragma(varNameNode, makeStrPragma("importcpp", cppName))
+
                   recList.add newIdentDefs(varNameNode, ty)
                 for n,ty in items(statics):
                     result.add buildStaticAccessor(n, ty, opts.className, opts.ns)

@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(FMovementProperties, header: "AI/Navigation/NavigationTypes.h"):
+class(FMovementProperties, header: "AI/Navigation/NavigationTypes.h", bycopy):
   var bCanCrouch: bool
     ## If true, this Pawn is capable of crouching.
     ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=MovementProperties)
@@ -23,7 +23,7 @@ class(FMovementProperties, header: "AI/Navigation/NavigationTypes.h"):
 
   proc makeFMovementProperties(): FMovementProperties {.constructor.}
 
-class(FNavAgentProperties of FMovementProperties, header: "AI/Navigation/NavigationTypes.h"):
+class(FNavAgentProperties of FMovementProperties, header: "AI/Navigation/NavigationTypes.h", bycopy):
   ## Properties of representation of an 'agent' (or Pawn) used by AI navigation/pathfinding.
 
   var agentRadius: cfloat

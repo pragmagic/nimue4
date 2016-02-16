@@ -14,7 +14,6 @@ type
 
   ClassOpt = enum
     coExported
-    coMinimalApi
 
   ClassMethod = object
     name: string
@@ -33,6 +32,7 @@ type
 
   ClassField = object
     name: string
+    nameNode: NimNode
     valueType: string
     nimTypeNode: NimNode
     defaultValue: NimNode
@@ -95,27 +95,25 @@ proc extractParamString(callNode: NimNode): string =
   result = paramStrs.join(", ")
 
 proc parseField(node: NimNode): ClassField =
-  assert(node.kind == nnkCall)
-  let fieldName = $(node[0])
+  assert(node.kind == nnkVarSection)
+  let identDefs = node[0]
+  let fieldName = $(identDefs[0].baseName.ident)
 
-  let valueNode = node[1][0]
-  var valueType: string
-  var defaultValue: NimNode
-  var typeNode: NimNode
-  if valueNode.kind == nnkAsgn:
-    parseError(valueNode, "default values for fields are not supported for now") # TODO
-    # has default value
-    # typeNode = valueNode[0]
-    # defaultValue = valueNode[1]
-  else:
-    typeNode = valueNode
+  let typeNode = identDefs[1]
+  let defaultValueNode = identDefs[2]
+  if defaultValueNode.kind != nnkEmpty:
+    parseError(defaultValueNode, "default values for fields are not supported for now") # TODO
 
-  return ClassField(name: fieldName, valueType: toCppType(typeNode), nimTypeNode: typeNode, defaultValue: defaultValue)
+  result = ClassField(name: fieldName,
+                    nameNode: identDefs[0],
+                    valueType: toCppType(typeNode),
+                    nimTypeNode: typeNode,
+                    defaultValue: defaultValueNode)
 
 proc parseUProperty(uPropertyNode: NimNode): ClassField =
   assert(uPropertyNode.kind == nnkCall and uPropertyNode[0].ident == !"UEProperty")
 
-  if uPropertyNode[^1].kind != nnkStmtList or uPropertyNode[^1][0].kind != nnkCall:
+  if uPropertyNode[^1].kind != nnkStmtList or uPropertyNode[^1][0].kind != nnkVarSection:
     parseError(uPropertyNode, "expected field declaration after UEProperty")
 
   result = parseField(uPropertyNode[^1][0])
@@ -150,12 +148,10 @@ proc parseArgs(node: NimNode): seq[VarDeclaration] =
 proc parseMethod(className: string, node: NimNode): ClassMethod =
   assert(node.kind == nnkProcDef or node.kind == nnkMethodDef)
 
-  if node[0].kind == nnkPostfix:
-    raise newException(ParseError, lineinfo(node[0]) & ": proc markers (like asterisk) are not supported for now")
   if node[2].kind == nnkGenericParams:
     raise newException(ParseError, lineinfo(node[2]) & ": generic params are not supported for now")
 
-  let name = $(node[0].ident)
+  let name = $(node[0].basename.ident)
   let isOverride = removePragma(node, "override")
   let isConstructor = removePragma(node, "constructor")
   let isAbstract = removePragma(node, "abstract")
@@ -171,6 +167,7 @@ proc parseMethod(className: string, node: NimNode): ClassMethod =
   if node.kind == nnkMethodDef:
     procNode = newNimNode(nnkProcDef)
     node.copyChildrenTo(procNode)
+
   result = ClassMethod(
     name: if isConstructor: className else: name,
     genName: className & "_" & genName(name),
@@ -266,8 +263,10 @@ proc genType(kind: TypeKind, definition: NimNode, callSite: NimNode): NimNode =
             meth.isAbstract = true
           methods.add(meth)
         else:
-          assert(kind != tkInterface)
-          fields.add(parseField(statement))
+          parseError(statement, "unexpected statement")
+      of nnkVarSection:
+        assert(kind != tkInterface)
+        fields.add(parseField(statement))
       of nnkProcDef, nnkMethodDef:
         var meth = parseMethod(name, statement)
         if kind == tkInterface:
@@ -275,7 +274,7 @@ proc genType(kind: TypeKind, definition: NimNode, callSite: NimNode): NimNode =
           meth.isAbstract = true
         methods.add(meth)
       else:
-        raise newException(ParseError, lineinfo(statement) & ": Unexpected statement")
+        parseError(statement, "unexpected statement")
 
   let classDefinition = ClassDefinition(
     name: name,
@@ -294,7 +293,7 @@ proc genType(kind: TypeKind, definition: NimNode, callSite: NimNode): NimNode =
     let fieldName = field.name
     fieldDeclarationCode &= field.valueType & " " & fieldName
     var defaultValueCode = ""
-    if field.defaultValue != nil:
+    if field.defaultValue != nil and field.defaultValue.kind != nnkEmpty:
       defaultValueCode = " = " & toCppLiteral(field.defaultValue)
     fieldDeclarationCode &= defaultValueCode & ";\n"
 
@@ -364,9 +363,8 @@ $#
 $#
 $# $#$#$# {
   $#
-  protected:
+public:
 $#
-  public:
 $#
 };/*END_UNREAL_TYPE*/""".format(
     interfaceHelperType, typeMacro, typeKind, exportPlaceholder, name, inheritanceExpr,
@@ -396,10 +394,10 @@ $#
 
   let ofPostfix = if primaryParentName != nil : " of " & primaryParentName else: ""
   var typeDecl = parseStmt("""type $1* {.header: "$2", importcpp: "$1", inheritable.} = object$3""".format(classDefinition.name, headerName, ofPostfix))
-  assert(typeDecl[0][0][2].kind == nnkObjectTy)
+
   var recList = newNimNode(nnkRecList)
   for field in classDefinition.fields:
-    recList.add(newNimNode(nnkIdentDefs).add(ident(field.name), field.nimTypeNode, newEmptyNode()))
+    recList.add(newNimNode(nnkIdentDefs).add(field.nameNode, field.nimTypeNode, newEmptyNode()))
   typeDecl[0][0][2][2] = recList
 
   result = newStmtList()
@@ -423,7 +421,6 @@ $#
 
 macro UEClass*(definition: expr, body: stmt): stmt {.immediate.} =
   result = genType(tkClass, definition, callsite())
-  echo repr result
 
 macro UEStruct*(definition: expr, body: stmt): stmt {.immediate.} =
   result = genType(tkStruct, definition, callsite())

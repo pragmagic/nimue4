@@ -428,7 +428,7 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
     ## UPROPERTY(BlueprintAssignable, Category="Input|Touch Input")
 
   var onInputTouchLeave: FActorEndTouchOverSignature
-    ## Called when a finger is moved off this actor when touch over events are enabled in the player controller. 
+    ## Called when a finger is moved off this actor when touch over events are enabled in the player controller.
     ## UPROPERTY(BlueprintAssignable, Category="Input|Touch Input")
 
   var onActorHit: FActorHitSignature
@@ -896,7 +896,7 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
 
   proc DetachSceneComponentsFromParent(InParentComponent: ptr USceneComponent;
                                        bMaintainWorldPosition: bool = true)
-    ##  Detaches all SceneComponents in this Actor from the supplied parent SceneComponent. 
+    ##  Detaches all SceneComponents in this Actor from the supplied parent SceneComponent.
     ##  @param InParentComponent    SceneComponent to detach this actor's components from
     ##  @param bMaintainWorldTransform  If true, update the relative location/rotation of this component to keep its world position the same
 
@@ -921,7 +921,7 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
     ## UFUNCTION(BlueprintCallable, Category="Utilities", meta=(Keywords = "dependency"))
 
   method addTickPrerequisiteComponent(prerequisiteComponent: ptr UActorComponent)
-    ## Make this actor tick after PrerequisiteComponent. This only applies to this actor's tick function; dependencies for owned components must be set up separately if desired. 
+    ## Make this actor tick after PrerequisiteComponent. This only applies to this actor's tick function; dependencies for owned components must be set up separately if desired.
     ## UFUNCTION(BlueprintCallable, Category="Utilities", meta=(Keywords = "dependency"))
 
   method removeTickPrerequisiteActor(prerequisiteActor: ptr AActor)
@@ -1119,7 +1119,7 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
     ## UFUNCTION(BlueprintImplementableEvent, meta=(DisplayName = "Hit"), Category="Collision")
 
   method setLifeSpan(inLifespan: cfloat)
-    ## Set the lifespan of this actor. When it expires the object will be destroyed. If requested lifespan is 0, the timer is cleared and the actor will not be destroyed. 
+    ## Set the lifespan of this actor. When it expires the object will be destroyed. If requested lifespan is 0, the timer is cleared and the actor will not be destroyed.
     ## UFUNCTION(BlueprintCallable, Category="Utilities", meta=(Keywords = "delete destroy"))
 
   method getLifeSpan(): cfloat {.noSideEffect.}
@@ -1768,7 +1768,7 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
   method getComponentsBoundingCylinder(collisionRadius: var cfloat;
                                        collisionHalfHeight: var cfloat;
                                        bNonColliding: bool = false) {.noSideEffect.}
-    ## Get half-height/radius of a big axis-aligned cylinder around this actors registered colliding components, or all registered components if bNonColliding is false. 
+    ## Get half-height/radius of a big axis-aligned cylinder around this actors registered colliding components, or all registered components if bNonColliding is false.
 
   method getSimpleCollisionCylinder(collisionRadius: var cfloat;
                                     collisionHalfHeight: var cfloat) {.noSideEffect.}
@@ -1904,7 +1904,7 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
 
   method postRenderFor(pc: ptr APlayerController; canvas: ptr UCanvas;
                        cameraPosition: FVector; cameraDir: FVector)
-    ##  Hook to allow actors to render HUD overlays for themselves.  Called from AHUD::DrawActorOverlays(). 
+    ##  Hook to allow actors to render HUD overlays for themselves.  Called from AHUD::DrawActorOverlays().
     ##  @param PC is the PlayerController on whose view this overlay is rendered
     ##  @param Canvas is the Canvas on which to draw the overlay
     ##  @param CameraPosition Position of Camera

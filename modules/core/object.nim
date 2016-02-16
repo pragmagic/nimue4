@@ -91,14 +91,14 @@ const REN_ForceGlobalUnique = 0x0040
 const REN_SkipGeneratedClasses = 0x0080
   ## Prevent renaming of any child generated classes and CDO's in blueprints
 
-class(FDebugDisplayInfo, header: "FDebugDisplayInfo.h"):
+class(FDebugDisplayInfo, header: "FDebugDisplayInfo.h", bycopy):
   proc make(inDisplayNames: var TArray[FName], inToggledCategories: var TArray[FName]): FDebugDisplayInfo {.constructor.}
 
   proc isDisplayOn(displayName: FName): bool {.noSideEffect.}
   proc isCategoryToggledOn(category: FName; bDefaultsToOn: bool): bool {.noSideEffect.}
   proc numDisplayNames(): int32 {.noSideEffect.}
 
-class (UObject, header: "UObject/UObject.h", notypedef):
+class(UObject, header: "UObject/UObject.h", notypedef):
   method postInitProperties()
     ## Called after the C++ constructor and after the properties have been initialized, including those loaded from config.
     ## mainly this is to emulate some behavior of when the constructor was called after the properties were intialized.
@@ -212,7 +212,7 @@ class (UObject, header: "UObject/UObject.h", notypedef):
   # method GetTransactionAnnotation(): TSharedPtr[ITransactionObjectAnnotation] {.noSideEffect.} # WITH_EDITOR
   #  ## Gathers external data required for applying an undo transaction
   # method PostEditUndo(TransactionAnnotation: TSharedPtr[ITransactionObjectAnnotation]) # WITH_EDITOR
-  #  ## Called after applying a transaction to the object in cases where transaction annotation was provided. Default implementation simply calls PostEditChange. 
+  #  ## Called after applying a transaction to the object in cases where transaction annotation was provided. Default implementation simply calls PostEditChange.
 
   method postRename(oldOuter: ptr UObject; oldName: FName)
 
@@ -243,7 +243,7 @@ class (UObject, header: "UObject/UObject.h", notypedef):
     ## Returns *true* if this object's PostLoad is thread safe
 
   proc canCreateInCurrentContext(tmpl: ptr UObject): bool {.isStatic.}
-    ##  Determines if you can create an object from the supplied template in the current context (editor, client only, dedicated server, game/listen) 
+    ##  Determines if you can create an object from the supplied template in the current context (editor, client only, dedicated server, game/listen)
     ##  This calls NeedsLoadForClient & NeedsLoadForServer
 
   # AWARE: uncomment when the deps are interfaced
@@ -418,7 +418,7 @@ class (UObject, header: "UObject/UObject.h", notypedef):
   #   ## Returns properties that are replicated for the lifetime of the actor channel
 
   method isNameStableForNetworking(): bool {.noSideEffect.}
-    ## IsNameStableForNetworking means an object can be referred to its path name (relative to outer) over the network 
+    ## IsNameStableForNetworking means an object can be referred to its path name (relative to outer) over the network
 
   method isFullNameStableForNetworking(): bool {.noSideEffect.}
     ## IsFullNameStableForNetworking means an object can be referred to its full path name over the network

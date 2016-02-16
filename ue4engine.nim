@@ -8,6 +8,12 @@ type
   ENoInit {.header: "CoreMiscDefines.h", importcpp: "ENoInit".} = enum
     NoInit
 
+const INDEX_NONE = -1
+
+converter intToInt32*(i: int): int32 =
+  ## to avoid casting all the time when working with Nim arrays/seqs
+  result = int32(i)
+
 include "modules/containers/array"
 include "modules/containers/map"
 include "modules/containers/set"
@@ -21,42 +27,42 @@ include modules/math
 include modules/misc
 
 type
-  FOutputDevice* {.header: "Misc/OutputDevice.h", importcpp: "FOutputDevice".} = object
-  FArchive* {.header: "Serialization/ArchiveBase.h", importcpp: "FArchive".} = object
+  FOutputDevice* {.header: "Misc/OutputDevice.h", importcpp.} = object
+  FArchive* {.header: "Serialization/ArchiveBase.h", importcpp.} = object
 
 # Have to declare many types here, because Nim doesn't support forward declaration
 # and UE types have lots of inter-dependencies
 type
-  UObject* {.header: "UObject/UObject.h", importcpp: "UWorld", inheritable.} = object
+  UObject* {.header: "UObject/UObject.h", importcpp, inheritable.} = object
 
-  UProperty* {.header: "UObject/UnrealTypes.h", importcpp: "UProperty".} = object of UObject
-  UClass* {.header: "UObject/Class.h", importcpp: "UClass".} = object of UObject
-  UField* {.header: "UObject/Class.h", importcpp: "UField".} = object of UObject
-  UStruct* {.header: "UObject/Class.h", importcpp: "UStruct".} = object of UField
-  UFunction* {.header: "UObject/Class.h", importcpp: "UFunction".} = object of UStruct
-  UInterface* {.header: "Interface.h", importcpp: "UInterface".} = object of UObject
+  UProperty* {.header: "UObject/UnrealTypes.h", importcpp.} = object of UObject
+  UClass* {.header: "UObject/Class.h", importcpp.} = object of UObject
+  UField* {.header: "UObject/Class.h", importcpp.} = object of UObject
+  UStruct* {.header: "UObject/Class.h", importcpp.} = object of UField
+  UFunction* {.header: "UObject/Class.h", importcpp.} = object of UStruct
+  UInterface* {.header: "Interface.h", importcpp.} = object of UObject
 
-  UCanvas* {.header: "Engine/Canvas.h", importcpp: "UCanvas".} = object of UObject
-  UWorld* {.header: "Engine/World.h", importcpp: "UWorld".} = object of UObject
+  UCanvas* {.header: "Engine/Canvas.h", importcpp.} = object of UObject
+  UWorld* {.header: "Engine/World.h", importcpp.} = object of UObject
     bWorldWasLoadedThisTick*: bool
     bTriggerPostLoadMap*: bool
-  ULevel* {.header: "Engine/Level.h", importcpp: "ULevel".} = object of UObject
-  UGameInstance* {.header: "Engine/GameInstance.h", importcpp: "UGameInstance".} = object of UObject
+  ULevel* {.header: "Engine/Level.h", importcpp.} = object of UObject
+  UGameInstance* {.header: "Engine/GameInstance.h", importcpp.} = object of UObject
 
-  ULevelStreaming* {.header: "Engine/LevelStreaming.h", importcpp: "ULevelStreaming".} = object of UObject
+  UModel* {.header: "Engine/Model.h", importcpp.} = object of UObject
 
-  UPlayerInput* {.header: "GameFramework/PlayerInput.h", importcpp: "UPlayerInput".} = object of UObject
+  ULevelStreaming* {.header: "Engine/LevelStreaming.h", importcpp.} = object of UObject
 
   # TODO: move out
-  FLatentActionInfo* {.header: "Engine/LatentActionManager.h", importcpp: "FLatentActionInfo".} = object
+  FLatentActionInfo* {.header: "Engine/LatentActionManager.h", importcpp.} = object
   FActiveHapticFeedbackEffect* {.header: "GameFramework/HapticFeedbackEffect.h",
-                                 importcpp: "FActiveForceFeedbackEffect".} = object
+                                 importcpp.} = object
   UHapticFeedbackEffect* {.header: "GameFramework/HapticFeedbackEffect.h",
                            importcpp: "UHapticFeedbackEffect".} = object of UObject
   FActiveForceFeedbackEffect* {.header: "GameFramework/ForceFeedbackEffect.h",
-                                importcpp: "FActiveForceFeedbackEffect".} = object
+                                importcpp.} = object
   UForceFeedbackEffect* {.header: "GameFramework/ForceFeedbackEffect.h",
-                          importcpp: "UForceFeedbackEffect".} = object of UObject
+                          importcpp.} = object of UObject
   FPlayerMuteList* {.header: "GameFramework/PlayerMuteList.h", importcpp: "FPlayerMuteList".} = object
 
   UNavigationSystem* {.header: "AI/Navigation/NavigationSystem.h", importcpp: "UNavigationSystem".} = object of UObject
@@ -99,18 +105,13 @@ type
 include modules/containers/subclassof
 
 include modules/enginetypes
-include modules/components/actor
-include modules/components/scene
-include modules/components/primitive
-include modules/components/shape
-include modules/components/input
-include modules/components/capsule
-include modules/components/billboard
-include modules/components/pathfollowing
+include modules/physics/types
 
-include modules/ai/navigationtypes
+include modules/components/actor
+include modules/components/input
 
 type
+  USceneComponent {.header: "Components/USceneComponent.h", importcpp: "USceneComponent", inheritable.} = object of UActorComponent
   AActor* {.header: "GameFramework/Actor.h", importcpp.} = object of UObject
     inputComponent {.importcpp: "InputComponent".}: ptr UInputComponent
       ## Component that handles input for this actor, if input is enabled.
@@ -127,7 +128,7 @@ type
     # currentClickTraceChannel {.importcpp: "CurrentClickTraceChannel".}: ECollisionChannel
     # inputComponent {.importcpp: "InputComponent".}: ptr UInputComponent
 
-  AInfo* {.header: "GameFramework/Info.h", importcpp: "AInfo".} = object of AActor
+  AInfo* {.header: "GameFramework/Info.h", importcpp.} = object of AActor
   AWorldSettings* {.header: "GameFramework/WorldSettings.h", importcpp.} = object of AInfo
   AGameMode* {.header: "GameFramework/GameMode.h", importcpp.} = object of AInfo
 
@@ -135,7 +136,7 @@ type
 
   APlayerState* {.header: "GameFramework/PlayerState.h", importcpp.} = object of AInfo
 
-  AHUD* {.header: "GameFramework/HUD.h", importcpp: "AHUD".} = object of AActor
+  AHUD* {.header: "GameFramework/HUD.h", importcpp.} = object of AActor
 
   EViewTargetBlendFunction* {.header: "Camera/PlayerCameraManager.h", importcpp, size: sizeof(cint).} = enum
     ## Options that define how to blend when changing view targets.
@@ -159,9 +160,55 @@ type
   AEmitter* {.header: "Particles/Emitter.h", importcpp.} = object of AActor
   AEmitterCameraLensEffectBase* {.header: "Particles/EmitterCameraLensEffectBase.h", importcpp.} = object of AEmitter
 
+# depends on AActor, cannot put it in enginetypes module
+class(FBasedPosition, header: "Engine/EngineTypes.h"):
+  ## Struct for handling positions relative to a base actor, which is potentially moving
+  var base: ptr AActor
+    ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=BasedPosition)
+
+  var position: FVector
+    ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=BasedPosition)
+
+  var cachedBaseLocation: FVector
+  var cachedBaseRotation: FRotator
+  var cachedTransPosition: FVector
+
+  proc makeFBasedPosition(): FBasedPosition {.constructor.}
+  proc makeFBasedPosition(inBase: ptr AActor, inPosition: var FVector): FBasedPosition {.constructor.}
+
+  proc location(): FVector {.noSideEffect, importcpp: "*#".}
+    ## Retrieve world location of this position
+
+  proc set(inBase: ptr AActor; inPosition: var FVector)
+  proc clear()
+
+include modules/components/primitive
+include modules/components/brush
+include modules/components/shape
+include modules/components/capsule
+include modules/components/billboard
+
+include modules/components/pathfollowing
+
+include modules/ai/navigationtypes
+
+include modules/engine/brush
+include modules/engine/volume
+include modules/engine/physicsvolume
+
+include modules/components/scene
+
+include modules/components/movement
+include modules/components/navmovement
+include modules/components/pawnmovement
+
+include modules/components/pawnnoiseemitter
+
 include "modules/core/object"
 
 include modules/input/inputcoretypes
+
+include modules/playerinput
 
 include modules/camera/types
 include modules/camera/anim
@@ -182,11 +229,9 @@ include modules/touchinterface
 include modules/core/player
 include modules/core/timermanager
 
-include modules/physics/types
-
 include modules/actor
 
-# include modules/pawn
+include modules/pawn
 # include modules/character
 # include modules/matineeactor
 
@@ -195,38 +240,10 @@ include modules/actor
 include modules/info
 include modules/localmessage
 include modules/playerstate
+
 include modules/controller
 include modules/playercontroller
-
-proc setupInputComponent*(controller: ptr APlayerController) {.header: "GameFramework/PlayerController.h", importcpp: "#.SetupInputComponent(@)", nodecl.}
-proc playerTick*(controller: ptr APlayerController) {.header: "GameFramework/PlayerController.h", importcpp: "#.SetupInputComponent(@)", nodecl.}
-proc getPawn*(controller: ptr APlayerController): ptr APawn {.header: "GameFramework/PlayerController.h", importcpp: "#.GetPawn(@)", nodecl.}
-proc getHitResultUnderCursor*(controller: ptr APlayerController, collChannel: ECollisionChannel, bTraceComplex: bool, hitResult: var FHitResult): bool {.
-  header: "GameFramework/PlayerController.h", importcpp: "#.GetHitResultUnderCursor(@)", nodecl, discardable.}
-proc getHitResultAtScreenPosition*(controller: ptr APlayerController, location: FVector2D, collChannel: ECollisionChannel, bTraceComplex: bool, hitResult: var FHitResult): bool {.
-  header: "GameFramework/PlayerController.h", importcpp: "#.GetHitResultAtScreenPosition(@)", nodecl, discardable.}
-proc setNewMoveDestination*(controller: ptr APlayerController, dest: FVector) {.header: "GameFramework/PlayerController.h", importcpp: "#.SetNewMoveDestination(@)", nodecl.}
-proc getWorld*(controller: ptr APlayerController): ptr UWorld {.header: "GameFramework/PlayerController.h", importcpp: "#.GetWorld(@)", nodecl.}
-
-proc initCapsuleSize*(capsule: ptr UCapsuleComponent, inRadius: float32, inHalfHeight: float32) {.
-  header: "Components/CapsuleComponent.h", importcpp: "#.SetCapsuleSize(@)", nodecl.}
-
-template bindAction*[T](inputComp: ptr UInputComponent, action: static[string], event: EInputEvent, objPtr: T, callback: proc(t: T)) =
-  {.emit: "$#->BindAction(`$#`, `$#`::$#, `$#`, & $#::$#);".format(
-            expandObjReference(astToStr(inputComp)), astToStr(action), type(event).name, astToStr(event),
-            astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalize()).}
-
-template bindTouch*[T](inputComp: ptr UInputComponent, event: EInputEvent, objPtr: T, callback: proc(t: T, fingerIndex: ETouchIndex, loc: FVector)) =
-  {.emit: "$#->BindTouch(`$#`::$#, `$#`, & $#::$#);".format(
-            expandObjReference(astToStr(inputComp)), type(event).name, astToStr(event),
-            astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalize()).}
-
-proc getActorLocation*(pawn: ptr APawn): FVector {.header: "GameFramework/Pawn.h", importcpp: "#.GetActorLocation(@)", nodecl.}
-
-proc dist*(vector, other: FVector): float32 {.header: "Math/Vector.h", importcpp: "'1::Dist(@)", nodecl.}
 
 proc getNavigationSystem*(world: ptr UWorld): ptr UNavigationSystem {.header: "Engine/World.h", importcpp: "#.GetNavigationSystem(@)", nodecl.}
 
 proc simpleMoveToLocation*(navSys: ptr UNavigationSystem, controller: ptr APlayerController, goal: FVector) {.header: "AI/Navigation/NavigationSystem.h", importcpp: "#.SimpleMoveToLocation(@)", nodecl.}
-
-proc to2D*(v: FVector): FVector2D {.header: "Math/Vector2D.h", importcpp: "'0(@)", constructor.}

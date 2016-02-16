@@ -108,9 +108,9 @@ class(EKeys, header: "InputCoreTypes.h"):
   var U {.isStatic.}: FKey
   var V {.isStatic.}: FKey
   var W {.isStatic.}: FKey
-  var X {.isStatic.}: FKey
-  var Y {.isStatic.}: FKey
-  var Z {.isStatic.}: FKey
+  # var X {.isStatic.}: FKey
+  # var Y {.isStatic.}: FKey
+  # var Z {.isStatic.}: FKey
 
   var NumPadZero {.isStatic.}: FKey
   var NumPadOne {.isStatic.}: FKey
