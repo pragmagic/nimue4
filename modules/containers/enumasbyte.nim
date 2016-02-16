@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(TEnumAsByte[T: enum], header: "Container/EnumAsByte.h"):
+class(TEnumAsByte[T: enum], header: "Container/EnumAsByte.h", bycopy):
   proc makeTEnumAsByte(e: T): TEnumAsByte[T] {.constructor.}
   proc value(): T {.noSideEffect.}
 

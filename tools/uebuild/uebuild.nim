@@ -35,12 +35,11 @@ proc exec(command: string) =
     quit(-1)
 
 proc extractByPeg(str: var string, peg: Peg): Rope =
-  var matches: seq[string] = @[]
+  var matches = newSeq[string](1)
   var (beginPos, endPos) = str.findBounds(peg, matches, 0)
   result = rope("")
   while beginPos != -1:
     let sliceToExtract = beginPos..endPos
-    # echo "Match found at: " & $(beginPos, endPos)
     result = result & str[sliceToExtract]
     str[sliceToExtract] = ""
     (beginPos, endPos) = str.findBounds(peg, matches, beginPos)
@@ -49,7 +48,7 @@ proc extractTypeDefinitions(contents: var string): Rope =
   result = extractByPeg(contents, peg("'$#' @ '$#'" % [beginTypeMarker, endTypeMarker]))
 
 proc extractIncludes(contents: var string, filename: string): Rope =
-  let includePeg = peg("""s <- wsNoEol '#include' ws '"' !'$#.h' {[^"]+} '"' ws
+  let includePeg = peg("""s <- wsNoEol '#include' ws '"' !'$#.h' [^"]+ '"' ws
                          comment <- '/*' @ '*/' / '//' .*
                          wsNoEol <- (comment / !\n \s+)*
                          ws <- (comment / \s+)* """.format(filename))
@@ -81,8 +80,8 @@ proc processFile(file, moduleName, outDir: string) =
   assert(intBitsDefBegin != -1)
   let intBitsDef = contents[intBitsDefBegin..intBitsDefEnd]
   if contents.contains(beginTypeMarker):
-    let typeDefs = extractTypeDefinitions(contents)
     let includes = extractIncludes(contents, filename)
+    let typeDefs = extractTypeDefinitions(contents)
 
     var headerFileContents = $("#pragma once\n" & intBitsDef & includes & "#include \"" & filename & ".generated.h\"\n" & typeDefs)
     var outHeaderDir = outCppDir
@@ -126,7 +125,7 @@ proc build(engineDir, projectDir, projectName, target, mode, platform: string) =
     for file in walkDirRec(moduleDir):
       if file.endsWith(".nim"):
         # TODO: use -d:release --opt:speed for release builds
-        exec "nim cpp -c --noMain --experimental -p:\"" & getCurrentDir() & "\" --nimcache:" & nimcacheDir &
+        exec "nim cpp --noMain -c --experimental -p:\"" & getCurrentDir() & "\" --nimcache:" & nimcacheDir &
           " --os:" & platform & " " & file
         expectedFilenames.incl(file.changeFileExt("h").extractFilename())
 

@@ -68,9 +68,9 @@ proc makeProcedure(className, ns: string, statement: NimNode, classNameNode: Nim
         var importCppPattern = "#." & cppName & "(@)"
         if isOperator:
           importCppPattern = case procName:
-            of "[]": "#[#]"
+            of "[]": "(#[#])"
             of "[]=": "#[#] = #"
-            else: "# " & procName & " #"
+            else: "(# " & procName & " #)"
         importCPragma = newNimNode(nnkExprColonExpr).add(
           ident("importcpp"), newStrLitNode(importCppPattern))
 

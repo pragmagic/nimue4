@@ -81,7 +81,7 @@ class(UPlayerInput of UObject, header: theHeader):
   ## @see https://docs.unrealengine.com/latest/INT/Gameplay/Input/index.html
   ## UCLASS(Within=PlayerController, config=Input, transient)
 
-  var touches: openarray[FVector]
+  var touches: array[11, FVector]
     ## NOTE: These touch vectors are calculated and set directly, they do not go through the .ini Bindings
     ## Touch locations, from 0..1 (0,0 is top left, 1,1 is bottom right), the Z component is > 0 if the touch is currently held down
     ## @todo: We have 10 touches to match the number of Touch* entries in EKeys (not easy to make this an enum or define or anything)

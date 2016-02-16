@@ -10,6 +10,9 @@ class(FVector, header: "Math/Vector.h", bycopy):
   proc `-`(other: FVector): FVector {.noSideEffect.}
   proc `-=`(other: FVector)
 
+  proc `==`(other: FVector): bool {.noSideEffect.}
+  proc `!=`(other: FVector): bool {.noSideEffect.}
+
   proc size(): cfloat
   proc sizeSquared(): cfloat
 
@@ -26,6 +29,9 @@ class(FVector2D, header: "Math/Vector2D.h", bycopy):
   proc `+=`(other: FVector2D)
   proc `-`(other: FVector2D): FVector2D {.noSideEffect.}
   proc `-=`(other: FVector2D)
+
+  proc `==`(other: FVector2D): bool {.noSideEffect.}
+  proc `!=`(other: FVector2D): bool {.noSideEffect.}
 
   proc size(): cfloat
   proc sizeSquared(): cfloat

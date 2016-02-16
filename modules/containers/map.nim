@@ -1,16 +1,16 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(TPair[K, V], header: "Containers/Map.h"):
+class(TPair[K, V], header: "Containers/Map.h", bycopy):
   var key: K
   var value: V
 
   proc `==`(other: TPair[K, V]): bool {.noSideEffect.}
   proc `!=`(other: TPair[K, V]): bool {.noSideEffect.}
 
-class(TMap[K, V], header: "Containers/Map.h"):
+class(TMap[K, V], header: "Containers/Map.h", bycopy):
   proc append(other: TMap[K, V])
 
-  proc `[]`(key: K): ptr V {.noSideEffect.}
+  proc `[]`(key: K): var V {.noSideEffect.}
   proc `[]=`(key: K, value: V)
   proc getOrDefault(key: K, default: V) {.noSideEffect.}
 
@@ -20,7 +20,7 @@ class(TMap[K, V], header: "Containers/Map.h"):
   proc reset()
     ## Remove all elements from the map, leaving the current capacity
 
-  proc clear(nextExpectedSize: Natural = 0)
+  proc clear(nextExpectedSize: Natural = 0) {.cppname: "Empty".}
     ## Remove all elements from the map, setting new capacity
 
   proc reserve(capacity: Natural)

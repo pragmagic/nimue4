@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(TArray[T], header: "Containers/Array.h"):
+class(TArray[T], header: "Containers/Array.h", bycopy):
   proc capacity(): uint32 {.noSideEffect, cppname: "Max".}
     ## number of items that can fit in the array without memory reallocation
   proc slack(): int32 {.noSideEffect, cppname: "GetSlack".}

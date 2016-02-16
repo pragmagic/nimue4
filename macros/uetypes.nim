@@ -395,6 +395,8 @@ $#
   let ofPostfix = if primaryParentName != nil : " of " & primaryParentName else: ""
   var typeDecl = parseStmt("""type $1* {.header: "$2", importcpp: "$1", inheritable.} = object$3""".format(classDefinition.name, headerName, ofPostfix))
 
+  if kind == tkStruct:
+    typeDecl[0][0][0][1].add(ident("bycopy"))
   var recList = newNimNode(nnkRecList)
   for field in classDefinition.fields:
     recList.add(newNimNode(nnkIdentDefs).add(field.nameNode, field.nimTypeNode, newEmptyNode()))
@@ -418,6 +420,8 @@ $#
     conv.pragma.add(ident("nodecl"))
   result.add(newNimNode(nnkPragma).add(
               newNimNode(nnkExprColonExpr).add(ident("emit"), newStrLitNode(codeToEmit))))
+
+  echo repr result
 
 macro UEClass*(definition: expr, body: stmt): stmt {.immediate.} =
   result = genType(tkClass, definition, callsite())
