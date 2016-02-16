@@ -1,0 +1,5 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+  "nim.project": "ue4.nim",
+  "nim.buildCommand": "cpp"
+}
