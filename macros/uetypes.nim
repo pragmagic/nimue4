@@ -421,8 +421,6 @@ $#
   result.add(newNimNode(nnkPragma).add(
               newNimNode(nnkExprColonExpr).add(ident("emit"), newStrLitNode(codeToEmit))))
 
-  echo repr result
-
 macro UEClass*(definition: expr, body: stmt): stmt {.immediate.} =
   result = genType(tkClass, definition, callsite())
 

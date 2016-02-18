@@ -43,7 +43,10 @@ proc fileNameNoExt*(node: NimNode): string =
 
   let info = lineinfo(node)
   let dotIndex = info.rfind('.')
-  result = info[0..<dotIndex]
+  var slashIndex = info.rfind('/')
+  if slashIndex == -1:
+    slashIndex = info.rfind('\\')
+  result = info[slashIndex + 1 .. <dotIndex]
 
 proc numToWord*(num: Natural): string {.compileTime.} =
   ## Converts number to English phrase representing the number

@@ -169,10 +169,10 @@ class(UBrushBuilder of UObject, header: "Engine/BrushBuilder.h", notypedef):
   proc badParameters(msg: FText): bool
   proc vertexv(v: FVector): int32
   proc vertex3f(x: cfloat; y: cfloat; z: cfloat): int32
-  proc poly3i(direction: int32; i: int32; j: int32; k: int32; itemName: FName = NAME_None;
-            bIsTwoSidedNonSolid: bool = false)
-  proc poly4i(direction: int32; i: int32; j: int32; k: int32; l: int32;
-              itemName: FName = NAME_None; bIsTwoSidedNonSolid: bool = false)
+  proc poly3i(direction: int32; i, j, k: int32; itemName: FName = NAME_None;
+              bIsTwoSidedNonSolid: bool = false)
+  proc poly4i (direction: int32; i, j, k, L: int32;
+               itemName: FName = NAME_None; bIsTwoSidedNonSolid: bool = false)
   proc polyBegin(direction: int32; itemName: FName = NAME_None)
   proc polyi(i: int32)
   proc polyEnd()

@@ -1,11 +1,20 @@
-Wrapper around Unreal Build Tool that compiles and prepares Nim files before
-passing further to UBT
+Wrapper around Unreal Build Tool (UBT) that compiles and prepares Nim files
+before passing further to UBT
 
-    uebuild [options]
+    uebuild [options] [command=deploy] [custom UBT options]
+
+Command:
+  deploy                  build the project with hot redeploy
+  precook                 build the editor for further cooking
+  clean                   clean Nim and UE generated files
 
 Options:
-  -d, --projectDir:PATH
-  -e, --engineDir:PATH
-  -p, --platform
-  -t, --target
-  -m, --mode
+  -d, --projectDir        directory with .uproject file
+  -e, --engineDir         UE4 root directory
+  -p, --platform          platform to build for; current platform by default;
+                          valid values: Win32, Win64, WinRT, WinRT_ARM, UWP,
+                          Mac, XboxOne, PS4, IOS, Android, HTML5, Linux,
+                          AllDesktop, TVOS
+  -t, --target            UE4 target; "{ProjectName}Editor" by default
+  -m, --mode              build mode; "Development" by default; valid values:
+                          Debug, DebugGame, Development, Shipping, Test
