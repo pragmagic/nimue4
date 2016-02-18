@@ -184,7 +184,8 @@ proc runUnrealBuildTool(engineDir: string; task: TaskType;
   var buildTool: string
   case hostOS
     of "macosx":
-      buildTool = "mono \"" & (engineDir / "Engine" / "Binaries" / "DotNET" / "UnrealBuildTool.exe") & '"'
+      let runMono = '"' & (engineDir / "Engine" / "Build" / "BatchFiles" / "Mac" / "RunMono.sh") & '"'
+      buildTool = runMono & " \"" & (engineDir / "Engine" / "Binaries" / "DotNET" / "UnrealBuildTool.exe") & '"'
     else:
       raise newException(OSError, "Building is not supported for your platform.")
 
