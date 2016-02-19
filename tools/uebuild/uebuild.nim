@@ -31,13 +31,15 @@ const cppModuleFileTemplate = """
 const nimModuleFileTemplate = """
   #include "$1.h"
 
-  extern "C" void NimMain(void);
+  extern "C" {void NimMain(void);}
 
-  class $1: public FDefaultGameModuleImpl {
+  class $1GameModule: public FDefaultGameModuleImpl {
     virtual void StartupModule() override {
       NimMain();
     }
   };
+
+  IMPLEMENT_GAME_MODULE($1GameModule, $1);
 """
 
 const moduleHeaderTemplate = """
@@ -123,6 +125,10 @@ proc extractIncludes(contents: var string, filename: string): Rope =
                          wsNoEol <- (comment / !\n \s+)*
                          ws <- (comment / \s+)* """.format(filename))
   result = extractByPeg(contents, includePeg)
+
+proc replaceInFile(filename: string; sub, to: string) =
+  var contents = readFile(filename)
+  writeFile(filename, contents.replace(sub, to))
 
 proc processFile(file, moduleName: string; outDir: string) =
   let moduleIncludeString = "#include \"$#.h\"\n" % moduleName
@@ -234,7 +240,8 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
     expectedFilenames.incl(moduleName & ".h")
 
     if isNimModule:
-      withTempFile(tempFile, moduleName & "Agregator" & ".nim", rootFileContent):
+      let agregatorFilename = moduleName & "Agregator" & ".nim"
+      withTempFile(tempFile, agregatorFilename, rootFileContent):
         # TODO: use -d:release --opt:speed for release builds
         var osCpuFlags = ""
         if os != nil:
@@ -244,6 +251,10 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
         exec "nim cpp -c --noCppExceptions --deadCodeElim:on --noMain --experimental " & osCpuFlags &
             " -p:\"" & getCurrentDir() & "\" -p:\"" & moduleDir & "\" --nimcache:\"" & nimcacheDir &
             "\" \"" & tempFile & '"'
+      # export NimMain procedure so that it can be used from module initialization code
+      replaceInFile(nimcacheDir / agregatorFilename.changeFileExt(".cpp"),
+                    "N_CDECL(void, NimMain)",
+                    "NIM_EXTERNC N_CDECL(void, NimMain)")
 
     for file in walkDirRec(nimcacheDir, {pcFile}):
       if file.endsWith(".h") and not expectedFilenames.contains(extractFilename(file)):
