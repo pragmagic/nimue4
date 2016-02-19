@@ -23,14 +23,21 @@ const beginTypeMarker = "/*BEGIN_UNREAL_TYPE*/"
 const endTypeMarker = "/*END_UNREAL_TYPE*/"
 const exportMarker = "/*EXPORT_MACRO_PLACEHOLDER*/"
 
-const primaryModuleFileTemplate = """
-  #include "$1.h"
-  IMPLEMENT_PRIMARY_GAME_MODULE(FDefaultGameModuleImpl, $1, "$1");
-"""
-
-const moduleFileTemplate = """
+const cppModuleFileTemplate = """
   #include "$1.h"
   IMPLEMENT_GAME_MODULE(FDefaultGameModuleImpl, $1);
+"""
+
+const nimModuleFileTemplate = """
+  #include "$1.h"
+
+  extern "C" void NimMain(void);
+
+  class $1: public FDefaultGameModuleImpl {
+    virtual void StartupModule() override {
+      NimMain();
+    }
+  };
 """
 
 const moduleHeaderTemplate = """
@@ -117,7 +124,7 @@ proc extractIncludes(contents: var string, filename: string): Rope =
                          ws <- (comment / \s+)* """.format(filename))
   result = extractByPeg(contents, includePeg)
 
-proc processFile(file, moduleName: string; isPrimaryModule: bool; outDir: string) =
+proc processFile(file, moduleName: string; outDir: string) =
   let moduleIncludeString = "#include \"$#.h\"\n" % moduleName
   let exportMacro = moduleName.toUpper() & "_API"
   let outCppDir = outDir / "Private"
@@ -131,7 +138,7 @@ proc processFile(file, moduleName: string; isPrimaryModule: bool; outDir: string
   if outFile == file and contents.contains(moduleIncludeString):
     # file hasn't been regenerated
     return
-  echo file.extractFileName() & " has changed - processing..."
+  echo file.extractFileName() & " was changed - processing..."
   createDir(outCppDir)
 
   var matches: seq[string] = @[]
@@ -156,24 +163,24 @@ proc processFile(file, moduleName: string; isPrimaryModule: bool; outDir: string
   contents.insert(moduleIncludeString, intBitsDefEnd + 1)
   writeFile(outFile, contents)
 
-proc createModuleFilesIfNeeded(targetDir, moduleName: string; isPrimaryModule: bool) =
+proc createModuleFilesIfNeeded(targetDir, moduleName: string; isNimModule: bool) =
   let moduleFile = targetDir / "Private" / moduleName & ".cpp"
   let moduleHeaderFile = targetDir / "Public" / moduleName & ".h"
 
   if fileExists(moduleHeaderFile):
     return
 
-  let fileTemplate = if isPrimaryModule: primaryModuleFileTemplate else: moduleFileTemplate
-  let headerTemplate = moduleHeaderTemplate
-
   createDir(moduleFile.parentDir())
   createDir(moduleHeaderFile.parentDir())
 
-  writeFile(moduleFile, fileTemplate.format(moduleName))
-  writeFile(moduleHeaderFile, headerTemplate.format(moduleName))
+  let moduleFileTemplate = if isNimModule: nimModuleFileTemplate else: cppModuleFileTemplate
+
+  writeFile(moduleFile, moduleFileTemplate.format(moduleName))
+  writeFile(moduleHeaderFile, moduleHeaderTemplate.format(moduleName))
 
 proc runUnrealBuildTool(engineDir: string; task: TaskType;
-                        target, platform, mode, uprojectFile: string; extraOptions: string = "") =
+                        target, platform, mode, uprojectFile: string;
+                        extraOptions: string = "") =
   let taskStr = case task:
   of ttDeploy: "-deploy"
   of ttClean: "-clean"
@@ -206,15 +213,12 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
       continue
     let moduleDir = sourceDirFile.path
     let moduleName = moduleDir.extractFilename()
-    let isPrimaryModule = (moduleName == projectName)
     let nimcacheDir = projectDir / ".nimcache" / moduleName
 
     let targetDir = moduleDir / nimModuleDirName
 
-    createModuleFilesIfNeeded(targetDir, moduleName, isPrimaryModule)
-
     var expectedFilenames = initSet[string]()
-    expectedFilenames.incl(moduleName & ".h")
+
     var rootFileContent = rope("")
     for file in walkDirRec(moduleDir):
       if file.endsWith(".nim"):
@@ -225,7 +229,11 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
         rootFileContent = rootFileContent & "import \"" & importArg & "\"\n"
         expectedFilenames.incl(file.changeFileExt("h").extractFilename())
 
-    if rootFileContent.len != 0:
+    let isNimModule = (rootFileContent.len != 0)
+    createModuleFilesIfNeeded(targetDir, moduleName, isNimModule)
+    expectedFilenames.incl(moduleName & ".h")
+
+    if isNimModule:
       withTempFile(tempFile, moduleName & "Agregator" & ".nim", rootFileContent):
         # TODO: use -d:release --opt:speed for release builds
         var osCpuFlags = ""
@@ -249,7 +257,7 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
         removeFile targetDir / cppFile.extractFilename()
         removeFile targetDir / "Private" / cppFile.extractFilename()
       elif file.endsWith(".cpp"):
-        processFile(file, moduleName, isPrimaryModule, targetDir)
+        processFile(file, moduleName, targetDir)
 
 proc build(task: TaskType, engineDir, projectDir, projectName, target, mode, platform, extraOptions: string) =
   var os, cpu: string = nil
