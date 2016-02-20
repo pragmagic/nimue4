@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(UBillboardComponent of UPrimitiveComponent, header: "Components/BillboardComponent.h"):
+class(UBillboardComponent of UPrimitiveComponent, header: "Components/BillboardComponent.h", notypedef):
   ## A 2d texture that will be rendered always facing the camera.
   ## UCLASS(ClassGroup=Rendering, collapsecategories,
   ##        hidecategories=(Object,Activation,"Components|Activation",Physics,Collision,Lighting,Mesh,PhysicsVolume),

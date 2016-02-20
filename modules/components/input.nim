@@ -5,9 +5,6 @@ type EControllerAnalogStick {.header: "Components/InputComponent.h", importcpp, 
   CAS_RightStick,
   CAS_MAX
 
-type
-  UInputComponent* {.header: "Components/InputComponent.h", importcpp.} = object of UActorComponent
-
 template bindAction*[T](inputComp: ptr UInputComponent, action: static[string], event: EInputEvent, objPtr: T, callback: proc(t: T)) =
   {.emit: "$#->BindAction(`$#`, `$#`::$#, `$#`, & $#::$#);".format(
             expandObjReference(astToStr(inputComp)), astToStr(action), type(event).name, astToStr(event),
@@ -17,3 +14,5 @@ template bindTouch*[T](inputComp: ptr UInputComponent, event: EInputEvent, objPt
   {.emit: "$#->BindTouch(`$#`::$#, `$#`, & $#::$#);".format(
             expandObjReference(astToStr(inputComp)), type(event).name, astToStr(event),
             astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalize()).}
+
+# TODO

@@ -9,7 +9,7 @@ type EPlaneConstraintAxisSetting {.size:sizeof(uint8),
   Z, ## Lock movement in the Z axis.
   UseGlobalPhysicsSetting ## Use the global physics project setting.
 
-class(UMovementComponent of UActorComponent, header: "GameFramework/MovementComponent.h"):
+class(UMovementComponent of UActorComponent, header: "GameFramework/MovementComponent.h", notypedef):
   ## UCLASS(ClassGroup=Movement, abstract, BlueprintType)
   ## MovementComponent is an abstract component class that defines functionality for moving a PrimitiveComponent (our UpdatedComponent) each tick.
   ## Base functionality includes:

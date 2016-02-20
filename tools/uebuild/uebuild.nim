@@ -11,6 +11,7 @@ type OptType = enum
   otEngineLocation
 
 type TaskType = enum
+  ttRecompile
   ttDeploy
   ttPreCook
   ttClean
@@ -25,7 +26,8 @@ const exportMarker = "/*EXPORT_MACRO_PLACEHOLDER*/"
 
 const cppModuleFileTemplate = """
   #include "$1.h"
-  IMPLEMENT_GAME_MODULE(FDefaultGameModuleImpl, $1);
+  class $1GameModule: public FDefaultGameModuleImpl {
+  };
 """
 
 const nimModuleFileTemplate = """
@@ -38,7 +40,13 @@ const nimModuleFileTemplate = """
       NimMain();
     }
   };
+"""
 
+const primaryModuleAppendix = """
+  IMPLEMENT_PRIMARY_GAME_MODULE($1GameModule, $1, "$1");
+"""
+
+const moduleAppendix = """
   IMPLEMENT_GAME_MODULE($1GameModule, $1);
 """
 
@@ -96,7 +104,7 @@ proc uePlatformToNimOSCPU(platform: string): tuple[os, cpu: string] {.noSideEffe
   # AllDesktop, TVOS
 
   result.os = case platform.toLower():
-    of "win32", "win64", "winrt", "winrt_arm", "uwp": "windows"
+    of "win32", "win64", "winrt", "winrt_arm", "uwp", "html5": "windows"
     of "mac", "ios", "tvos": "macosx"
     of "linux", "android": "linux"
     else: "standalone"
@@ -169,7 +177,7 @@ proc processFile(file, moduleName: string; outDir: string) =
   contents.insert(moduleIncludeString, intBitsDefEnd + 1)
   writeFile(outFile, contents)
 
-proc createModuleFilesIfNeeded(targetDir, moduleName: string; isNimModule: bool) =
+proc createModuleFilesIfNeeded(targetDir, moduleName: string; isNimModule, isPrimaryModule: bool) =
   let moduleFile = targetDir / "Private" / moduleName & ".cpp"
   let moduleHeaderFile = targetDir / "Public" / moduleName & ".h"
 
@@ -180,14 +188,17 @@ proc createModuleFilesIfNeeded(targetDir, moduleName: string; isNimModule: bool)
   createDir(moduleHeaderFile.parentDir())
 
   let moduleFileTemplate = if isNimModule: nimModuleFileTemplate else: cppModuleFileTemplate
+  let appendixTemplate = if isPrimaryModule: primaryModuleAppendix else: moduleAppendix
+  let cppTemplate = moduleFileTemplate & appendixTemplate
 
-  writeFile(moduleFile, moduleFileTemplate.format(moduleName))
+  writeFile(moduleFile, cppTemplate.format(moduleName))
   writeFile(moduleHeaderFile, moduleHeaderTemplate.format(moduleName))
 
 proc runUnrealBuildTool(engineDir: string; task: TaskType;
                         target, platform, mode, uprojectFile: string;
                         extraOptions: string = "") =
   let taskStr = case task:
+  of ttRecompile: "-editorrecompile"
   of ttDeploy: "-deploy"
   of ttClean: "-clean"
   of ttPreCook: "-editorrecompile"
@@ -235,20 +246,21 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
         rootFileContent = rootFileContent & "import \"" & importArg & "\"\n"
         expectedFilenames.incl(file.changeFileExt("h").extractFilename())
 
+    let isPrimaryModule = (moduleName == projectName)
     let isNimModule = (rootFileContent.len != 0)
-    createModuleFilesIfNeeded(targetDir, moduleName, isNimModule)
+    createModuleFilesIfNeeded(targetDir, moduleName, isNimModule, isPrimaryModule)
     expectedFilenames.incl(moduleName & ".h")
 
     if isNimModule:
       let agregatorFilename = moduleName & "Agregator" & ".nim"
       withTempFile(tempFile, agregatorFilename, rootFileContent):
-        # TODO: use -d:release --opt:speed for release builds
+        # TODO: use -d:release --opt:speed --deadCodeElim:on for release builds
         var osCpuFlags = ""
         if os != nil:
           osCpuFlags &= "--os:" & os
         if cpu != nil:
           osCpuFlags &= " --cpu:" & cpu
-        exec "nim cpp -c --noCppExceptions --deadCodeElim:on --noMain --experimental " & osCpuFlags &
+        exec "nim cpp -c --noCppExceptions -d:release --noMain --experimental " & osCpuFlags &
             " -p:\"" & getCurrentDir() & "\" -p:\"" & moduleDir & "\" --nimcache:\"" & nimcacheDir &
             "\" \"" & tempFile & '"'
       # export NimMain procedure so that it can be used from module initialization code
@@ -310,7 +322,7 @@ when isMainModule:
   var platform = nimOSToUEPlatform(hostOS)
   var extraOptions = ""
   var projectDir: string = nil
-  var task = ttDeploy
+  var task = ttRecompile
   var engineDir: string = nil
   var expectedOptType = otTask
 
@@ -327,6 +339,7 @@ when isMainModule:
           of "deploy": task = ttDeploy
           of "precook": task = ttPreCook
           of "clean": task = ttClean
+          of "recompile": task = ttRecompile
           else: raise newException(ValueError, "Unknown task: " & key)
           extraOptions = cmdLineRest(p)
           break
@@ -374,5 +387,5 @@ when isMainModule:
   if target == nil:
     target = projectName & "Editor"
   case task:
-    of ttPreCook, ttDeploy: build(task, engineDir, projectDir, projectName, target, mode, platform, extraOptions)
+    of ttPreCook, ttDeploy, ttRecompile: build(task, engineDir, projectDir, projectName, target, mode, platform, extraOptions)
     of ttClean: clean(engineDir, projectDir, projectName, target, mode, platform, extraOptions)

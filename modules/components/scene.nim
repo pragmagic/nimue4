@@ -1,16 +1,14 @@
 # Copyright 2016 Xored Software, Inc.
 
-const compHeader = "Components/SceneComponent.h"
-
 type
-  EDetailMode {.size: sizeof(cint), header: compHeader, importcpp.} = enum
+  EDetailMode {.size: sizeof(cint), header: "Components/SceneComponent.h", importcpp.} = enum
     ## Detail mode for scene component rendering.
     DM_Low,
     DM_Medium,
     DM_High,
     DM_MAX
 
-  ERelativeTransformSpace {.size: sizeof(cint), header: compHeader, importcpp.} = enum
+  ERelativeTransformSpace {.size: sizeof(cint), header: "Components/SceneComponent.h", importcpp.} = enum
     ## The space for the transform
     RTS_World,
       ## World space transform.
@@ -19,7 +17,7 @@ type
     RTS_Component
       ## Component space transform.
 
-  EMoveComponentFlags {.size: sizeof(cint), header: compHeader, importcpp.} = enum
+  EMoveComponentFlags {.size: sizeof(cint), header: "Components/SceneComponent.h", importcpp.} = enum
     ## MoveComponent options.
     MOVECOMP_NoFlags = 0x0000,  ## No flags
     MOVECOMP_IgnoreBases = 0x0001,  ## Ignore collisions with things the Actor is based on
@@ -29,6 +27,8 @@ type
     MOVECOMP_NeverIgnoreBlockingOverlaps= 0x0004,
       ## Never ignore initial blocking overlaps during movement, which are usually ignored when moving out of an object.
       ## MOVECOMP_IgnoreBases is still respected.
+
+const compHeader = "Components/SceneComponent.h"
 
 proc `|`(arg1: EMoveComponentFlags, arg2: EMoveComponentFlags): EMoveComponentFlags {.header: compHeader, importcpp: "#|#", noSideEffect.}
 proc `&`(arg1: EMoveComponentFlags, arg2: EMoveComponentFlags): EMoveComponentFlags {.header: compHeader, importcpp: "#&#", noSideEffect.}

@@ -56,12 +56,12 @@ class(TArray[T], header: "Containers/Array.h", bycopy):
 
   proc reserve(capacity: Natural)
 
-proc makeArray[T](): TArray[T] {.importcpp: "TArray", constructor, nodecl.}
-proc makeArray[T](initCapacity: Natural): TArray[T] =
+proc makeArray*[T](): TArray[T] {.importcpp: "TArray", constructor, nodecl.}
+proc makeArray*[T](initCapacity: Natural): TArray[T] =
   result = makeArray()
   result.reserve(initCapacity)
 
-iterator items[T](arr: TArray[T]): T =
+iterator items*[T](arr: TArray[T]): T =
   for i in 0 .. <arr.len:
     yield arr[i]
 

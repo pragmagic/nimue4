@@ -22,10 +22,11 @@ type
 # in C++ it's actually a macro that prepends "L" to the string literal, making it wide string literal
 proc TEXT*(s: cstring): wstring {.noSideEffect, importc: "TEXT", nodecl.}
 
-proc getCharArray(s: FString): var wstring {.importcpp: "#.GetCharArray(@)", nodecl.}
-proc mid(s: FString,
+proc charArray*(s: FString): var wstring {.importcpp: "#.GetCharArray(@)", nodecl.}
+proc mid*(s: FString,
          start: Natural,
          count: Natural = high(int32)): FString {.noSideEffect, importcpp: "#.Mid(@)", nodecl.}
+
 proc findInternal(s: FString;
                   subStr: FString or wstring;
                   searchCase: ESearchCase = ESearchCase.IgnoreCase;
@@ -330,6 +331,8 @@ proc toText(s: FString): FText {.
 
 proc toText(s: FName): FText {.
   noSideEffect, header: "Internationalization/Text.h", importcpp: "'0::FromName(@)", nodecl.}
+
+proc text(s: FString or FName or FText): wstring {.importcpp: "(*#)", nodecl.}
 
 converter toFName(num: EName): FName =
   result = fromEName(num)

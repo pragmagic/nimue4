@@ -10,8 +10,8 @@ class(TPair[K, V], header: "Containers/Map.h", bycopy):
 class(TMap[K, V], header: "Containers/Map.h", bycopy):
   proc append(other: TMap[K, V])
 
-  proc `[]`(key: K): var V {.noSideEffect.}
-  proc `[]=`(key: K, value: V)
+  proc `[]`(key: K): var V
+  proc `[]=`(key: K, value: V) {.cppname: "Add".}
   proc getOrDefault(key: K, default: V) {.noSideEffect.}
 
   proc equals(other: TMap[K, V]): bool {.noSideEffect, cppname: "OrderIndependentCompareEqual".}
@@ -35,17 +35,18 @@ class(TMap[K, V], header: "Containers/Map.h", bycopy):
   proc contains(key: K): bool {.noSideEffect.}
 
 type
-  TMapIterator {.importcpp: "TBaseMap<'0, '1>::TIterator".} [K, V] = object
+  TMapIterator {.importcpp: "TBaseMap<'0, '1>::TIterator", header: "Containers/Map.h".} [K, V] = object
 
-proc key[K, V](it: TMapIterator[K, V]): K {.noSideEffect, importcpp: "#.Key(@)", nodecl.}
-proc value[K, V](it: TMapIterator[K, V]): V {.noSideEffect, importcpp: "#.Value(@)", nodecl.}
-proc pair[K, V](it: TMapIterator[K, V]): TPair[K, V] {.noSideEffect, importcpp: "*#", nodecl.}
-proc isValid[K, V](it: TMapIterator[K, V]): bool {.noSideEffect, importcpp: "#", nodecl.}
-proc next[K, V](it: var TMapIterator[K, V]) {.importcpp: "#++", nodecl.}
+proc key[K, V](it: TMapIterator[K, V]): K {.
+  noSideEffect, importcpp: "#.Key(@)", header: "Containers/Map.h".}
+proc value[K, V](it: TMapIterator[K, V]): V {.noSideEffect, importcpp: "#.Value(@)", header: "Containers/Map.h".}
+proc pair[K, V](it: TMapIterator[K, V]): TPair[K, V] {.noSideEffect, importcpp: "*#", header: "Containers/Map.h".}
+proc isValid[K, V](it: TMapIterator[K, V]): bool {.noSideEffect, importcpp: "#", header: "Containers/Map.h".}
+proc next[K, V](it: var TMapIterator[K, V]) {.importcpp: "#++", header: "Containers/Map.h".}
 
-proc makeIterator[K, V](map: TMap[K, V]): TMapIterator[K, V] {.importcpp:"#.CreateIterator(@)", nodecl.}
+proc makeIterator[K, V](map: TMap[K, V]): TMapIterator[K, V] {.importcpp:"#.CreateIterator(@)", header: "Containers/Map.h".}
 
-proc keysInternal[K, V](map: TMap[K, V], outArr: var TArray[K]) {.importcpp:"#.GetKeys(@)", nodecl.}
+proc keysInternal[K, V](map: TMap[K, V], outArr: var TArray[K]) {.importcpp:"#.GetKeys(@)", header: "Containers/Map.h".}
 proc keys*[K, V](map: TMap[K, V]): TArray[K] =
   result = makeArray(map.len)
   keysInternal(map, result)
@@ -70,7 +71,7 @@ iterator values*[K, V](map: TMap[K, V]): V =
 
 # TODO: mpairs, mvalues?
 
-proc makeMap*[K, V](): TMap[K, V] {.importcpp: "TMap", constructor, nodecl.}
+proc makeMap*[K, V](): TMap[K, V] {.importcpp: "TMap", constructor, header: "Containers/Map.h".}
 proc makeMap*[K, V](initialCapacity: Natural): TMap[K, V] =
   result = makeMap()
   result.reserve(initialCapacity)

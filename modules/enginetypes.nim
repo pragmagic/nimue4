@@ -248,21 +248,6 @@ type
     Spawned, ## Only possess by an AI Controller if Pawn is spawned after the world has loaded.
     PlacedInWorldOrSpawned, ## Pawn is automatically possessed by an AI Controller whenever it is created.
 
-  FHitResult* {.header: "Engine/EngineTypes.h", importcpp: "FHitResult".} = object
-    bBlockingHit*: bool
-    bStartPenetrating*: float32
-    Time*: float32
-    Location*: FVector
-    ImpactPoint*: FVector
-    Normal*: FVector
-    ImpactNormal*: FVector
-    TraceStart*: FVector
-    TraceEnd*: FVector
-    Distance*: float32
-    PenetrationDepth*: float32
-    Item*: int32
-    FaceIndex*: int32
-
   FDamageEvent* {.header: "Engine/EngineTypes.h", importcpp: "FDamageEvent", inheritable.} = object
   FRadialDamageEvent* {.header: "Engine/EngineTypes.h", importcpp: "FRadialDamageEvent".} = object of FDamageEvent
   FPointDamageEvent* {.header: "Engine/EngineTypes.h", importcpp: "FPointDamageEvent".} = object of FDamageEvent
@@ -284,6 +269,55 @@ type
   EControllerHand* {.size: sizeof(cint), header: "InputCoreTypes.h", importcpp: "EControllerHand::Type", pure.} = enum
     Left,
     Right
+
+class(FHitResult, header: "Engine/EngineTypes.h", bycopy):
+    var bBlockingHit: bool
+    var bStartPenetrating: bool
+
+    var time: cfloat
+    var location: FVector
+    var impactPoint: FVector
+    var normal: FVector
+    var impactNormal: FVector
+    var traceStart: FVector
+    var traceEnd: FVector
+    var distance: cfloat
+    var penetrationDepth: cfloat
+    var item: int32
+    var boneName: FName
+    var faceIndex: int32
+
+    var actor: TWeakObjectPtr[AActor]
+    var component: TWeakObjectPtr[UPrimitiveComponent]
+    # var physMaterial: TWeakObjectPtr[UPhysicalMaterial]
+
+    proc makeFHitResult(): FHitResult {.constructor.}
+
+    proc getActor(): ptr AActor {.noSideEffect.}
+    proc getComponent(): ptr UPrimitiveComponent {.noSideEffect.}
+    proc isValidBlockingHit(): bool {.noSideEffect.}
+
+# depends on AActor, cannot put it in enginetypes module
+class(FBasedPosition, header: "Engine/EngineTypes.h"):
+  ## Struct for handling positions relative to a base actor, which is potentially moving
+  var base: ptr AActor
+    ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=BasedPosition)
+
+  var position: FVector
+    ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=BasedPosition)
+
+  var cachedBaseLocation: FVector
+  var cachedBaseRotation: FRotator
+  var cachedTransPosition: FVector
+
+  proc makeFBasedPosition(): FBasedPosition {.constructor.}
+  proc makeFBasedPosition(inBase: ptr AActor, inPosition: var FVector): FBasedPosition {.constructor.}
+
+  proc location(): FVector {.noSideEffect, importcpp: "*#".}
+    ## Retrieve world location of this position
+
+  proc set(inBase: ptr AActor; inPosition: var FVector)
+  proc clear()
 
 class(FRigidBodyContactInfo, header: "Engine/EngineTypes.h", bycopy):
   var contactPosition: FVector

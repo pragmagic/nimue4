@@ -1,5 +1,5 @@
 # Source: https://github.com/onionhammer/clibpp
-# Some modifications applied
+# Many modifications applied
 
 ## Easy way to 'Mock' C++ interface
 import macros, parseutils, strutils
@@ -45,9 +45,8 @@ proc makeProcedure(className, ns: string, statement: NimNode, classNameNode: Nim
 
     let isStatic = statement.removePragma("isStatic")
     let isConstructor = statement.hasPragma("constructor")
-    var cppName = statement.removeStrPragma("cppname")
-    if cppName == nil:
-      cppName = procName.capitalize()
+    let userSuppliedName = statement.removeStrPragma("cppname")
+    let cppName = if userSuppliedName == nil: procName.capitalize() else: userSuppliedName
     # Check if static is set (and remove static pragma)
     if isStatic:
         assert(not isOperator)
@@ -66,7 +65,7 @@ proc makeProcedure(className, ns: string, statement: NimNode, classNameNode: Nim
             .add(newStrLitNode(className & "(@)"))
     else:
         var importCppPattern = "#." & cppName & "(@)"
-        if isOperator:
+        if isOperator and userSuppliedName == nil:
           importCppPattern = case procName:
             of "[]": "(#[#])"
             of "[]=": "#[#] = #"

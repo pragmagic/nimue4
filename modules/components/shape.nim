@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(UShapeComponent of UPrimitiveComponent, header: "Components/ShapeComponent.h"):
+class(UShapeComponent of UPrimitiveComponent, header: "Components/ShapeComponent.h", notypedef):
   ## ShapeComponent is a PrimitiveComponent that is represented by a simple geometrical shape (sphere, capsule, box, etc).
   ## UCLASS(abstract, hidecategories=(Object,LOD,Lighting,TextureStreaming,Activation,"Components|Activation"),
   ##        editinlinenew, meta=(BlueprintSpawnableComponent), showcategories=(Mobility))

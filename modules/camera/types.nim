@@ -1,17 +1,15 @@
 # Copyright 2016 Xored Software, Inc.
 
-const cameraTypesHeader = "Camera/CameraTypes.h"
-
 type
-  ECameraProjectionMode {.header: cameraTypesHeader, importcpp: "ECameraProjectionMode::Type"} = enum
+  ECameraProjectionMode {.header: "Camera/CameraTypes.h", importcpp: "ECameraProjectionMode::Type"} = enum
     Perspective,
     Orthographic
 
-  ECameraAnimPlaySpace {.header: cameraTypesHeader, importcpp: "ECameraAnimPlaySpace".} = enum
+  ECameraAnimPlaySpace {.header: "Camera/CameraTypes.h", importcpp: "ECameraAnimPlaySpace".} = enum
     CameraLocal, ## This anim is applied in camera space.
     World, ## This anim is applied in world space.
     UserDefined, ## This anim is applied in a user-specified space (defined by UserPlaySpaceMatrix).
 
-  FMinimalViewInfo {.header: cameraTypesHeader, importcpp: "FMinimalViewInfo".} = object
+  FMinimalViewInfo {.header: "Camera/CameraTypes.h", importcpp: "FMinimalViewInfo".} = object
 
 # TODO

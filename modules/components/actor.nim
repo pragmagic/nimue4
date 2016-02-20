@@ -19,7 +19,7 @@ type
       ## movement between initial and final position, and collisions along the way will occur
     TeleportPhysics ## Teleport physics body so that velocity remains the same and no collision occurs
 
-class(UActorComponent of UObject, "Components/ActorComponent.h"):
+class(UActorComponent of UObject, header: "Components/ActorComponent.h", notypedef):
   var primaryComponentTick: FActorComponentTickFunction
   var componentTags: TArray[FName]
 

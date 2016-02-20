@@ -24,8 +24,6 @@ include modules/containers/sharedptr
 include modules/strings
 include modules/math
 
-include modules/misc
-
 type
   FOutputDevice* {.header: "Misc/OutputDevice.h", importcpp.} = object
   FArchive* {.header: "Serialization/ArchiveBase.h", importcpp.} = object
@@ -101,17 +99,11 @@ type
 
   FPostProcessSettings* {.header: "Scene.h", importcpp.} = object
 
+include modules/misc
 
-include modules/containers/subclassof
-
-include modules/enginetypes
-include modules/physics/types
-
-include modules/components/actor
-include modules/components/input
+include modules/components/componentdecls
 
 type
-  USceneComponent {.header: "Components/USceneComponent.h", importcpp: "USceneComponent", inheritable.} = object of UActorComponent
   AActor* {.header: "GameFramework/Actor.h", importcpp.} = object of UObject
     inputComponent {.importcpp: "InputComponent".}: ptr UInputComponent
       ## Component that handles input for this actor, if input is enabled.
@@ -138,6 +130,7 @@ type
 
   AHUD* {.header: "GameFramework/HUD.h", importcpp.} = object of AActor
 
+  # TODO: move out
   EViewTargetBlendFunction* {.header: "Camera/PlayerCameraManager.h", importcpp, size: sizeof(cint).} = enum
     ## Options that define how to blend when changing view targets.
     ## @see FViewTargetTransitionParams, SetViewTarget
@@ -160,27 +153,13 @@ type
   AEmitter* {.header: "Particles/Emitter.h", importcpp.} = object of AActor
   AEmitterCameraLensEffectBase* {.header: "Particles/EmitterCameraLensEffectBase.h", importcpp.} = object of AEmitter
 
-# depends on AActor, cannot put it in enginetypes module
-class(FBasedPosition, header: "Engine/EngineTypes.h"):
-  ## Struct for handling positions relative to a base actor, which is potentially moving
-  var base: ptr AActor
-    ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=BasedPosition)
+include modules/containers/subclassof
 
-  var position: FVector
-    ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=BasedPosition)
+include modules/enginetypes
+include modules/physics/types
 
-  var cachedBaseLocation: FVector
-  var cachedBaseRotation: FRotator
-  var cachedTransPosition: FVector
-
-  proc makeFBasedPosition(): FBasedPosition {.constructor.}
-  proc makeFBasedPosition(inBase: ptr AActor, inPosition: var FVector): FBasedPosition {.constructor.}
-
-  proc location(): FVector {.noSideEffect, importcpp: "*#".}
-    ## Retrieve world location of this position
-
-  proc set(inBase: ptr AActor; inPosition: var FVector)
-  proc clear()
+include modules/components/actor
+include modules/components/input
 
 include modules/components/primitive
 include modules/components/brush
