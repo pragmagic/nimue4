@@ -155,18 +155,19 @@ proc parse_opts(className: NimNode; opts: seq[NimNode]): TMacroOptions =
 
     result.className = className
 
-proc buildStaticAccessor (name,ty, className:NimNode; ns:string): NimNode =
+proc buildStaticAccessor(name,ty, className:NimNode; ns:string): NimNode =
     result = newProc(
-        name = name,
+        name = postfix(name, "*"),
         procType = nnkProcDef,
         body = newEmptyNode(),
         params = [ty, newIdentDefs(ident"ty", parseExpr("typedesc["& $(className) & "]"))]
     )
+    let cppIdent = if ty.toStrLit.strVal == "bool": $name.basename else: ($name.basename).capitalize
     result.pragma = newNimNode(nnkPragma).add(
         ident"noDecl",
         newNimNode(nnkExprColonExpr).add(
             ident"importcpp",
-            newLit(ns & $className & "::" & $name.baseName & "@")))
+            newLit(ns & $className & "::" & cppIdent & "@")))
 
 macro namespace*(namespaceName: expr, body: stmt): stmt {.immediate.} =
     result = newStmtList()

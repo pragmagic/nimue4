@@ -25,16 +25,26 @@ proc declareDelegate(name: NimNode,
 
   let bindTemplateBodyStr = """{.emit: "$#.Bind(`$#`, & $#::$#);".format(
               expandObjReference(astToStr(delegate)), astToStr(objPtr),
-              type(objPtr[]).name, astToStr(callback)).}
+              type(objPtr[]).name, astToStr(callback).capitalize()).}
 """
   var bindTemplate = newProc(
     name = postfix(ident("bind"), "*"),
     params = @[newEmptyNode(), newIdentDefs(ident("delegate"), name),
-               newIdentDefs(ident("objPtr"), newNimNode(nnkPtrTy).add(ident("T")))] & @[callbackType],
+               newIdentDefs(ident("objPtr"), ident("T"))] & @[callbackType],
     body = newStmtList(parseExpr(bindTemplateBodyStr)),
     procType = nnkTemplateDef
   )
   bindTemplate[2] = newNimNode(nnkGenericParams).add(newIdentDefs(ident("T"), newEmptyNode()))
+
+  var bindUObjectTemplate = newProc(
+    name = postfix(ident("bindUObject"), "*"),
+    body = newStmtList(parseExpr(bindTemplateBodyStr.replace("Bind", "BindUObject"))),
+    procType = nnkTemplateDef
+  )
+  # copy params
+  bindUObjectTemplate[2] = bindTemplate[2].copyNimTree()
+  bindUObjectTemplate[3] = bindTemplate[3].copyNimTree()
+
   var addTemplate = newProc(
     name = postfix(ident("add"), "*"),
     body = newStmtList(parseExpr(bindTemplateBodyStr.replace("Bind", "Add"))),
@@ -81,6 +91,7 @@ proc removeDynamic*(delegate: $1, obj: ptr, methodName: string) {.importcpp: "Re
   result.add(executeProc)
   result.add(executeIfBoundProc)
   result.add(bindTemplate)
+  result.add(bindUObjectTemplate)
 
   if MulticastDelegates.contains(kind):
     result.add(addTemplate)

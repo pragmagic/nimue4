@@ -639,7 +639,7 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
     ##
     ## UFUNCTION(BlueprintCallable, Category="Utilities|Transformation", meta=(DisplayName="AddActorWorldOffset", Keywords="location position"))
 
-  proc AddActorWorldOffset(deltaLocation: FVector; bSweep: bool = false;
+  proc addActorWorldOffset(deltaLocation: FVector; bSweep: bool = false;
                            outSweepHitResult: ptr FHitResult = nil;
                            teleport: ETeleportType = ETeleportType.None)
     ## Adds a delta to the location of this actor in world space.

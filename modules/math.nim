@@ -33,8 +33,14 @@ class(FVector2D, header: "Math/Vector2D.h", bycopy):
   proc `==`(other: FVector2D): bool {.noSideEffect.}
   proc `!=`(other: FVector2D): bool {.noSideEffect.}
 
-  proc size(): cfloat
-  proc sizeSquared(): cfloat
+  proc size(): cfloat {.noSideEffect.}
+  proc sizeSquared(): cfloat {.noSideEffect.}
+
+  proc getRotated(angleDeg: cfloat): FVector2D {.noSideEffect.}
+    ## Rotates around axis (0,0,1)
+    ##
+    ## @param AngleDeg Angle to rotate (in degrees)
+    ## @return Rotated Vector
 
 proc to2D*(v: FVector): FVector2D {.header: "Math/Vector2D.h", importcpp: "'0(@)", constructor.}
 
@@ -72,6 +78,9 @@ var WhiteColor* {.importc: "FColor::White", header: "Math/Color.h".}: FColor
 var ZeroVector2D* {.importc: "FVector2D::ZeroVector", header: "Math/Vector2D.h".}: FVector2D
 var ZeroRotator* {.importc: "FRotator::ZeroRotator", header: "Math/Rotator.h".}: FRotator
 var IdentityTransform* {.importc: "FTransform::Identity", header: "Math/TransformVectorized.h".}: FTransform
+
+proc makeFRotator*(yaw: cfloat, pitch: cfloat, roll: cfloat): FRotator {.
+  header: "Math/Rotator.h", importcpp: "FRotator(@)", constructor.}
 
 converter vectorFromForceInit(f: EForceInit): FVector {.importcpp, constructor, header: "Math/Vector.h".}
 converter colorFromForceInit(f: EForceInit): FColor {.importcpp, constructor, header: "Math/Color.h".}

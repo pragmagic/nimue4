@@ -260,7 +260,7 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
           osCpuFlags &= "--os:" & os
         if cpu != nil:
           osCpuFlags &= " --cpu:" & cpu
-        exec "nim cpp -c --noCppExceptions -d:release --noMain --experimental " & osCpuFlags &
+        exec "nim cpp -c --noCppExceptions --noMain --experimental " & osCpuFlags &
             " -p:\"" & getCurrentDir() & "\" -p:\"" & moduleDir & "\" --nimcache:\"" & nimcacheDir &
             "\" \"" & tempFile & '"'
       # export NimMain procedure so that it can be used from module initialization code

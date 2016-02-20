@@ -99,6 +99,10 @@ class(FDebugDisplayInfo, header: "FDebugDisplayInfo.h", bycopy):
   proc numDisplayNames(): int32 {.noSideEffect.}
 
 class(UObject, header: "UObject/UObject.h", notypedef):
+  proc createDefaultSubobject*[T](subobjectName: FName; bTransient: bool = false): ptr T {.cppname:"CreateDefaultSubobject<'*0>".}
+  proc createOptionalDefaultSubobject*[T](subobjectName: FName; bTransient: bool = false): ptr T {.cppname:"createOptionalDefaultSubobject<'*0>".}
+  proc createAbstractDefaultSubobject*[T](subobjectName: FName; bTransient: bool = false): ptr T {.cppname:"createAbstractDefaultSubobject<'*0>".}
+
   method postInitProperties()
     ## Called after the C++ constructor and after the properties have been initialized, including those loaded from config.
     ## mainly this is to emulate some behavior of when the constructor was called after the properties were intialized.

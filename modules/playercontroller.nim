@@ -7,9 +7,6 @@
 #     DefaultMouseCursor*: EMouseCursor
 #     InputComponent*: UInputComponent
 
-## Default delegate that provides an implementation for those that don't have special needs other than a toggle
-declareBuiltinDelegate(FCanUnpause, dkSimpleRetVal, "GameFramework/PlayerController.h", bool)
-
 ## Delegate used to override default viewport audio listener position calculated from camera
 declareBuiltinDelegate(FGetAudioListenerPos, dkSimple, "GameFramework/PlayerController.h",
                        location: var FVector, projFront: var FVector, projRight: var FVector)

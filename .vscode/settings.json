@@ -4,5 +4,6 @@
   "editor.rulers": [120],
   "files.trimTrailingWhitespace": true,
   "nim.project": "ue4.nim",
-  "nim.buildCommand": "cpp"
+  "nim.buildCommand": "cpp",
+  "nim.licenseString": "# Copyright 2016 Xored Software, Inc.\n\n"
 }

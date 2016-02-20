@@ -10,6 +10,11 @@ template bindAction*[T](inputComp: ptr UInputComponent, action: static[string], 
             expandObjReference(astToStr(inputComp)), astToStr(action), type(event).name, astToStr(event),
             astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalize()).}
 
+template bindAxis*[T](inputComp: ptr UInputComponent, axisName: static[string], objPtr: T, callback: proc(t: T, val: cfloat)) =
+  {.emit: "$#->BindAxis(`$#`, `$#`, & $#::$#);".format(
+            expandObjReference(astToStr(inputComp)), astToStr(axisName),
+            astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalize()).}
+
 template bindTouch*[T](inputComp: ptr UInputComponent, event: EInputEvent, objPtr: T, callback: proc(t: T, fingerIndex: ETouchIndex, loc: FVector)) =
   {.emit: "$#->BindTouch(`$#`::$#, `$#`, & $#::$#);".format(
             expandObjReference(astToStr(inputComp)), type(event).name, astToStr(event),

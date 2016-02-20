@@ -79,6 +79,11 @@ proc toCppSignature(meth: ClassMethod, methodName: string): string {.compileTime
   let overrideMarker = if meth.isOverride: " override" else: ""
   result = virtualPrefix & meth.returnType & " " & methodName & "(" & toCppArgList(meth.args) & ")" & overrideMarker
 
+proc toCppFieldName(name: string, valueType: string): string {.compileTime.} =
+  result = name
+  if valueType != "bool":
+    result = name.capitalize()
+
 proc genName(name: string): string {.compileTime.} =
   result = name & "_" & $genNameCtr
   inc(genNameCtr)
@@ -290,8 +295,7 @@ proc genType(kind: TypeKind, definition: NimNode, callSite: NimNode): NimNode =
   for field in classDefinition.fields:
     if field.isUProperty:
       fieldDeclarationCode &= "UPROPERTY($#)\n".format(field.uPropertyParamStr)
-    let fieldName = field.name
-    fieldDeclarationCode &= field.valueType & " " & fieldName
+    fieldDeclarationCode &= field.valueType & " " & toCppFieldName(field.name, field.valueType)
     var defaultValueCode = ""
     if field.defaultValue != nil and field.defaultValue.kind != nnkEmpty:
       defaultValueCode = " = " & toCppLiteral(field.defaultValue)
@@ -392,6 +396,10 @@ $#
 
       methDefs.add(meth.node)
 
+  let staticClassMeth = parseStmt("""
+  proc staticClass*(ty: typedesc[$1]): TSubclassOf[$1] {.header: "$2", importc: "$1::StaticClass".}
+""".format(classDefinition.name, headerName))
+  methDecls.add(staticClassMeth)
   let ofPostfix = if primaryParentName != nil : " of " & primaryParentName else: ""
   var typeDecl = parseStmt("""type $1* {.header: "$2", importcpp: "$1", inheritable.} = object$3""".format(classDefinition.name, headerName, ofPostfix))
 
@@ -399,7 +407,9 @@ $#
     typeDecl[0][0][0][1].add(ident("bycopy"))
   var recList = newNimNode(nnkRecList)
   for field in classDefinition.fields:
-    recList.add(newNimNode(nnkIdentDefs).add(field.nameNode, field.nimTypeNode, newEmptyNode()))
+    let pragmaNode = newNimNode(nnkPragma).add(makeStrPragma("importcpp", toCppFieldName(field.name, field.valueType)))
+    let varIdent = newNimNode(nnkPragmaExpr).add(field.nameNode, pragmaNode)
+    recList.add(newNimNode(nnkIdentDefs).add(varIdent, field.nimTypeNode, newEmptyNode()))
   typeDecl[0][0][2][2] = recList
 
   result = newStmtList()

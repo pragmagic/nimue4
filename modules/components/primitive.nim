@@ -31,6 +31,9 @@ class(UPrimitiveComponent of USceneComponent, header: "Components/PrimitiveCompo
   var minDrawDistance: cfloat
   var ldMaxDrawDistance: cfloat
   var cachedMaxDrawDistance: cfloat
+  var bGenerateOverlapEvents: bool
+
+  method setCollisionProfileName(inCollisionProfileName: FName)
 
 # TODO
 

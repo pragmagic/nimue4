@@ -99,6 +99,8 @@ type
 
   FPostProcessSettings* {.header: "Scene.h", importcpp.} = object
 
+  UStaticMesh* {.header: "Engine/StaticMesh.h", importcpp.} = object of UObject
+
 include modules/misc
 
 include modules/components/componentdecls
@@ -121,6 +123,12 @@ type
     # inputComponent {.importcpp: "InputComponent".}: ptr UInputComponent
 
   AInfo* {.header: "GameFramework/Info.h", importcpp.} = object of AActor
+  AGameSession* {.header: "GameFramework/GameSession.h", importcpp.} = object of AInfo
+    ## Acts as a game-specific wrapper around the session interface.
+    ## The game code makes calls to this when it needs to interact with the session interface.
+    ## A game session exists only the server, while running an online game.
+  AGameState* {.header: "GameFramework/GameState.h", importcpp.} = object of AInfo
+    ## GameState is replicated and is valid on servers and clients.
   AWorldSettings* {.header: "GameFramework/WorldSettings.h", importcpp.} = object of AInfo
   AGameMode* {.header: "GameFramework/GameMode.h", importcpp.} = object of AInfo
 
@@ -162,6 +170,7 @@ include modules/components/actor
 include modules/components/input
 
 include modules/components/primitive
+include modules/components/drawfrustum
 include modules/components/brush
 include modules/components/shape
 include modules/components/capsule
@@ -176,6 +185,7 @@ include modules/engine/volume
 include modules/engine/physicsvolume
 
 include modules/components/scene
+include modules/components/springarm
 
 include modules/components/movement
 include modules/components/navmovement
@@ -192,6 +202,7 @@ include modules/playerinput
 include modules/camera/types
 include modules/camera/anim
 include modules/camera/shake
+include modules/components/camera
 
 include modules/sound/base
 
@@ -211,13 +222,15 @@ include modules/core/timermanager
 include modules/actor
 
 include modules/pawn
+include modules/defaultpawn
+include modules/spectatorpawn
 # include modules/character
 # include modules/matineeactor
 
 # include modules/hud
 
 include modules/info
-include modules/localmessage
+include modules/gamemode
 include modules/playerstate
 
 include modules/controller

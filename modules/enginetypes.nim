@@ -1,7 +1,7 @@
 # Copyright 2016 Xored Software, Inc.
 
 type
-  ECollisionChannel* {.header: "Engine/EngineTypes.h", importcpp: "ECollisionChannel".} = enum
+  ECollisionChannel* {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(cint).} = enum
     ECC_WorldStatic,
     ECC_WorldDynamic,
     ECC_Pawn,
@@ -11,7 +11,7 @@ type
     ECC_Vehicle,
     ECC_Destructible
 
-  ECollisionResponse* {.size: sizeof(cint), header: "Engine/EngineTypes.h", importcpp: "ECollisionResponse".} = enum
+  ECollisionResponse* {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(cint).} = enum
     ECR_Ignore,
     ECR_Overlap,
     ECR_Block,
@@ -30,7 +30,7 @@ type
     Touch9,
     Touch10
 
-  EInputEvent* {.header:"Engine/EngineBaseTypes.h", importcpp: "EInputEvent", pure.} = enum
+  EInputEvent* {.header:"Engine/EngineBaseTypes.h", importcpp, size: sizeof(cint).} = enum
     IE_Pressed,
     IE_Released,
     IE_Repeat,
@@ -38,7 +38,7 @@ type
     IE_Axis,
     IE_MAX
 
-  ETickingGroup* {.header: "Engine/EngineBaseTypes.h", importcpp: "ETickingGroup", pure.} = enum
+  ETickingGroup* {.header: "Engine/EngineBaseTypes.h", importcpp, size: sizeof(cint).} = enum
     TG_PrePhysics,    ## Any item that needs to be executed before physics simulation starts.
     TG_StartPhysics,  ## Special tick group that starts physics simulation.
     TG_DuringPhysics, ## Any item that can be run in parallel with our physics simulation work.
@@ -51,7 +51,7 @@ type
     TG_NewlySpawned,  ## Special tick group that is not actually a tick group. After every tick group this is repeatedly re-run until there are no more newly spawned items to run.
     TG_MAX
 
-  ETravelType* {.size: sizeof(cint), header: "Engine/EngineBaseTypes.h", importcpp: "ETickingGroup", pure.} = enum
+  ETravelType* {.header: "Engine/EngineBaseTypes.h", importcpp, size: sizeof(cint).} = enum
     TRAVEL_Absolute,
       ## Absolute URL.
     TRAVEL_Partial,
@@ -78,14 +78,14 @@ type
     Custom, ## Custom cursor shape for platforms that support setting a native cursor shape. Same as specifying None if not set.
     TotalCursorCount ## Number of cursors supported
 
-  ENetRole* {.header: "Engine/EngineTypes.h", importcpp: "ENetRole".} = enum
+  ENetRole* {.header: "Engine/EngineTypes.h", importcpp.} = enum
     ROLE_None, ## No role at all.
     ROLE_SimulatedProxy, ## Locally simulated proxy of this actor.
     ROLE_AutonomousProxy, ## Locally autonomous proxy of this actor.
     ROLE_Authority, ## Authoritative control over the actor.
     ROLE_MAX
 
-  ENetDormancy* {.size: sizeof(cint), header: "Engine/EngineTypes.h", importcpp: "ENetDormancy".} = enum
+  ENetDormancy* {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(cint).} = enum
     DORM_Never, ## This actor can never go network dormant.
     DORM_Awake,
       ## This actor can go dormant, but is not currently dormant.
@@ -100,14 +100,14 @@ type
     DORN_MAX,
       ## Yes, it's a typo, and it is present in UE4 code
 
-  ELevelTick* {.size: sizeof(cint), header: "Engine/EngineTypes.h", importcpp: "ELevelTick".} = enum
+  ELevelTick* {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(cint).} = enum
     ## Type of tick we wish to perform on the level
     LEVELTICK_TimeOnly = 0, ## Update the level time only.
     LEVELTICK_ViewportsOnly = 1, ## Update time and viewports.
     LEVELTICK_All = 2, ## Update all
     LEVELTICK_PauseTick = 3 ## Delta time is zero, we are paused. Components don't tick.
 
-  ENetMode* {.size: sizeof(cint), header: "Engine/EngineTypes.h", importcpp: "ENetMode".} = enum
+  ENetMode* {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(cint).} = enum
     ## The network mode the game is currently running.
     ## see https://docs.unrealengine.com/latest/INT/Gameplay/Networking/Replication/
     NM_Standalone,
@@ -126,7 +126,7 @@ type
 
     NM_MAX
 
-  EAutoReceiveInput* {.size: sizeof(cint), header: "Engine/EngineTypes.h", importcpp: "EAutoReceiveInput".} = enum
+  EAutoReceiveInput* {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(cint).} = enum
     Disabled,
     Player0,
     Player1,
@@ -164,7 +164,7 @@ type
     RemovedFromWorld, ## When the level it is a member of is streamed out.
     Quit ## When the application is being exited.
 
-  EObjectTypeQuery* {.size: sizeof(cint), header: "Engine/EngineTypes.h", importcpp: "EObjectTypeQuery".} = enum
+  EObjectTypeQuery* {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(cint).} = enum
     ObjectTypeQuery1,
     ObjectTypeQuery2,
     ObjectTypeQuery3,
@@ -200,7 +200,7 @@ type
 
     ObjectTypeQuery_MAX
 
-  ETraceTypeQuery* {.size: sizeof(cint), header: "Engine/EngineTypes.h", importcpp: "ETraceTypeQuery".} = enum
+  ETraceTypeQuery* {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(cint).} = enum
     TraceTypeQuery1,
     TraceTypeQuery2,
     TraceTypeQuery3,
@@ -236,37 +236,35 @@ type
 
     TraceTypeQuery_MAX
 
-  ERadialImpulseFalloff* {.size: sizeof(cint), header: "Engine/EngineTypes.h", importcpp.} = enum
+  ERadialImpulseFalloff* {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(cint).} = enum
     ## Enum for controlling the falloff of strength of a radial impulse as a function of distance from Origin.
     RIF_Constant, ## Impulse is a constant strength, up to the limit of its range.
     RIF_Linear, ## Impulse should get linearly weaker the further from origin.
     RIF_MAX
 
-  EAutoPossessAI* {.size: sizeof(uint8), header: "Engine/EngineTypes.h", importcpp, pure.} = enum
+  EAutoPossessAI* {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(uint8), pure.} = enum
     Disabled, ## Feature is disabled (do not automatically possess AI).
     PlacedInWorld, ## Only possess by an AI Controller if Pawn is placed in the world.
     Spawned, ## Only possess by an AI Controller if Pawn is spawned after the world has loaded.
     PlacedInWorldOrSpawned, ## Pawn is automatically possessed by an AI Controller whenever it is created.
 
-  FDamageEvent* {.header: "Engine/EngineTypes.h", importcpp: "FDamageEvent", inheritable.} = object
-  FRadialDamageEvent* {.header: "Engine/EngineTypes.h", importcpp: "FRadialDamageEvent".} = object of FDamageEvent
-  FPointDamageEvent* {.header: "Engine/EngineTypes.h", importcpp: "FPointDamageEvent".} = object of FDamageEvent
+  FDamageEvent* {.header: "Engine/EngineTypes.h", importcpp, inheritable, bycopy.} = object
+  FRadialDamageEvent* {.header: "Engine/EngineTypes.h", importcpp.} = object of FDamageEvent
+  FPointDamageEvent* {.header: "Engine/EngineTypes.h", importcpp.} = object of FDamageEvent
 
-  FTickFunction* {.header: "Engine/EngineTypes.h", importcpp: "FTickFunction", inheritable.} = object
-  FActorComponentTickFunction* {.header: "Engine/EngineTypes.h", importcpp: "FActorComponentTickFunction".} = object of FTickFunction
-  FActorTickFunction* {.header: "Engine/EngineTypes.h", importcpp: "FActorTickFunction".} = object of FTickFunction
-  FCharacterMovementComponentPreClothTickFunction* {.
-    header: "Engine/EngineTypes.h",
-    importcpp: "FCharacterMovementComponentPreClothTickFunction".} = object of FTickFunction
-  FEndClothSimulationFunction* {.header: "Engine/EngineTypes.h", importcpp: "FEndClothSimulationFunction".} = object of FTickFunction
-  FEndPhysicsTickFunction* {.header: "Engine/EngineTypes.h", importcpp: "FEndPhysicsTickFunction".} = object of FTickFunction
-  FPrimitiveComponentPostPhysicsTickFunction* {.header: "Engine/EngineTypes.h", importcpp: "FPrimitiveComponentPostPhysicsTickFunction".} = object of FTickFunction
-  FSkeletalMeshComponentPreClothTickFunction* {.header: "Engine/EngineTypes.h", importcpp: "FSkeletalMeshComponentPreClothTickFunction".} = object of FTickFunction
-  FStartClothSimulationFunction* {.header: "Engine/EngineTypes.h", importcpp: "FStartClothSimulationFunction".} = object of FTickFunction
-  FStartPhysicsTickFunction* {.header: "Engine/EngineTypes.h", importcpp: "FStartPhysicsTickFunction".} = object of FTickFunction
+  FTickFunction* {.header: "Engine/EngineTypes.h", importcpp, inheritable.} = object
+  FActorComponentTickFunction* {.header: "Engine/EngineTypes.h", importcpp.} = object of FTickFunction
+  FActorTickFunction* {.header: "Engine/EngineTypes.h", importcpp.} = object of FTickFunction
+  FCharacterMovementComponentPreClothTickFunction* {.header: "Engine/EngineTypes.h", importcpp.} = object of FTickFunction
+  FEndClothSimulationFunction* {.header: "Engine/EngineTypes.h", importcpp.} = object of FTickFunction
+  FEndPhysicsTickFunction* {.header: "Engine/EngineTypes.h", importcpp.} = object of FTickFunction
+  FPrimitiveComponentPostPhysicsTickFunction* {.header: "Engine/EngineTypes.h", importcpp.} = object of FTickFunction
+  FSkeletalMeshComponentPreClothTickFunction* {.header: "Engine/EngineTypes.h", importcpp.} = object of FTickFunction
+  FStartClothSimulationFunction* {.header: "Engine/EngineTypes.h", importcpp.} = object of FTickFunction
+  FStartPhysicsTickFunction* {.header: "Engine/EngineTypes.h", importcpp.} = object of FTickFunction
 
 
-  EControllerHand* {.size: sizeof(cint), header: "InputCoreTypes.h", importcpp: "EControllerHand::Type", pure.} = enum
+  EControllerHand* {.header: "InputCoreTypes.h", importcpp: "EControllerHand::Type", size: sizeof(cint), pure.} = enum
     Left,
     Right
 
@@ -400,3 +398,17 @@ class(IInputInterface, header: "GenericPlatform/IInputInterface.h"):
 
   method setLightColor(controllerId: int32; color: FColor)
     ## Sets the controller for the given controller.  Ignored if controller does not support a color.
+
+class(FClientReceiveData, header: "GameFramework/LocalMessage.h", bycopy):
+  var localPC: ptr APlayerController
+  var messageType: FName
+  var messageIndex: int32
+  var messageString: FString
+  var relatedPlayerState_1: ptr APlayerState
+  var relatedPlayerState_2: ptr APlayerState
+  var optionalObject: ptr UObject
+  proc makeFClientReceiveData(): FClientReceiveData {.constructor.}
+
+class(ULocalMessage of UObject, header: "GameFramework/LocalMessage.h"):
+  method clientReceive(clientData: var FClientReceiveData) {.noSideEffect.}
+    ## Send message to client
