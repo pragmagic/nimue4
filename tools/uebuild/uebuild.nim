@@ -245,7 +245,7 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
         if file.extractFilename().cmpIgnoreCase(moduleName & ".nim") == 0:
           echo ".nim filename mustn't be equal to module name: " & file.extractFileName()
           quit(-1)
-        let importArg = makeRelative(file, moduleDir)
+        let importArg = makeRelative(file, moduleDir).replace("\\", "\\\\")
         rootFileContent = rootFileContent & "import \"" & importArg & "\"\n"
         expectedFilenames.incl(file.changeFileExt("h").extractFilename())
 
