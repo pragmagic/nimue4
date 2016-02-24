@@ -206,10 +206,13 @@ proc runUnrealBuildTool(engineDir: string; task: TaskType;
   let ubtPlatform = if task == ttPreCook: nimOSToUEPlatform(hostOS) else: platform
 
   var buildTool: string
+  let ubtPath = (engineDir / "Engine" / "Binaries" / "DotNET" / "UnrealBuildTool.exe")
   case hostOS
     of "macosx":
       let runMono = '"' & (engineDir / "Engine" / "Build" / "BatchFiles" / "Mac" / "RunMono.sh") & '"'
-      buildTool = runMono & " \"" & (engineDir / "Engine" / "Binaries" / "DotNET" / "UnrealBuildTool.exe") & '"'
+      buildTool = runMono & " \"" & ubtPath & '"'
+    of "windows":
+      buildTool = ubtPath
     else:
       raise newException(OSError, "Building is not supported for your platform.")
 
