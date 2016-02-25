@@ -34,9 +34,6 @@ declareBuiltinDelegate(FMakeNoiseDelegate, dkDynamicMulticast, "GameFramework/Ac
 when not defined(UE_BUILD_SHIPPING):
   declareBuiltinDelegate(FOnProcessEvent, dkDynamicMulticastRetVal, "GameFramework/Actor.h", bool, actor: ptr AActor, f: ptr UFunction, obj: ptr)
 
-type
-  FComponentInstanceDataCache* {.header: "ComponentInstanceDataCache.h", importcpp: "FComponentInstanceDataCache".} = object
-
 class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
   # AWARE
   # proc getLifetimeReplicatedProps(outLifetimeProps: var TArray[FLifetimeProperty])

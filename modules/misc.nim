@@ -24,4 +24,7 @@ proc overrideBlendableSettings*(this: IBlendableInterface, view: var FSceneView,
     header: "Engine/BlendableInterface.h", importcpp: "OverrideBlendableSettings", noSideEffect.}
   ## @param `weight` 0..1, excluding 0, 1=fully take the values from this object, crash if outside the valid range.
 
+type UAssetUserData {.header: "Engine/AssetUserData.h", importcpp.} = object of UObject
+# proc draw(this: UAssetUserData; pdi: ptr FPrimitiveDrawInterface; view: ptr FSceneView)
+
 # TODO

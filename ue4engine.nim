@@ -27,6 +27,8 @@ include modules/math
 type
   FOutputDevice* {.header: "Misc/OutputDevice.h", importcpp.} = object
   FArchive* {.header: "Serialization/ArchiveBase.h", importcpp.} = object
+  FSceneInterface* {.header: "SceneInterface.h", importcpp.} = object
+  FReferenceCollector* {.header: "UObject/UObjectGlobals.h", importcpp.} = object
 
 # Have to declare many types here, because Nim doesn't support forward declaration
 # and UE types have lots of inter-dependencies
