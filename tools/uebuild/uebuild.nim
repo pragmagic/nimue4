@@ -64,15 +64,6 @@ template withDir(dir: string; body: untyped): untyped =
   finally:
     setCurrentDir(curDir)
 
-template withTempFile(outFileName, desiredName, contents, body: untyped): untyped =
-  # let (_, filename, ext) = splitFile(desiredName)
-  let outFileName = getTempDir() / desiredName
-  writeFile(outFileName, $contents)
-  try:
-    body
-  finally:
-    removeFile(outFileName)
-
 proc makeRelative(filePath: string; dir: string): string =
   assert(dir.isAbsolute())
   let fullPath = expandFilename(filePath)
@@ -217,7 +208,7 @@ proc runUnrealBuildTool(engineDir: string; task: TaskType;
       raise newException(OSError, "Building is not supported for your platform.")
 
   withDir engineDir:
-    exec buildTool & " $# $# $# $# -project=\"$#\" -rocket $#" % [target, ubtPlatform, mode, taskStr, uprojectFile, extraOptions]
+    exec buildTool & " $# $# $# $# -project=\"$#\" -rocket -disableunity $#" % [target, ubtPlatform, mode, taskStr, uprojectFile, extraOptions]
 
 proc cleanModules(projectDir: string) =
   for moduleDir in walkDir(projectDir / "Source"):
@@ -225,15 +216,22 @@ proc cleanModules(projectDir: string) =
       continue
     removeDir (moduleDir.path / nimModuleDirName)
 
+proc getNimOutDir(projectDir: string): string =
+  result = projectDir / "Intermediate" / "Nim"
+
+proc getNimcacheDir(projectDir: string; moduleName: string): string =
+  result = getNimOutDir(projectDir) / "nimcache" / moduleName
+
 proc buildNim(projectDir, projectName, os, cpu: string) =
   let sourceDir = projectDir / "Source"
+  let nimOutDir = getNimOutDir(projectDir)
 
   for sourceDirFile in walkDir(sourceDir):
     if sourceDirFile.kind != pcDir:
       continue
     let moduleDir = sourceDirFile.path
     let moduleName = moduleDir.extractFilename()
-    let nimcacheDir = projectDir / ".nimcache" / moduleName
+    let nimcacheDir = getNimcacheDir(projectDir, moduleName)
 
     let targetDir = moduleDir / nimModuleDirName
 
@@ -241,11 +239,11 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
 
     var rootFileContent = rope("")
     for file in walkDirRec(moduleDir):
-      if file.endsWith(".nim"):
+      if file.endsWith(".nim") and not file.endsWith(".inc.nim"):
         if file.extractFilename().cmpIgnoreCase(moduleName & ".nim") == 0:
           echo ".nim filename mustn't be equal to module name: " & file.extractFileName()
           quit(-1)
-        let importArg = makeRelative(file, moduleDir).replace("\\", "\\\\")
+        let importArg = makeRelative(file, moduleDir).replace("\\", "/")
         rootFileContent = rootFileContent & "import \"" & importArg & "\"\n"
         expectedFilenames.incl(file.changeFileExt("h").extractFilename())
 
@@ -255,25 +253,25 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
     expectedFilenames.incl(moduleName & ".h")
 
     if isNimModule:
-      let agregatorFilename = moduleName & "Agregator" & ".nim"
-      withTempFile(tempFile, agregatorFilename, rootFileContent):
-        # TODO: use -d:release --opt:speed --deadCodeElim:on for release builds
-        var osCpuFlags = ""
-        if os != nil:
-          osCpuFlags &= "--os:" & os
-        if cpu != nil:
-          osCpuFlags &= " --cpu:" & cpu
-        exec "nim cpp -c --noCppExceptions --noMain --experimental " & osCpuFlags &
-            " -p:\"" & getCurrentDir() & "\" -p:\"" & moduleDir & "\" --nimcache:\"" & nimcacheDir &
-            "\" \"" & tempFile & '"'
+      let rootFile = nimOutDir / moduleName & "Root.nim"
+      createDir(rootFile.parentDir())
+      writeFile(rootFile, $rootFileContent)
+      # TODO: use -d:release --opt:speed --deadCodeElim:on for release builds
+      var osCpuFlags = ""
+      if os != nil:
+        osCpuFlags &= "--os:" & os
+      if cpu != nil:
+        osCpuFlags &= " --cpu:" & cpu
+      exec "nim cpp -c --noMain --experimental " & osCpuFlags &
+          " -p:\"" & getCurrentDir() & "\" -p:\"" & moduleDir & "\" --nimcache:\"" & nimcacheDir &
+          "\" \"" & rootFile & '"'
       # export NimMain procedure so that it can be used from module initialization code
-      replaceInFile(nimcacheDir / agregatorFilename.changeFileExt(".cpp"),
+      replaceInFile(nimcacheDir / rootFile.extractFilename().changeFileExt(".cpp"),
                     "N_CDECL(void, NimMain)",
                     "NIM_EXTERNC N_CDECL(void, NimMain)")
 
     for file in walkDirRec(nimcacheDir, {pcFile}):
       if file.endsWith(".h") and not expectedFilenames.contains(extractFilename(file)):
-        echo "Unexpected file: " & extractFilename(file)
         let cppFile = file.changeFileExt("cpp")
         removeFile file
         removeFile cppFile
@@ -304,7 +302,8 @@ proc build(task: TaskType, engineDir, projectDir, projectName, target, mode, pla
     buildNim(projectDir, projectName, os, cpu)
 
 proc clean(engineDir, projectDir, projectName, target, mode, platform, extraOptions: string) =
-  removeDir (projectDir / ".nimcache")
+  let nimOutDir = getNimOutDir(projectDir)
+  removeDir nimOutDir
 
   runUnrealBuildTool(engineDir, ttClean, target, platform, mode, projectDir / projectName & ".uproject", extraOptions)
 
