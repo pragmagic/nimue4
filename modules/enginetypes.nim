@@ -17,6 +17,14 @@ type
     ECR_Block,
     ECR_MAX
 
+  ECollisionEnabled* {.header: "Engine/EngineTypes.h", importcpp: "ECollisionEnabled::Type", size: sizeof(cint).} = enum
+    NoCollision, ## No collision is enabled for this body.
+    QueryOnly,
+      ## This body is used only for collision queries (raycasts, sweeps, and overlaps).
+    PhysicsOnly,
+      ## This body is used only for physics collision.
+    QueryAndPhysics
+      ## This body interacts with all collision (Query and Physics).
 
   ETouchIndex* {.header: "InputCoreTypes.h", importcpp: "ETouchIndex::Type", pure.} = enum
     Touch1,
@@ -109,7 +117,7 @@ type
 
   ENetMode* {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(cint).} = enum
     ## The network mode the game is currently running.
-    ## see https://docs.unrealengine.com/latest/INT/Gameplay/Networking/Replication/
+    ## see https:##docs.unrealengine.com/latest/INT/Gameplay/Networking/Replication/
     NM_Standalone,
       ## Standalone: a game without networking, with one or more local players.
       ## Still considered a server because it has all server functionality.
@@ -163,6 +171,39 @@ type
     EndPlayInEditor, ## When the world is being unloaded because PIE is ending.
     RemovedFromWorld, ## When the level it is a member of is streamed out.
     Quit ## When the application is being exited.
+
+  EComponentMobility* {.header: "Engine/EngineTypes.h", importcpp: "EComponentMobility::Type", pure.} = enum
+    ## Describes how often this component is allowed to move.
+    Static,
+      ## Static objects cannot be moved or changed in game.
+      ## - Allows baked lighting
+      ## - Fastest rendering
+    Stationary,
+      ## A stationary light will only have its shadowing and bounced lighting from static geometry
+      ## baked by Lightmass, all other lighting will be dynamic.
+      ## - Stationary only makes sense for light components
+      ## - It can change color and intensity in game.
+      ## - Can't move
+      ## - Allows partial baked lighting
+      ## - Dynamic shadows
+    Movable
+      ## Movable objects can be moved and changed in game.
+      ## - Totally dynamic
+      ## - Can cast dynamic shadows
+      ## - Slowest rendering
+
+  EComponentSocketType* {.header: "Engine/EngineTypes.h", importcpp: "EComponentSocketType::Type", pure, size: sizeof(cint).} = enum
+    ## Type of a socket on a scene component.
+    Invalid, ## Not a valid socket or bone name.
+    Bone, ## Skeletal bone.
+    Socket ## Socket.
+
+  FComponentSocketDescription* {.header: "Engine/EngineTypes.h", importcpp.} = object
+    ## Info about a socket on a scene component
+    name* {.importcpp: "Name".}: FName
+      ## Name of the socket
+    kind* {.importcpp: "Type".}: EComponentSocketType
+      ## Type of the socket
 
   EObjectTypeQuery* {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(cint).} = enum
     ObjectTypeQuery1,
@@ -248,6 +289,10 @@ type
     Spawned, ## Only possess by an AI Controller if Pawn is spawned after the world has loaded.
     PlacedInWorldOrSpawned, ## Pawn is automatically possessed by an AI Controller whenever it is created.
 
+  FResponseChannel* {.header: "Engine/EngineTypes.h", importcpp.} = object
+    channel* {.importcpp: "Channel".}: FName
+    response* {.importcpp: "Response".}: ECollisionResponse
+
   FDamageEvent* {.header: "Engine/EngineTypes.h", importcpp, inheritable, bycopy.} = object
   FRadialDamageEvent* {.header: "Engine/EngineTypes.h", importcpp.} = object of FDamageEvent
   FPointDamageEvent* {.header: "Engine/EngineTypes.h", importcpp.} = object of FDamageEvent
@@ -262,7 +307,6 @@ type
   FSkeletalMeshComponentPreClothTickFunction* {.header: "Engine/EngineTypes.h", importcpp.} = object of FTickFunction
   FStartClothSimulationFunction* {.header: "Engine/EngineTypes.h", importcpp.} = object of FTickFunction
   FStartPhysicsTickFunction* {.header: "Engine/EngineTypes.h", importcpp.} = object of FTickFunction
-
 
   EControllerHand* {.header: "InputCoreTypes.h", importcpp: "EControllerHand::Type", size: sizeof(cint), pure.} = enum
     Left,
@@ -327,6 +371,122 @@ class(FRigidBodyContactInfo, header: "Engine/EngineTypes.h", bycopy):
   proc make(): FRigidBodyContactInfo {.constructor.}
 
   proc swapOrder()
+
+class(FCollisionResponseContainer, header: "Engine/EngineTypes.h", bycopy):
+  var worldStatic: ECollisionResponse ## 0
+    ## UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=CollisionResponseContainer, meta=(DisplayName="WorldStatic"))
+
+  var worldDynamic: ECollisionResponse ## 1
+    ## UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=CollisionResponseContainer, meta=(DisplayName="WorldDynamic"))
+
+  var pawn: ECollisionResponse ## 2
+    ## UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=CollisionResponseContainer, meta=(DisplayName="Pawn"))
+
+  var visibility: ECollisionResponse ## 3
+    ## UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=CollisionResponseContainer, meta=(DisplayName="Visibility"))
+
+  var camera: ECollisionResponse ## 4
+    ## UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=CollisionResponseContainer, meta=(DisplayName="Camera"))
+
+  var physicsBody: ECollisionResponse ## 5
+    ## UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=CollisionResponseContainer, meta=(DisplayName="PhysicsBody"))
+
+  var vehicle: ECollisionResponse ## 6
+    ## UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=CollisionResponseContainer, meta=(DisplayName="Vehicle"))
+
+  var destructible: ECollisionResponse ## 7
+    ## UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=CollisionResponseContainer, meta=(DisplayName="Destructible"))
+
+  #
+  # Unspecified Engine Trace Channels
+  #
+  var engineTraceChannel1: ECollisionResponse ## 8
+
+  var engineTraceChannel2: ECollisionResponse ## 9
+
+  var engineTraceChannel3: ECollisionResponse ## 10
+
+  var engineTraceChannel4: ECollisionResponse ## 11
+
+  var engineTraceChannel5: ECollisionResponse ## 12
+
+  var engineTraceChannel6: ECollisionResponse ## 13
+
+  # in order to use this custom channels
+  # we recommend to define in your local file
+  # - i.e. #define COLLISION_WEAPON		ECC_GameTraceChannel1
+  # and make sure you customize these it in INI file by
+  #
+  # in DefaultEngine.ini
+  #
+  # [/Script/Engine.CollisionProfile]
+  # GameTraceChannel1="Weapon"
+  #
+  # also in the INI file, you can override collision profiles that are defined by simply redefining
+  # note that Weapon isn't defined in the BaseEngine.ini file, but "Trigger" is defined in Engine
+  # +Profiles=(Name="Trigger",CollisionEnabled=QueryOnly,ObjectTypeName=WorldDynamic, DefaultResponse=ECR_Overlap, CustomResponses=((Channel=Visibility, Response=ECR_Ignore), (Channel=Weapon, Response=ECR_Ignore)))
+
+  var gameTraceChannel1: ECollisionResponse ## 14
+
+  var gameTraceChannel2: ECollisionResponse ## 15
+
+  var gameTraceChannel3: ECollisionResponse ## 16
+
+  var gameTraceChannel4: ECollisionResponse ## 17
+
+  var gameTraceChannel5: ECollisionResponse ## 18
+
+  var gameTraceChannel6: ECollisionResponse ## 19
+
+  var gameTraceChannel7: ECollisionResponse ## 20
+
+  var gameTraceChannel8: ECollisionResponse ## 21
+
+  var gameTraceChannel9: ECollisionResponse ## 22
+
+  var gameTraceChannel10: ECollisionResponse ## 23
+
+  var gameTraceChannel11: ECollisionResponse ## 24
+
+  var gameTraceChannel12: ECollisionResponse ## 25
+
+  var gameTraceChannel13: ECollisionResponse ## 26
+
+  var gameTraceChannel14: ECollisionResponse ## 27
+
+  var gameTraceChannel15: ECollisionResponse ## 28
+
+  var gameTraceChannel16: ECollisionResponse ## 28
+
+  var gameTraceChannel17: ECollisionResponse ## 30
+
+  var gameTraceChannel18: ECollisionResponse
+
+  proc makeFCollisionResponseContainer() {.constructor.}
+    ## This constructor will set all channels to ECR_Block
+  proc makeFCollisionResponseContainer(defaultResponse: ECollisionResponse) {.constructor.}
+
+  proc setResponse(channel: ECollisionChannel; newResponse: ECollisionResponse)
+    ## Set the response of a particular channel in the structure.
+
+  proc setAllChannels(newResponse: ECollisionResponse)
+    ## Set all channels to the specified response
+
+  proc replaceChannels(oldResponse, newResponse: ECollisionResponse)
+    ## Replace the channels matching the old response with the new response
+
+  proc getResponse(channel: ECollisionChannel): ECollisionResponse {.noSideEffect.}
+    ## Returns the response set on the specified channel
+
+  proc updateResponsesFromArray(channelResponses: var TArray[FResponseChannel])
+    ## Set all channels from ChannelResponse Array
+  proc fillArrayFromResponses(channelResponses: var TArray[FResponseChannel]): int32
+
+  proc createMinContainer(a, b: FCollisionResponseContainer): FCollisionResponseContainer {.isStatic.}
+    ## Take two response containers and create a new container where each element
+    ## is the 'min' of the two inputs (ie Ignore and Block results in Ignore)
+
+  proc getDefaultResponseContainer(): FCollisionResponseContainer {.isStatic.}
 
 class(FCollisionImpactData, header: "Engine/EngineTypes.h", bycopy):
   var contactInfos: TArray[FRigidBodyContactInfo]

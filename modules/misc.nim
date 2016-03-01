@@ -1,5 +1,15 @@
 # Copyright 2016 Xored Software, Inc.
 
+type ERHIFeatureLevel* {.header: "RHIDefinitions.h", importcpp: "ERHIFeatureLevel::Type", size: sizeof(cint), pure.} = enum
+    ## The RHI's feature level indicates what level of support can be relied upon.
+    ## Note: these are named after graphics API's like ES2 but a feature level can be used with a different API (eg ERHIFeatureLevel::ES2 on D3D11)
+    ## As long as the graphics API supports all the features of the feature level (eg no ERHIFeatureLevel::SM5 on OpenGL ES2)
+    ES2, ## Feature level defined by the core capabilities of OpenGL ES2.
+    ES3_1, ## Feature level defined by the core capabilities of OpenGL ES3.1 & Metal.
+    SM4, ## Feature level defined by the capabilities of DX10 Shader Model 4.
+    SM5, ## Feature level defined by the capabilities of DX11 Shader Model 5.
+    Num
+
 type FGuid* {.header: "Misc/Guid.h", importcpp.} = object
   A*: uint32
   B*: uint32

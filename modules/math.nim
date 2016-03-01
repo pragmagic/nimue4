@@ -36,7 +36,7 @@ type
     None,
     X,
     Y,
-    Z,
+    Z
 
 class(FVector, header: "Math/Vector.h", bycopy):
   var x: cfloat
@@ -158,6 +158,15 @@ type
   FSphere* {.header: "Math/Sphere.h", importcpp.} = object
     center* {.importcpp: "Center".}: FVector
     w* {.importcpp: "W".}: cfloat
+
+  FBoxSphereBounds* {.header: "Math/BoxSphereBounds.h", importcpp.} = object
+    ## Structure for a combined axis aligned bounding box and bounding sphere with the same origin. (28 bytes).
+    origin*: FVector
+      ## Holds the origin of the bounding box and sphere.
+    boxExtent*: FVector
+      ## Holds the extent of the bounding box.
+    sphereRadius*: float
+      ## Holds the radius of the bounding sphere.
 
 class(FVector2D, header: "Math/Vector2D.h", bycopy):
   var x: cfloat
