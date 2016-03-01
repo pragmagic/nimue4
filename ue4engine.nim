@@ -98,6 +98,8 @@ type
   UCheatManager* {.header: "GameFramework/CheatManager.h", importcpp.} = object of UObject
 
   UMaterialInterface* {.header: "Materials/MaterialInterface.h", importcpp.} = object of UObject
+  UMaterialInstance* {.header: "Materials/MaterialInstance.h", importcpp.} = object of UMaterialInterface
+  UMaterialInstanceDynamic* {.header: "Materials/MaterialInstanceDynamic.h", importcpp.} = object of UMaterialInstance
 
   FPostProcessSettings* {.header: "Scene.h", importcpp.} = object
 

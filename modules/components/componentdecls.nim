@@ -27,3 +27,6 @@ type
   UMovementComponent* {.header: "Components/MovementComponent.h", importcpp.} = object of UActorComponent
   UNavMovementComponent* {.header: "GameFramework/NavMovementComponent.h", importcpp.} = object of UMovementComponent
   UPawnMovementComponent* {.header: "GameFramework/PawnMovementComponent.h", importcpp.} = object of UNavMovementComponent
+
+  ULightComponentBase* {.header: "Components/LightComponentBase.h", importcpp.}  = object of USceneComponent
+  ULightComponent* {.header: "Components/LightComponent.h", importcpp.} = object of ULightComponentBase

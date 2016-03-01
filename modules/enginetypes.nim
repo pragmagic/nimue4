@@ -165,6 +165,23 @@ type
       ## Calculates the relative scale so that the final world scale of the component remains the same.
     SnapToTargetIncludingScale ## Snaps entire transform to target, including scale.
 
+  ESceneDepthPriorityGroup* {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(cint).} = enum
+    ## A priority for sorting scene elements by depth.
+    ## Elements with higher priority occlude elements with lower priority, disregarding distance.
+    SDPG_World,
+      ## World scene DPG.
+    SDPG_Foreground,
+      ## Foreground scene DPG.
+    SDPG_MAX
+
+  EIndirectLightingCacheQuality* {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(cint).} = enum
+    ILCQ_Off,
+      ## The indirect lighting cache will be disabled for this object, so no GI from stationary lights on movable objects.
+    ILCQ_Point,
+      ## A single indirect lighting sample computed at the bounds origin will be interpolated which fades over time to newer results.
+    ILCQ_Volume
+      ## The object will get a 5x5x5 stable volume of interpolated indirect lighting, which allows gradients of lighting intensity across the receiving object.
+
   EEndPlayReason* {.header: "Engine/EngineTypes.h", importcpp: "EEndPlayReason::Type", pure.} = enum
     Destroyed, ## When the Actor or Component is explicitly destroyed.
     LevelTransition, ## When the world is being unloaded for a level transition.
@@ -289,6 +306,25 @@ type
     Spawned, ## Only possess by an AI Controller if Pawn is spawned after the world has loaded.
     PlacedInWorldOrSpawned, ## Pawn is automatically possessed by an AI Controller whenever it is created.
 
+  EWalkableSlopeBehavior* {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(cint).} = enum
+    ## Controls behavior of WalkableSlopeOverride, determining how to affect walkability of surfaces for Characters.
+    ## @see FWalkableSlopeOverride
+    ## @see UCharacterMovementComponent::GetWalkableFloorAngle(), UCharacterMovementComponent::SetWalkableFloorAngle()
+    WalkableSlope_Default,
+      ## Don't affect the walkable slope. Walkable slope angle will be ignored.
+    WalkableSlope_Increase,
+      ## Increase walkable slope.
+      ## Makes it easier to walk up a surface, by allowing traversal over higher-than-usual angles.
+      ## @see FWalkableSlopeOverride::WalkableSlopeAngle
+    WalkableSlope_Decrease,
+      ## Decrease walkable slope.
+      ## Makes it harder to walk up a surface, by restricting traversal to lower-than-usual angles.
+      ## @see FWalkableSlopeOverride::WalkableSlopeAngle
+    WalkableSlope_Unwalkable,
+      ## Make surface unwalkable.
+      ## Note: WalkableSlopeAngle will be ignored.
+    WalkableSlope_Max
+
   FResponseChannel* {.header: "Engine/EngineTypes.h", importcpp.} = object
     channel* {.importcpp: "Channel".}: FName
     response* {.importcpp: "Response".}: ECollisionResponse
@@ -311,6 +347,66 @@ type
   EControllerHand* {.header: "InputCoreTypes.h", importcpp: "EControllerHand::Type", size: sizeof(cint), pure.} = enum
     Left,
     Right
+
+  FOverlapResult* {.header: "Engine/EngineTypes.h", importcpp.} = object
+    ## Structure containing information about one hit of an overlap test
+    actor* {.importcpp: "Actor".}: TWeakObjectPtr[AActor]
+      ## Actor that the check hit.
+    component* {.importcpp: "Component".}: TWeakObjectPtr[UPrimitiveComponent]
+      ## PrimitiveComponent that the check hit.
+    itemIndex* {.importcpp: "ItemIndex".}: int32
+      ## This is the index of the overlapping item.
+      ## For DestructibleComponents, this is the ChunkInfo index.
+      ## For SkeletalMeshComponents this is the Body index or INDEX_NONE for single body
+    bBlockingHit*: bool
+      ## Indicates if this hit was requesting a block - if false, was requesting a touch instead
+
+  FWalkableSlopeOverride* {.header: "Engine/EngineTypes.h", importcpp.} = object
+    ## Struct allowing control over "walkable" normals,
+    ## by allowing a restriction or relaxation of what steepness is normally walkable.
+    walkableSlopeBehavior {.importcpp: "WalkableSlopeBehavior".}: EWalkableSlopeBehavior
+    walkableSlopeAngle {.importcpp: "WalkableSlopeAngle".}: cfloat
+
+  FMTDResult* {.header: "Engine/EngineTypes.h", importcpp.} = object
+    ## Structure containing information about minimum translation direction (MTD)
+    direction* {.importcpp: "Direction".}: FVector
+      ## Normalized direction of the minimum translation required to fix penetration.
+    distance* {.importcpp: "Distance".}: cfloat
+      ## Distance required to move along the MTD vector (Direction).
+
+  EMaterialQualityLevel* {.header: "SceneTypes.h", importcpp: "EMaterialQualityLevel::Type", pure, size: sizeof(cint).} = enum
+    ## Quality levels that a material can be compiled for.
+    Low,
+    High,
+    Medium,
+    Num
+
+  ELightMapInteractionType* {.header: "SceneTypes.h", importcpp, size: sizeof(cint).} = enum
+    ## The types of interactions between a light and a primitive.
+    LMIT_None = 0,
+    LMIT_Texture = 2,
+    LMIT_NumBits = 3
+
+  FRigidBodyState* {.header: "Engine/EngineTypes.h", importcpp.} = object
+    ## TODO
+
+  FRigidBodyErrorCorrection* {.header: "Engine/EngineTypes.h", importcpp.} = object
+    ## Rigid body error correction data
+    linearDeltaThresholdSq* {.importcpp: "LinearDeltaThresholdSq".}: cfloat
+      ## max squared position difference to perform velocity adjustment
+    linearInterpAlpha* {.importcpp: "LinearInterpAlpha".}: cfloat
+      ## strength of snapping to desired linear velocity
+    linearRecipFixTime* {.importcpp: "LinearRecipFixTime".}: cfloat
+      ## inverted duration after which linear velocity adjustment will fix error
+    angularDeltaThreshold* {.importcpp: "AngularDeltaThreshold".}: cfloat
+      ## max squared angle difference (in radians) to perform velocity adjustment
+    angularInterpAlpha* {.importcpp: "AngularInterpAlpha".}: cfloat
+      ## strength of snapping to desired angular velocity
+    angularRecipFixTime* {.importcpp: "AngularRecipFixTime".}: cfloat
+      ## inverted duration after which angular velocity adjustment will fix error
+    bodySpeedThresholdSq* {.importcpp: "BodySpeedThresholdSq".}: cfloat
+      ## min squared body speed to perform velocity adjustment
+
 
 class(FHitResult, header: "Engine/EngineTypes.h", bycopy):
     var bBlockingHit: bool

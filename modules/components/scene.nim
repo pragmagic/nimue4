@@ -64,7 +64,7 @@ class(FScopedMovementUpdate, header: "Components/SceneComponent.h", bycopy):
   proc getPendingBlockingHits(): TArray[FHitResult] {.noSideEffect.}
     ## Returns the list of pending blocking hits, which will be used for notifications once the move is committed.
 
-  # These methods are intended only to be used by SceneComponent and derived classes.
+# These methods are intended only to be used by SceneComponent and derived classes.
 
   proc appendOverlapsAfterMove(NewPendingOverlaps: TArray[FOverlapInfo]; bSweep: bool; bIncludesOverlapsAtEnd: bool)
     ## Add overlaps to the queued overlaps array. This is intended for use only by SceneComponent and its derived classes whenever movement is performed.

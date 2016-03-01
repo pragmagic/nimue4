@@ -1,5 +1,7 @@
 # Copyright 2016 Xored Software, Inc.
 
+## Types that didn't fit into other interfaced modules for now
+
 type ERHIFeatureLevel* {.header: "RHIDefinitions.h", importcpp: "ERHIFeatureLevel::Type", size: sizeof(cint), pure.} = enum
     ## The RHI's feature level indicates what level of support can be relied upon.
     ## Note: these are named after graphics API's like ES2 but a feature level can be used with a different API (eg ERHIFeatureLevel::ES2 on D3D11)
@@ -17,6 +19,16 @@ type FGuid* {.header: "Misc/Guid.h", importcpp.} = object
   D*: uint32
 
 type FDateTime* {.header: "Misc/DateTime.h", importcpp.} = object
+type FThreadSafeCounter* {.header: "HAL/ThreadingBase.h", importcpp.} = object
+type FPrimitiveSceneProxy* {.header: "PrimitiveSceneProxy.h", importcpp.} = object
+type FRenderCommandFence* {.header: "RenderCommandFence.h", importcpp.} = object
+
+type FStaticLightingPrimitiveInfo* {.header: "StaticLighting.h", importcpp.} = object
+type FLightingBuildOptions* {.header: "LightingBuildOptions.h", importcpp.} = object
+type FEngineShowFlags* {.header: "ShowFlags.h", importcpp.} = object
+type FConvexVolume* {.header: "ConvexVolume.h", importcpp.} = object
+
+type FNavigableGeometryExport* {.header: "AI/NavigationSystemHelpers.h", importcpp.} = object
 
 proc ueLog*(s: wstring) {.importcpp: "UE_LOG(LogTemp, Log, @)", nodecl, varargs.}
 
