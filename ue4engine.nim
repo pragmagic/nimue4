@@ -169,6 +169,7 @@ include modules/containers/subclassof
 
 include modules/enginetypes
 include modules/physics/types
+include modules/input/inputcoretypes
 
 include modules/components/actor
 include modules/components/input
@@ -198,8 +199,6 @@ include modules/components/pawnmovement
 include modules/components/pawnnoiseemitter
 
 include "modules/core/object"
-
-include modules/input/inputcoretypes
 
 include modules/playerinput
 

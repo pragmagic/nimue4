@@ -38,7 +38,7 @@ type
     ## Information about a streaming texture that a primitive uses for rendering.
     texture* {.importcpp: "Texture".}: ptr UTexture
     bounds* {.importcpp: "Bounds".}: FSphere
-    texelFactor* {.importcpp: "TexelFactor".}: float
+    texelFactor* {.importcpp: "TexelFactor".}: cfloat
 
 class(FOverlapInfo, header: "Components/SceneComponent.h", bycopy):
   ## Overlap info consisting of the primitive and the body that is overlapping
