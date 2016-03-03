@@ -119,9 +119,10 @@ proc extractTypeDefinitions(contents: var string): Rope =
   result = extractByPeg(contents, peg("'$#' @ '$#'" % [beginTypeMarker, endTypeMarker]))
 
 proc extractIncludes(contents: var string, filename: string): Rope =
-  let includePeg = peg("""s <- wsNoEol '#include' ws '"' !'$#.h' [^"]+ '"' ws
+  let includePeg = peg("""s <- wsNoEol '#include' ws '"' !'$#.h' [^"]+ '"' wsWithEol
                          comment <- '/*' @ '*/' / '//' .*
                          wsNoEol <- (comment / !\n \s+)*
+                         wsWithEol <- (comment / [\9\11\12]+)* \n
                          ws <- (comment / \s+)* """.format(filename))
   result = extractByPeg(contents, includePeg)
 
@@ -164,6 +165,10 @@ proc processFile(file, moduleName: string; outDir: string) =
       headerFileContents = headerFileContents.replace(exportMarker, exportMacro)
 
     writeFile(outHeaderDir / outFile.extractFilename().changeFileExt("h"), headerFileContents)
+
+    let headerIncludeString = "#include \"$#.h\"" % filename
+    if not contents.contains(headerIncludeString):
+      contents.insert(headerIncludeString, intBitsDefEnd + 1)
 
   contents.insert(moduleIncludeString, intBitsDefEnd + 1)
   writeFile(outFile, contents)
