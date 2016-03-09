@@ -334,6 +334,7 @@ type
   FPointDamageEvent* {.header: "Engine/EngineTypes.h", importcpp.} = object of FDamageEvent
 
   FTickFunction* {.header: "Engine/EngineTypes.h", importcpp, inheritable.} = object
+    bCanEverTick* : bool
   FActorComponentTickFunction* {.header: "Engine/EngineTypes.h", importcpp.} = object of FTickFunction
   FActorTickFunction* {.header: "Engine/EngineTypes.h", importcpp.} = object of FTickFunction
   FCharacterMovementComponentPreClothTickFunction* {.header: "Engine/EngineTypes.h", importcpp.} = object of FTickFunction

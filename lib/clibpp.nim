@@ -91,7 +91,7 @@ proc makeProcedure(className, ns: string, statement: NimNode, classNameNode: Nim
 
 proc buildProceduresFromVar(className: NimNode; ns, header: string; varIdent, varType: NimNode): seq[NimNode] =
   let setterName = postfix(newNimNode(nnkAccQuoted).add(varIdent, ident("=")), "*")
-  let getter = newProc(postfix(varIdent, "*"), [varType, newIdentDefs(ident("this"), className.copyNimTree())], newEmptyNode())
+  let getter = newProc(postfix(varIdent, "*"), [newNimNode(nnkVarTy).add(varType), newIdentDefs(ident("this"), className.copyNimTree())], newEmptyNode())
   let setter = newProc(setterName, [newEmptyNode(),
                                   newIdentDefs(ident("this"), className.copyNimTree()), # newNimNode(nnkVarTy).add(ident(classname))),
                                   newIdentDefs(ident("val"), varType)], newEmptyNode())
