@@ -64,14 +64,6 @@ template withDir(dir: string; body: untyped): untyped =
   finally:
     setCurrentDir(curDir)
 
-proc makeRelative(filePath: string; dir: string): string =
-  assert(dir.isAbsolute())
-  let fullPath = expandFilename(filePath)
-  let fullDirPath = expandFilename(dir)
-  assert(fullPath.startsWith(fullDirPath))
-
-  result = fullPath[fullDirPath.len + 1 .. ^1]
-
 proc exec(command: string) =
   echo "[exec] " & command
   let retCode = execCmd(command)
@@ -248,7 +240,7 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
         if file.extractFilename().cmpIgnoreCase(moduleName & ".nim") == 0:
           echo ".nim filename mustn't be equal to module name: " & file.extractFileName()
           quit(-1)
-        let importArg = makeRelative(file, moduleDir).replace("\\", "/")
+        let importArg = file.replace("\\", "/")
         rootFileContent = rootFileContent & "import \"" & importArg & "\"\n"
         expectedFilenames.incl(file.changeFileExt("h").extractFilename())
 
