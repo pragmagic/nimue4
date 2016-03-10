@@ -326,6 +326,9 @@ converter toName*(t: wstring): FName {.
 converter toString*(t: wstring): FString {.
   header: "Containers/UnrealString.h", importcpp: "'0(@)", nodecl.}
 
+converter toString*(t: cstring): FString {.
+  header: "Containers/UnrealString.h", importcpp: "'0(@)", nodecl.}
+
 proc toText(s: FString): FText {.
   noSideEffect, header: "Internationalization/Text.h", importcpp: "'0::FromString(@)", nodecl.}
 
