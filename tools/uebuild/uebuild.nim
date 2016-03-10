@@ -165,6 +165,14 @@ proc processFile(file, moduleName: string; outDir: string) =
   contents.insert(moduleIncludeString, intBitsDefEnd + 1)
   writeFile(outFile, contents)
 
+proc makeRelative(filePath: string; dir: string): string =
+  assert(dir.isAbsolute())
+  let fullPath = expandFilename(filePath)
+  let fullDirPath = expandFilename(dir)
+  assert(fullPath.startsWith(fullDirPath))
+
+  result = fullPath[fullDirPath.len + 1 .. ^1]
+
 proc createModuleFilesIfNeeded(targetDir, moduleName: string; isNimModule, isPrimaryModule: bool) =
   let moduleFile = targetDir / "Private" / moduleName & ".cpp"
   let moduleHeaderFile = targetDir / "Public" / moduleName & ".h"
@@ -205,7 +213,8 @@ proc runUnrealBuildTool(engineDir: string; task: TaskType;
       raise newException(OSError, "Building is not supported for your platform.")
 
   withDir engineDir:
-    exec buildTool & " $# $# $# $# -project=\"$#\" -rocket -disableunity $#" % [target, ubtPlatform, mode, taskStr, uprojectFile, extraOptions]
+    exec buildTool & " $# $# $# $# -project=\"$#\" -rocket -disableunity $#" %
+      [target, ubtPlatform, mode, taskStr, uprojectFile, extraOptions]
 
 proc cleanModules(projectDir: string) =
   for moduleDir in walkDir(projectDir / "Source"):
@@ -219,10 +228,12 @@ proc getNimOutDir(projectDir: string): string =
 proc getNimcacheDir(projectDir: string; moduleName: string): string =
   result = getNimOutDir(projectDir) / "nimcache" / moduleName
 
-proc createNimCfg(outDir: string) =
+proc createNimCfg(outDir: string, moduleDir: string) =
   var contents = ""
   if hostOS == "windows":
     contents.add("cc=vcc\n")
+  contents.add("--path:\"" & moduleDir & "\"\n")
+  contents.add("--path:\"" & getCurrentDir() & "\"\n")
   contents.add("--experimental\n")
   writeFile(outDir / "nim.cfg", contents)
 
@@ -247,7 +258,7 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
         if file.extractFilename().cmpIgnoreCase(moduleName & ".nim") == 0:
           echo ".nim filename mustn't be equal to module name: " & file.extractFileName()
           quit(-1)
-        let importArg = file.replace("\\", "/")
+        let importArg = makeRelative(file, moduleDir).replace("\\", "/")
         rootFileContent = rootFileContent & "import \"" & importArg & "\"\n"
         expectedFilenames.incl(file.changeFileExt("h").extractFilename())
 
@@ -260,7 +271,7 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
       let rootFile = nimOutDir / moduleName & "Root.nim"
       createDir(nimOutDir)
       writeFile(rootFile, $rootFileContent)
-      createNimCfg(nimOutDir)
+      createNimCfg(nimOutDir, moduleDir)
       # TODO: use -d:release --deadCodeElim:on for release builds
       var osCpuFlags = ""
       if os != nil:
