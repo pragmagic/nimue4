@@ -30,10 +30,25 @@ type FConvexVolume* {.header: "ConvexVolume.h", importcpp.} = object
 
 type FNavigableGeometryExport* {.header: "AI/NavigationSystemHelpers.h", importcpp.} = object
 
-proc ueLog*(s: wstring) {.importcpp: "UE_LOG(LogTemp, Log, @)", nodecl, varargs.}
+proc rawUELog*(s: wstring) {.importcpp: "UE_LOG(LogTemp, Log, @)", nodecl, varargs.}
 
 template ueLog*(s: static[string]) =
-  uelog(TEXT(s))
+  rawUELog(TEXT(s))
+
+macro ueLog*(formatString: string{lit}, args: varargs[expr]): expr =
+  result = callsite()
+  result[0] = newIdentNode("rawUELog")
+  result[1] = newCall("TEXT", result[1])
+
+  for i in 0 .. <args.len:
+    if $args[i].getType == "string" or
+       $args[i].getType == "cstring":
+      result[i + 2] = newCall("toFString", result[i + 2])
+
+  echo repr result
+
+proc ueLog*[T](t: T) {.inline.} =
+  rawUELog(TEXT("%s"), toFString($t))
 
 proc ueCast*[T](v: ptr UObject): ptr T {.importcpp: "(Cast<'*0>(@))", nodecl.}
 proc ueNew*[T](): ptr T {.importcpp: "(NewObject<'*0>())", nodecl.}

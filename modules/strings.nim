@@ -326,9 +326,9 @@ converter toFName*(s: wstring): FName {.
 converter toFString*(s: wstring): FString {.
   header: "Containers/UnrealString.h", importcpp: "'0(@)", nodecl.}
 
-converter toFString*(s: cstring): FString {.importcpp: "ANSI_TO_TCHAR(@)", nodecl.}
+proc toFString*(s: cstring): FString {.importcpp: "ANSI_TO_TCHAR(@)", nodecl.}
 
-converter toWideString*(s: cstring): wstring {.importcpp: "ANSI_TO_TCHAR(@)", nodecl.}
+proc toWideString*(s: cstring): wstring {.importcpp: "ANSI_TO_TCHAR(@)", nodecl.}
 
 proc toText(s: FString): FText {.
   noSideEffect, header: "Internationalization/Text.h", importcpp: "'0::FromString(@)", nodecl.}
