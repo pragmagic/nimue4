@@ -232,8 +232,8 @@ proc createNimCfg(outDir: string, moduleDir: string) =
   var contents = "--define:CPP\n"
   if hostOS == "windows":
     contents.add("cc=vcc\n")
-  contents.add("--path:\"" & moduleDir & "\"\n")
-  contents.add("--path:\"" & getCurrentDir() & "\"\n")
+  contents.add("--path:\"" & moduleDir.replace("\\", "/") & "\"\n")
+  contents.add("--path:\"" & getCurrentDir().replace("\\", "/") & "\"\n")
   contents.add("--experimental\n")
   writeFile(outDir / "nim.cfg", contents)
 
