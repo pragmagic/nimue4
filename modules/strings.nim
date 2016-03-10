@@ -327,7 +327,7 @@ converter toString*(t: wstring): FString {.
   header: "Containers/UnrealString.h", importcpp: "'0(@)", nodecl.}
 
 converter toString*(t: cstring): FString {.
-  header: "Containers/UnrealString.h", importcpp: "'0(@)", nodecl.}
+  header: "Containers/UnrealString.h", importcpp: "'0(ANSI_TO_TCHAR(@))", nodecl.}
 
 proc toText(s: FString): FText {.
   noSideEffect, header: "Internationalization/Text.h", importcpp: "'0::FromString(@)", nodecl.}
