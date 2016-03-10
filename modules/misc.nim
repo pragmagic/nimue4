@@ -45,8 +45,6 @@ macro ueLog*(formatString: string{lit}, args: varargs[expr]): expr =
        $args[i].getType == "cstring":
       result[i + 2] = newCall("toFString", result[i + 2])
 
-  echo repr result
-
 proc ueLog*[T](t: T) {.inline.} =
   rawUELog(TEXT("%s"), toFString($t))
 
