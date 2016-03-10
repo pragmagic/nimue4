@@ -229,7 +229,7 @@ proc getNimcacheDir(projectDir: string; moduleName: string): string =
   result = getNimOutDir(projectDir) / "nimcache" / moduleName
 
 proc createNimCfg(outDir: string, moduleDir: string) =
-  var contents = ""
+  var contents = "--define:CPP\n"
   if hostOS == "windows":
     contents.add("cc=vcc\n")
   contents.add("--path:\"" & moduleDir & "\"\n")
