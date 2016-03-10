@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-import macros, strutils
+import macros, strutils, ropes
 
 type
   ParseError* = object of Exception
@@ -86,16 +86,18 @@ proc fromStr*[Enum](val: string): Enum {.compileTime.} =
       return item
   raise newException(ValueError, "Unknown enum value: " & val)
 
-proc toCppType*(typeNode: NimNode): string =
+proc toCppType*(typeNode: NimNode): Rope =
   ## Returns string representing C++ type corresponding to the specified Nim type
   ## Wraps non-primitive types in backtricks (`) for further use with .emit pragma
 
   case typeNode.kind:
   of nnkBracketExpr:
-    var templateTypes: seq[string] = @[]
+    var templateParams: Rope
     for i in 1 .. < typeNode.len:
-      templateTypes.add(toCppType(typeNode[i]))
-    result = $(typeNode[0].ident) & "<" & templateTypes.join(", ") & ">"
+      if templateParams.len != 0:
+        templateParams.add(", ")
+      templateParams.add(toCppType(typeNode[i]))
+    result = rope($typeNode[0].ident) & "<" & templateParams & ">"
   of nnkVarTy:
     result = toCppType(typeNode[0]) & "&"
   of nnkPtrTy:
@@ -103,16 +105,16 @@ proc toCppType*(typeNode: NimNode): string =
   of nnkIdent:
     case $(typeNode.ident):
     of "float32", "cfloat":
-      result = "float"
+      result = rope("float")
     of "float64", "cdouble":
-      result = "double"
+      result = rope("double")
     of "float", "uint", "int":
       raise newException(ParseError, lineinfo(typeNode) &
         ": avoid using types of undefined size - use size-defined alternative instead (e.g. float32, int32)")
     of "bool", "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64":
-      result = $(typeNode.ident)
+      result = rope($(typeNode.ident))
     else:
-      result = "`" & $(typeNode.ident) & "`"
+      result = rope("`") & $(typeNode.ident) & "`"
   else:
     raise newException(ParseError, lineinfo(typeNode) & ": type expected")
 

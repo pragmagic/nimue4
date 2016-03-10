@@ -17,7 +17,7 @@ const MulticastDelegates = {dkMulticast, dkMulticastRetVal, dkDynamicMulticast, 
 
 proc declareDelegate(name: NimNode,
                      kind: DelegateKind,
-                     header: string,
+                     header: NimNode,
                      procParams: seq[NimNode] = @[],
                      retType: NimNode = newEmptyNode()): NimNode =
   let callbackParams = newNimNode(nnkFormalParams).add(retType, newIdentDefs(ident("t"), ident("T"))).add(procParams)
@@ -59,7 +59,7 @@ proc declareDelegate(name: NimNode,
     body = newEmptyNode(),
     params = @[retType, newIdentDefs(ident("delegate"), name)] & @procParams
   )
-  let headerPragma = newNimNode(nnkExprColonExpr).add(ident("header"), newStrLitNode(header))
+  let headerPragma = newNimNode(nnkExprColonExpr).add(ident("header"), header)
   executeProc.pragma = newNimNode(nnkPragma)
   executeProc.pragma.add(headerPragma)
 
@@ -74,15 +74,15 @@ proc declareDelegate(name: NimNode,
   executeIfBoundProc.pragma.add(importcppExecuteIfBoundPragma)
 
   result = parseStmt("""
-type $1* {.importcpp: "$1", header: "$2".} = object
-proc isBound*(delegate: $1) {.importcpp: "#.IsBound(@)", header: "$2".}
-""".format($(name.ident), header))
+type $1* {.importcpp: "$1", header: $2.} = object
+proc isBound*(delegate: $1) {.importcpp: "#.IsBound(@)", header: $2.}
+""".format($(name.ident), header.toStrLit.strVal))
 
   let dynamicProcs = parseStmt("""
-proc bindDynamic*(delegate: $1, obj: ptr, methodName: string) {.importcpp: "BindDynamic", header: "$2".}
-proc addDynamic*(delegate: $1, obj: ptr, methodName: string) {.importcpp: "AddDynamic", header: "$2".}
-proc removeDynamic*(delegate: $1, obj: ptr, methodName: string) {.importcpp: "RemoveDynamic", header: "$2".}
-""".format($(name.ident), header))
+proc bindDynamic*(delegate: $1, obj: ptr, methodName: string) {.importcpp: "BindDynamic", header: $2.}
+proc addDynamic*(delegate: $1, obj: ptr, methodName: string) {.importcpp: "AddDynamic", header: $2.}
+proc removeDynamic*(delegate: $1, obj: ptr, methodName: string) {.importcpp: "RemoveDynamic", header: $2.}
+""".format($(name.ident), header.toStrLit.strVal))
 
   if DynamicDelegates.contains(kind):
     for statement in dynamicProcs:
@@ -131,13 +131,13 @@ macro UEDelegate*(name: expr, kindNode: DelegateKind): stmt {.immediate.} =
     of 1: "_OneParam"
     else: "_" & numToWord(procParams.len) & "Params"
 
-  var typesAndNamesStr = ""
+  var typesAndNamesStr: Rope
   for param in procParams:
-    typesAndNamesStr &= ", " & toCppType(param[1])
+    typesAndNamesStr.add(", " & toCppType(param[1]))
 
     if DynamicDelegates.contains(kind):
       # the invocation is different for dynamic delegates - names are provided as arguments
-      typesAndNamesStr &= ", " & $(param[0].ident)
+      typesAndNamesStr.add(", " & $(param[0].ident))
 
   let codeToEmit = """/*TYPESECTION*/
 /*BEGIN_UNREAL_TYPE*/
@@ -145,11 +145,11 @@ $#$#($#$#$#);
 /*END_UNREAL_TYPE*/
 """.format(delegateMacro, delegateMacroPostfix, retValType, $(name.ident), typesAndNamesStr)
 
-  result = declareDelegate(name, kind, headerName, procParams, if isRetVal: callsite()[3] else: newEmptyNode())
+  result = declareDelegate(name, kind, newStrLitNode(headerName), procParams, if isRetVal: callsite()[3] else: newEmptyNode())
   result.add(newNimNode(nnkPragma).add(
               newNimNode(nnkExprColonExpr).add(ident("emit"), newStrLitNode(codeToEmit))))
 
-macro declareBuiltinDelegate(name: expr, kindNode: DelegateKind, header: static[string]): stmt {.immediate.} =
+macro declareBuiltinDelegate(name: expr, kindNode: DelegateKind, header: expr): stmt {.immediate.} =
   assert(name.kind == nnkIdent)
   let kind = fromStr[DelegateKind]($(kindNode.ident))
 
