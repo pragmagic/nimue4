@@ -219,6 +219,13 @@ proc getNimOutDir(projectDir: string): string =
 proc getNimcacheDir(projectDir: string; moduleName: string): string =
   result = getNimOutDir(projectDir) / "nimcache" / moduleName
 
+proc createNimCfg(outDir: string) =
+  var contents = ""
+  if hostOS == "windows":
+    contents.add("cc=vcc\n")
+  contents.add("--experimental\n")
+  writeFile(outDir / "nim.cfg", contents)
+
 proc buildNim(projectDir, projectName, os, cpu: string) =
   let sourceDir = projectDir / "Source"
   let nimOutDir = getNimOutDir(projectDir)
@@ -251,9 +258,10 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
 
     if isNimModule:
       let rootFile = nimOutDir / moduleName & "Root.nim"
-      createDir(rootFile.parentDir())
+      createDir(nimOutDir)
       writeFile(rootFile, $rootFileContent)
-      # TODO: use -d:release --opt:speed --deadCodeElim:on for release builds
+      createNimCfg(nimOutDir)
+      # TODO: use -d:release --deadCodeElim:on for release builds
       var osCpuFlags = ""
       if os != nil:
         osCpuFlags &= "--os:" & os
