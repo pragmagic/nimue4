@@ -317,17 +317,18 @@ proc `<`*[T: FString|FName](x, y: T): bool {.noSideEffect, importcpp: "# < #", n
 proc `<=`*[T: FString|FName](x, y: T): bool {.noSideEffect, importcpp: "# <= #", nodecl.}
 proc `==`*[T: FString|FName](x, y: T): bool {.noSideEffect, importcpp: "# == #", nodecl.}
 
-converter toText*(t: wstring): FText {.
+converter toFText*(s: wstring): FText {.
   header: "Internationalization/Text.h", importcpp: "'0(@)", nodecl.}
 
-converter toName*(t: wstring): FName {.
+converter toFName*(s: wstring): FName {.
   header: "UObject/NameTypes.h", importcpp: "'0(@)", nodecl.}
 
-converter toString*(t: wstring): FString {.
+converter toFString*(s: wstring): FString {.
   header: "Containers/UnrealString.h", importcpp: "'0(@)", nodecl.}
 
-converter toString*(t: cstring): FString {.
-  header: "Containers/UnrealString.h", importcpp: "'0(ANSI_TO_TCHAR(@))", nodecl.}
+converter toFString*(s: cstring): FString {.importcpp: "ANSI_TO_TCHAR(@)", nodecl.}
+
+converter toWideString*(s: cstring): wstring {.importcpp: "ANSI_TO_TCHAR(@)", nodecl.}
 
 proc toText(s: FString): FText {.
   noSideEffect, header: "Internationalization/Text.h", importcpp: "'0::FromString(@)", nodecl.}
