@@ -56,8 +56,11 @@ var genNameCtr {.compileTime.} : uint64 = 0
 proc isBlueprintNative(meth: TypeMethod): bool =
   result = meth.isUFunction and ($meth.uFunctionParamStr).contains("BlueprintNativeEvent")
 
+proc isBlueprintImplementable(meth: TypeMethod): bool =
+  result = meth.isUFunction and ($meth.uFunctionParamStr).contains("BlueprintImplementableEvent")
+
 proc isImplementationNeeded(meth: TypeMethod): bool =
-  result = not (meth.isAbstract or meth.isBlueprintNative())
+  result = not (meth.isAbstract or meth.isBlueprintNative() or meth.isBlueprintImplementable())
 
 proc toCppLiteral(nimLiteral: NimNode): Rope =
   # TODO: make this more compatible to C++ standards
