@@ -173,6 +173,7 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
   let isConstructor = removePragma(node, "constructor")
   let isAbstract = removePragma(node, "abstract")
   let isVirtual = removePragma(node, "virtual") or (node.kind == nnkMethodDef) or isOverride or isAbstract
+  let isCallSuper = removePragma(node, "callSuper")
   var returnType: Rope
   if isConstructor:
     returnType = nil
@@ -194,7 +195,7 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
     isOverride: isOverride,
     isVirtual: isVirtual,
     isConstructor: isConstructor,
-    isCallSuper: removePragma(node, "callSuper"),
+    isCallSuper: isCallSuper,
     isExported: true, # TODO
     args: parseArgs(node[3]),
     returnType: returnType,
