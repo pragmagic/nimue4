@@ -53,6 +53,12 @@ type
 
 var genNameCtr {.compileTime.} : uint64 = 0
 
+proc isBlueprintNative(meth: TypeMethod): bool =
+  result = meth.isUFunction and ($meth.uFunctionParamStr).contains("BlueprintNativeEvent")
+
+proc isImplementationNeeded(meth: TypeMethod): bool =
+  result = not (meth.isAbstract or meth.isBlueprintNative())
+
 proc toCppLiteral(nimLiteral: NimNode): Rope =
   # TODO: make this more compatible to C++ standards
   case nimLiteral.kind:
@@ -277,7 +283,7 @@ proc genCppMethods(typeDef: TypeDefinition): Rope {.compileTime.} =
     let methNameCapitalized = rope(($meth.name).capitalize())
     let signature = toCppSignature(meth, methNameCapitalized)
 
-    if not meth.isAbstract:
+    if meth.isImplementationNeeded():
       # friend declaration is needed so that Nim procs have access to
       # private/protected fields
       result.add(friendSignature)
@@ -287,6 +293,8 @@ proc genCppMethods(typeDef: TypeDefinition): Rope {.compileTime.} =
     result.add(signature)
     if meth.isAbstract:
       result.add(" = 0;\n")
+    elif not meth.isImplementationNeeded():
+      result.add(";\n")
     else:
       # append body that calls Nim procedure
       result.add(" {\n ")
@@ -382,7 +390,7 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
 
     meth.node[0] = ident($meth.genName)
 
-    if not meth.isAbstract:
+    if meth.isImplementationNeeded():
       if meth.node.pragma.kind == nnkEmpty:
         meth.node.pragma = newNimNode(nnkPragma)
       meth.node.pragma.add(ident("exportc"))
