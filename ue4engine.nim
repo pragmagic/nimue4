@@ -238,7 +238,6 @@ include modules/playerstate
 
 include modules/controller
 include modules/playercontroller
-
-proc getNavigationSystem*(world: ptr UWorld): ptr UNavigationSystem {.header: "Engine/World.h", importcpp: "#.GetNavigationSystem(@)", nodecl.}
+include modules/world
 
 proc simpleMoveToLocation*(navSys: ptr UNavigationSystem, controller: ptr APlayerController, goal: FVector) {.header: "AI/Navigation/NavigationSystem.h", importcpp: "#.SimpleMoveToLocation(@)", nodecl.}
