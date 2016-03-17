@@ -75,18 +75,18 @@ proc toCppLiteral(nimLiteral: NimNode): Rope =
     else:
       parseError(nimLiteral, "literal type expected, but got " & $(nimLiteral.kind))
 
-proc toCppArgList(args: seq[VarDeclaration]): Rope {.compileTime.} =
+proc toCppArgList(args: seq[VarDeclaration], useGenName: bool = true): Rope {.compileTime.} =
   for i in 0 .. < args.len:
     if result.len != 0:
       result.add(", ")
     # have to declare separate variables because of https://github.com/nim-lang/Nim/issues/3804
     let valueType = args[i].valueType
-    let genName = args[i].genName
-    result.add(valueType & " " & genName)
+    let name = if useGenName: args[i].genName else: args[i].name
+    result.add(valueType & " " & name)
 
 proc toCppSignature(meth: TypeMethod, methodName: Rope): Rope {.compileTime.} =
   result.add(if meth.isVirtual: "virtual " else: nil)
-  result.add(meth.returnType & " " & methodName & "(" & toCppArgList(meth.args) & ")")
+  result.add(meth.returnType & " " & methodName & "(" & toCppArgList(meth.args, false) & ")")
   result.add(if meth.isOverride: " override" else: nil)
 
 proc toCppFieldName(name: string, valueType: string): Rope {.compileTime.} =
@@ -279,7 +279,7 @@ proc genCppMethods(typeDef: TypeDefinition): Rope {.compileTime.} =
 
     var invocationCode: Rope
     for arg in meth.args:
-      invocationCode.add(rope(", ") & arg.genName)
+      invocationCode.add(", " & arg.name)
 
     let methNameCapitalized = rope(($meth.name).capitalize())
     let signature = toCppSignature(meth, methNameCapitalized)
@@ -302,7 +302,7 @@ proc genCppMethods(typeDef: TypeDefinition): Rope {.compileTime.} =
 
       if meth.isCallSuper:
         let superInvocation = rope("Super::") & methNameCapitalized &
-          "(" & meth.args.mapIt($(it.genName)).join(", ") & ");\n"
+          "(" & meth.args.mapIt($(it.name)).join(", ") & ");\n"
         result.add(superInvocation)
       let returnOrNothing = rope(if meth.isConstructor or $(meth.returnType) == "void": "" else: "return")
       result.addf("$# `$#`(this$#);\n",
