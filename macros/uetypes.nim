@@ -11,7 +11,7 @@ type
   VarDeclaration = ref object
     name: Rope
     genName: Rope
-    valueType: Rope
+    typeNode: NimNode
     defaultValue: NimNode
 
   TypeOpt = enum
@@ -75,18 +75,17 @@ proc toCppLiteral(nimLiteral: NimNode): Rope =
     else:
       parseError(nimLiteral, "literal type expected, but got " & $(nimLiteral.kind))
 
-proc toCppArgList(args: seq[VarDeclaration], useGenName: bool = true): Rope {.compileTime.} =
+proc toCppArgList(args: seq[VarDeclaration], isUeSignature: bool = false, useGenName: bool = true): Rope {.compileTime.} =
   for i in 0 .. < args.len:
     if result.len != 0:
       result.add(", ")
-    # have to declare separate variables because of https://github.com/nim-lang/Nim/issues/3804
-    let valueType = args[i].valueType
+    let valueType = toCppType(args[i].typeNode, isUeSignature)
     let name = if useGenName: args[i].genName else: args[i].name
     result.add(valueType & " " & name)
 
 proc toCppSignature(meth: TypeMethod, methodName: Rope): Rope {.compileTime.} =
   result.add(if meth.isVirtual: "virtual " else: nil)
-  result.add(meth.returnType & " " & methodName & "(" & toCppArgList(meth.args, false) & ")")
+  result.add(meth.returnType & " " & methodName & "(" & toCppArgList(meth.args, true, false) & ")")
   result.add(if meth.isOverride: " override" else: nil)
 
 proc toCppFieldName(name: string, valueType: string): Rope {.compileTime.} =
@@ -151,13 +150,12 @@ proc parseArgs(node: NimNode): seq[VarDeclaration] =
     if identDefs[^2].kind == nnkEmpty:
       parseError(identDefs, "type inference is not supported for arguments")
 
-    let argType = toCppType(identDefs[^2])
     for nameIndex in 0 .. < identDefs.len - 2:
       let name = $(identDefs[nameIndex].ident)
       let varDecl = VarDeclaration(
         name: rope(name),
         genName: genName(name),
-        valueType: argType,
+        typeNode: identDefs[^2],
         defaultValue: nil
       )
       result.add(varDecl)
