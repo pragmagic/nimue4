@@ -9,7 +9,7 @@ type
   wchar* {.importcpp: "wchar_t", nodecl.} = object
   wstring* = ref array[0 .. 1000000, wchar]
 
-  FString* {.header: "Containers/UnrealString.h", importcpp: "FString", byref, nodecl.} = object
+  FString* {.header: "Containers/UnrealString.h", importcpp: "FString", bycopy, nodecl.} = object
 
   ESearchCase {.header: "Containers/UnrealString.h", importcpp: "ESearchCase::Type", nodecl, pure.} = enum
     CaseSensitive,
@@ -113,7 +113,7 @@ proc strip*(s: FString; leading = true; trailing = true): FString {.noSideEffect
 
 # TODO: format, parseInt, parseBool, join, repeat for FString
 
-class(FText, header: "Internationalization/Text.h"):
+class(FText, header: "Internationalization/Text.h", bycopy):
   proc isEmpty(): bool {.noSideEffect.}
   proc isEmptyOrWhitespace(): bool {.noSideEffect.}
   proc toString(): FString {.noSideEffect.}
@@ -305,7 +305,7 @@ type EName {.header: "UObject/UnrealNames.h" importcpp: "EName".} = enum
   NAME_EditorLayout = 600
   NAME_EditorKeyBindings = 601
 
-class(FName, "UObject/NameTypes.h"):
+class(FName, header: "UObject/NameTypes.h", bycopy):
   proc makeNone(): FName {.constructor.}
   proc fromEName(name: EName): FName {.constructor.}
   proc cmp(other: FName): int32 {.noSideEffect.}
