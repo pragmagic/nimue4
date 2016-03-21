@@ -86,7 +86,7 @@ proc fromStr*[Enum](val: string): Enum {.compileTime.} =
       return item
   raise newException(ValueError, "Unknown enum value: " & val)
 
-proc toCppType*(typeNode: NimNode): Rope =
+proc toCppType*(typeNode: NimNode; isUeSignature, isPrefixed: bool = false): Rope =
   ## Returns string representing C++ type corresponding to the specified Nim type
   ## Wraps non-primitive types in backtricks (`) for further use with .emit pragma
 
@@ -99,9 +99,9 @@ proc toCppType*(typeNode: NimNode): Rope =
       templateParams.add(toCppType(typeNode[i]))
     result = rope($typeNode[0].ident) & "<" & templateParams & ">"
   of nnkVarTy:
-    result = toCppType(typeNode[0]) & "&"
+    result = toCppType(typeNode[0], isUeSignature, true) & "&"
   of nnkPtrTy:
-    result = toCppType(typeNode[0]) & "*"
+    result = toCppType(typeNode[0], isUeSignature, true) & "*"
   of nnkIdent:
     case $(typeNode.ident):
     of "float32", "cfloat":
@@ -114,7 +114,12 @@ proc toCppType*(typeNode: NimNode): Rope =
     of "bool", "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64":
       result = rope($(typeNode.ident))
     else:
-      result = rope("`") & $(typeNode.ident) & "`"
+      let typeName = $(typeNode.ident)
+      if isUeSignature and not isPrefixed and typeName.startsWith("F"):
+        # sometimes UHT forcefully converts structure values to const references in signatures
+        result = rope("const `") & typeName & "`&"
+      else:
+        result = rope("`") & $(typeNode.ident) & "`"
   else:
     raise newException(ParseError, lineinfo(typeNode) & ": type expected")
 
