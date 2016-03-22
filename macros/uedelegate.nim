@@ -106,7 +106,7 @@ proc exprListToParamList(callParams: NimNode, start: Natural, to: Natural): seq[
     let paramDef = newIdentDefs(opt[0], opt[1])
     result.add(paramDef)
 
-macro UEDelegate*(name: expr, kindNode: DelegateKind): stmt {.immediate.} =
+macro udelegate*(name: expr, kindNode: DelegateKind): stmt {.immediate.} =
   assert(name.kind == nnkIdent)
   assert(kindNode.kind == nnkIdent, "Delegate type expected")
   let kind = fromStr[DelegateKind]($(kindNode.ident))

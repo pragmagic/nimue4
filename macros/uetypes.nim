@@ -561,19 +561,19 @@ proc parseType(kind: TypeKind, definition: NimNode, callSite: NimNode): TypeDefi
     opts: opts
   )
 
-macro UEClass*(definition: expr, body: stmt): stmt {.immediate.} =
+macro uclass*(definition: expr, body: stmt): stmt {.immediate.} =
   let typeDef = parseType(tkClass, definition, callsite())
   result = genType(typeDef)
 
-macro UEStruct*(definition: expr, body: stmt): stmt {.immediate.} =
+macro ustruct*(definition: expr, body: stmt): stmt {.immediate.} =
   let typeDef = parseType(tkStruct, definition, callsite())
   result = genType(typeDef)
 
-macro UEInterface*(definition: expr, body: stmt): stmt {.immediate.} =
+macro uinterface*(definition: expr, body: stmt): stmt {.immediate.} =
   let typeDef = parseType(tkInterface, definition, callsite())
   result = genType(typeDef)
 
-macro UEEnum*(definition: expr, body: stmt): stmt {.immediate.} =
+macro uenum*(definition: expr, body: stmt): stmt {.immediate.} =
   let typeDef = parseType(tkEnum, definition, callsite())
   result = genType(typeDef)
 
@@ -587,8 +587,7 @@ macro blueprint*(function: stmt): stmt {.immediate.} =
   if category.contains('"'):
     parseError(function, "category name must not contain quotes")
 
-  var uFunctionParamStr = rope("BlueprintCallable")
-  uFunctionParamStr.add(", Category=\"" & category & "\"")
+  var uFunctionParamStr = rope("BlueprintCallable, Category=\"") & category & "\""
   let methods = @[TypeMethod(
     name: rope(name),
     genName: genName(name),
