@@ -182,16 +182,6 @@ macro namespace*(namespaceName: expr, body: stmt): stmt {.immediate.} =
 
     result.add body
 
-proc extractVarName(node: NimNode): NimNode =
-  ## returns ident node
-  case node.kind
-  of nnkPragmaExpr:
-    result = extractVarName(node[0])
-  of nnkPostfix:
-    result = extractVarName(node[1])
-  else:
-    result = node
-
 proc addVarPragma(node, pragma: NimNode): NimNode =
   assert({nnkExprColonExpr, nnkIdent}.contains(pragma.kind))
 
@@ -315,7 +305,7 @@ macro class*(className, opts: expr, body: stmt): stmt {.immediate.} =
 
                 for n,ty in items(fields):
                   var varNameNode = n
-                  let varNameIdent = extractVarName(n)
+                  let varNameIdent = extractIdent(n)
                   var cppName = removeStrPragma(varNameNode, "cppname")
                   if cppName == nil:
                     cppName = ($varNameIdent).capitalize

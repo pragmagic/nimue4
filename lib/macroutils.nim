@@ -115,7 +115,8 @@ proc toCppType*(typeNode: NimNode; isUeSignature, isPrefixed: bool = false): Rop
       result = rope($(typeNode.ident))
     else:
       let typeName = $(typeNode.ident)
-      if isUeSignature and not isPrefixed and typeName.startsWith("F"):
+      if isUeSignature and not isPrefixed and
+         typeName.len > 1 and typeName[0] == 'F' and typeName[1].isUpper:
         # sometimes UHT forcefully converts structure values to const references in signatures
         result = rope("const `") & typeName & "`&"
       else:
@@ -129,3 +130,13 @@ proc makeStrPragma*(name, val: string): NimNode {.compileTime.} =
 template parseError*(node: NimNode, msg: string) =
   ## Shortcut to raise ParseError for specified `node` with specified message
   raise newException(ParseError, lineinfo(node) & ": " & msg)
+
+proc extractIdent*(node: NimNode): NimNode =
+  ## returns ident node
+  case node.kind
+  of nnkPragmaExpr:
+    result = extractIdent(node[0])
+  of nnkPostfix:
+    result = extractIdent(node[1])
+  else:
+    result = node

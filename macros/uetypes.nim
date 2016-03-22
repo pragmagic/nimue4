@@ -27,8 +27,8 @@ type
     isCallSuper: bool
     isAbstract: bool
     isUFunction: bool
+    isStatic: bool
     args: seq[VarDeclaration]
-    returnType: Rope
     uFunctionParamStr: Rope
     node: NimNode
 
@@ -42,7 +42,8 @@ type
     uPropertyParamStr: Rope
 
   TypeDefinition = ref object
-    node: NimNode
+    headerName: string
+    isUtilityType: bool
     name: Rope
     kind: TypeKind
     paramStr: Rope
@@ -61,6 +62,20 @@ proc isBlueprintImplementable(meth: TypeMethod): bool =
 
 proc isImplementationNeeded(meth: TypeMethod): bool =
   result = not (meth.isAbstract or meth.isBlueprintNative() or meth.isBlueprintImplementable())
+
+proc cppReturnType(n: NimNode): Rope =
+  assert(RoutineNodes.contains(n.kind))
+
+  if n[3][0].kind == nnkEmpty:
+    result = rope("void")
+  else:
+    result = toCppType(n[3][0])
+
+proc doc(n: NimNode): string =
+  assert(RoutineNodes.contains(n.kind))
+
+  if n.body.len > 0 and n.body[0].kind == nnkCommentStmt:
+    result = n.body[0].strVal
 
 proc toCppLiteral(nimLiteral: NimNode): Rope =
   # TODO: make this more compatible to C++ standards
@@ -88,7 +103,9 @@ proc toCppArgList(args: seq[VarDeclaration], isUeSignature: bool = false, useGen
 
 proc toCppSignature(meth: TypeMethod, methodName: Rope): Rope {.compileTime.} =
   result.add(if meth.isVirtual: "virtual " else: nil)
-  result.add(meth.returnType & " " & methodName & "(" & toCppArgList(meth.args, true, false) & ")")
+  result.add(if meth.isStatic: "static " else: nil)
+  result.add(if not meth.isConstructor: meth.node.cppReturnType() else: nil)
+  result.add(" " & methodName & "(" & toCppArgList(meth.args, true, false) & ")")
   result.add(if meth.isOverride: " override" else: nil)
 
 proc toCppFieldName(name: string, valueType: string): Rope {.compileTime.} =
@@ -175,13 +192,6 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
   let isAbstract = removePragma(node, "abstract")
   let isVirtual = removePragma(node, "virtual") or (node.kind == nnkMethodDef) or isOverride or isAbstract
   let isCallSuper = removePragma(node, "callSuper")
-  var returnType: Rope
-  if isConstructor:
-    returnType = nil
-  elif node[3][0].kind == nnkEmpty:
-    returnType = rope("void")
-  else:
-    returnType = toCppType(node[3][0])
 
   var procNode = node
   if node.kind == nnkMethodDef:
@@ -199,7 +209,6 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
     isCallSuper: isCallSuper,
     isExported: true, # TODO
     args: parseArgs(node[3]),
-    returnType: returnType,
     node: procNode
   )
 
@@ -272,15 +281,14 @@ proc genCppFields(typeDef: TypeDefinition): Rope {.compileTime.} =
 proc genCppMethods(typeDef: TypeDefinition): Rope {.compileTime.} =
   for meth in typeDef.methods:
     var friendArgList = toCppArgList(meth.args)
-    if friendArgList.len != 0:
-      friendArgList = rope(", ") & friendArgList
-    let returnType = if meth.isConstructor: rope("void") else: meth.returnType
-    let friendSignature = rope("friend ") & returnType & " `" & meth.genName &
-      "`(" & typeDef.name & "*" & friendArgList & ");\n"
-
-    var invocationCode: Rope
-    for arg in meth.args:
-      invocationCode.add(", " & arg.name)
+    let returnType = if meth.isConstructor: rope("void") else: meth.node.cppReturnType()
+    var friendSignature = rope("friend ") & returnType & " `" & meth.genName & "`("
+    if not typeDef.isUtilityType:
+      friendSignature.add(typeDef.name & "*")
+      if friendArgList.len != 0:
+        friendSignature.add(", ")
+    friendSignature.add(friendArgList)
+    friendSignature.add(");\n")
 
     let methNameCapitalized = rope(($meth.name).capitalize())
     let signature = toCppSignature(meth, methNameCapitalized)
@@ -289,29 +297,62 @@ proc genCppMethods(typeDef: TypeDefinition): Rope {.compileTime.} =
       # friend declaration is needed so that Nim procs have access to
       # private/protected fields
       result.add(friendSignature)
+    let doc = meth.node.doc()
+    if doc != nil:
+      result.add("/** \n")
+      for line in doc.splitLines():
+        result.add(" *  " & line & "\n")
+      result.add(" */\n")
     if meth.isUFunction:
       result.add("UFUNCTION($#)\n".format(meth.uFunctionParamStr))
 
     result.add(signature)
     if meth.isAbstract:
       result.add(" = 0;\n")
-    elif not meth.isImplementationNeeded():
-      result.add(";\n")
     else:
-      # append body that calls Nim procedure
-      result.add(" {\n ")
+      result.add(";\n")
 
-      if meth.isCallSuper:
-        let superInvocation = rope("Super::") & methNameCapitalized &
-          "(" & meth.args.mapIt($(it.name)).join(", ") & ");\n"
-        result.add(superInvocation)
-      let returnOrNothing = rope(if meth.isConstructor or $(meth.returnType) == "void": "" else: "return")
-      result.addf("$# `$#`(this$#);\n",
-                  [returnOrNothing, meth.genName, invocationCode])
+proc genCppImplementationCode(typeDef: TypeDefinition): string {.compileTime.} =
+  var code: Rope
+  for meth in typeDef.methods:
+    if not meth.isImplementationNeeded():
+      continue
+    let methNameCapitalized = ($meth.name).capitalize()
 
-      result.add("}\n\n")
+    if not meth.isConstructor:
+      code.add(meth.node.cppReturnType())
+      code.add(" ")
+    code.add(typeDef.name & "::" & methNameCapitalized)
+    code.add("(" & toCppArgList(meth.args, true, false) & ")")
 
-proc genCppCode(typeDef: TypeDefinition): string {.compileTime.} =
+    code.add(" {\n ")
+
+    if meth.isCallSuper:
+      let superInvocation = rope("Super::") & methNameCapitalized &
+        "(" & meth.args.mapIt($(it.name)).join(", ") & ");\n"
+      code.add(superInvocation)
+
+    var invocationCode: Rope
+    for arg in meth.args:
+      if invocationCode.len != 0:
+        invocationCode.add(", ")
+      invocationCode.add(arg.name)
+    let returnOrNothing = rope(if meth.isConstructor or $(meth.node.cppReturnType()) == "void": "" else: "return")
+    var thisOrNothing = rope(if not meth.isStatic: "this" else: "")
+    if thisOrNothing.len != 0 and invocationCode.len != 0:
+      invocationCode = ", " & invocationCode
+    invocationCode = thisOrNothing & invocationCode
+    code.addf("$# `$#`($#);\n",
+                [returnOrNothing, meth.genName, invocationCode])
+
+    code.add("}\n\n")
+
+  if code.len != 0:
+    code = rope("/*VARSECTION*/") & code
+
+  result = $code
+
+proc genCppDeclarationCode(typeDef: TypeDefinition): string {.compileTime.} =
   let typeMacro = case typeDef.kind:
     of tkClass: "UCLASS($#)\n" % $typeDef.paramStr
     of tkStruct: "USTRUCT($#)\n" % $typeDef.paramStr
@@ -373,21 +414,19 @@ $2::$2(const `FObjectInitializer`& ObjectInitializer): Super(ObjectInitializer)
 proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
   # TODO: generate C++ "const" marker if `noSideEffect` pragma is provided
 
-  let codeToEmit = genCppCode(typeDef)
-  let headerName = cppHeaderName(typeDef.node)
-
   var methDecls: seq[NimNode] = @[]
   var methDefs: seq[NimNode] = @[]
   for meth in typeDef.methods:
-    let thisDef = newNimNode(nnkIdentDefs).add(
-      ident("this"), newNimNode(nnkPtrTy).add(ident($typeDef.name)), newEmptyNode())
-    meth.node[3].insert(1, thisDef)
+    if not typeDef.isUtilityType:
+      let thisDef = newNimNode(nnkIdentDefs).add(
+        ident("this"), newNimNode(nnkPtrTy).add(ident($typeDef.name)), newEmptyNode())
+      meth.node[3].insert(1, thisDef)
 
     if not meth.isConstructor:
       var decl = meth.node.copy()
       decl[^1] = newEmptyNode() # remove body
       let cppName = ($meth.name).capitalize()
-      decl.pragma = parseExpr("{.header: \"$#\", importcpp: \"#.$#(@)\", nodecl.}".format(headerName, cppName))
+      decl.pragma = parseExpr("{.header: \"$#\", importcpp: \"#.$#(@)\", nodecl.}".format(typeDef.headerName, cppName))
       methDecls.add(decl)
 
     meth.node[0] = ident($meth.genName)
@@ -399,10 +438,10 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
 
       methDefs.add(meth.node)
 
-  if typeDef.kind != tkEnum:
+  if typeDef.kind != tkEnum and not typeDef.isUtilityType:
     let staticClassMeth = parseStmt("""
     proc staticClass*(ty: typedesc[$1]): TSubclassOf[$1] {.header: "$2", importc: "$1::StaticClass".}
-""".format(typeDef.name, headerName))
+""".format(typeDef.name, typeDef.headerName))
     methDecls.add(staticClassMeth)
 
   let primaryParentName: string = if typeDef.parentNames.len > 0: typeDef.parentNames[0] else: nil
@@ -417,7 +456,7 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
     else: ""
 
   var typeDecl = parseStmt("""type $1* {.header: "$2", importcpp: "$1"$3.} = $4$5$6""".format(
-    typeDef.name, headerName, additionalPragmas, nimTypeKind, ofPostfix, enumFields))
+    typeDef.name, typeDef.headerName, additionalPragmas, nimTypeKind, ofPostfix, enumFields))
 
   if typeDef.kind != tkEnum:
     var recList = newNimNode(nnkRecList)
@@ -429,7 +468,8 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
     typeDecl[0][0][2][2] = recList
 
   result = newStmtList()
-  result.add(typeDecl)
+  if not typeDef.isUtilityType:
+    result.add(typeDecl)
   result.add(methDecls)
   result.add(methDefs)
   for nameInd in 1 .. < typeDef.parentNames.len:
@@ -444,8 +484,16 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
     conv.pragma = newNimNode(nnkPragma)
     conv.pragma.add(makeStrPragma("importcpp", "#"))
     conv.pragma.add(ident("nodecl"))
+
+  let declarationCode = genCppDeclarationCode(typeDef)
+  let implementationCode = genCppImplementationCode(typeDef)
+
   result.add(newNimNode(nnkPragma).add(
-              newNimNode(nnkExprColonExpr).add(ident("emit"), newStrLitNode(codeToEmit))))
+              newNimNode(nnkExprColonExpr).add(ident("emit"), newStrLitNode(declarationCode))))
+
+  if implementationCode.len != 0:
+    result.add(newNimNode(nnkPragma).add(
+              newNimNode(nnkExprColonExpr).add(ident("emit"), newStrLitNode(implementationCode))))
 
 proc parseType(kind: TypeKind, definition: NimNode, callSite: NimNode): TypeDefinition =
   let body = callSite[^1]
@@ -503,7 +551,7 @@ proc parseType(kind: TypeKind, definition: NimNode, callSite: NimNode): TypeDefi
         parseError(statement, "field or method declaration expected")
 
   result = TypeDefinition(
-    node: definition,
+    headerName: cppHeaderName(definition),
     name: rope(name),
     kind: kind,
     parentNames: parentNames,
@@ -527,4 +575,37 @@ macro UEInterface*(definition: expr, body: stmt): stmt {.immediate.} =
 
 macro UEEnum*(definition: expr, body: stmt): stmt {.immediate.} =
   let typeDef = parseType(tkEnum, definition, callsite())
+  result = genType(typeDef)
+
+macro blueprint*(function: stmt): stmt {.immediate.} =
+  if function.kind != nnkProcDef:
+    parseError(function, "blueprint macro is only supported for procs")
+  let name = $(extractIdent(function.name).ident)
+  let category = function.removeStrPragma("category")
+  if category == nil:
+    parseError(function, "blueprint function must have .category pragma")
+  if category.contains('"'):
+    parseError(function, "category name must not contain quotes")
+
+  var uFunctionParamStr = rope("BlueprintCallable")
+  uFunctionParamStr.add(", Category=\"" & category & "\"")
+  let methods = @[TypeMethod(
+    name: rope(name),
+    genName: genName(name),
+    isStatic: true,
+    args: parseArgs(function[3]),
+    isUFunction: true,
+    uFunctionParamStr: uFunctionParamStr,
+    node: function,
+  )]
+
+  let typeDef = TypeDefinition(
+    headerName: cppHeaderName(function),
+    isUtilityType: true,
+    name: rope("UBlueprintLibraryStub_" & name),
+    kind: tkClass,
+    parentNames: @["UBlueprintFunctionLibrary"],
+    fields: @[],
+    methods: methods
+  )
   result = genType(typeDef)

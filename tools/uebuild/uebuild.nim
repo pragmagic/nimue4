@@ -158,7 +158,7 @@ proc processFile(file, moduleName: string; outDir: string) =
 
     writeFile(outHeaderDir / outFile.extractFilename().changeFileExt("h"), headerFileContents)
 
-    let headerIncludeString = "#include \"$#.h\"" % filename
+    let headerIncludeString = "#include \"$#.h\"\n" % filename
     if not contents.contains(headerIncludeString):
       contents.insert(headerIncludeString, intBitsDefEnd + 1)
 
