@@ -234,6 +234,7 @@ proc createNimCfg(outDir: string, moduleDir: string) =
     contents.add("cc=vcc\n")
   contents.add("--path:\"" & moduleDir.replace("\\", "/") & "\"\n")
   contents.add("--path:\"" & getCurrentDir().replace("\\", "/") & "\"\n")
+  contents.add("--define:useRealtimeGC\n")
   contents.add("--experimental\n")
   writeFile(outDir / "nim.cfg", contents)
 
@@ -278,9 +279,10 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
         osCpuFlags &= "--os:" & os
       if cpu != nil:
         osCpuFlags &= " --cpu:" & cpu
-      exec "nim cpp -c --noMain --noCppExceptions --experimental --gc:boehm " & osCpuFlags &
-          " -p:\"" & getCurrentDir() & "\" -p:\"" & moduleDir & "\" --nimcache:\"" & nimcacheDir &
-          "\" \"" & rootFile & '"'
+      exec "nim cpp -c --noMain --noCppExceptions --threads:on --tlsEmulation:off " &
+           "-d:useSysAssert -d:useGcAssert --experimental " & osCpuFlags &
+           " -p:\"" & getCurrentDir() & "\" -p:\"" & moduleDir & "\" --nimcache:\"" & nimcacheDir &
+           "\" \"" & rootFile & '"'
       # export NimMain procedure so that it can be used from module initialization code
       replaceInFile(nimcacheDir / rootFile.extractFilename().changeFileExt(".cpp"),
                     "N_CDECL(void, NimMain)",
