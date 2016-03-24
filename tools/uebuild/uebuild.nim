@@ -279,7 +279,7 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
         osCpuFlags &= "--os:" & os
       if cpu != nil:
         osCpuFlags &= " --cpu:" & cpu
-      exec "nim cpp -c --noMain --noCppExceptions --threads:on --tlsEmulation:off " &
+      exec "nim cpp -c --noMain --noCppExceptions --tlsEmulation:off " &
            "-d:useSysAssert -d:useGcAssert --experimental " & osCpuFlags &
            " -p:\"" & getCurrentDir() & "\" -p:\"" & moduleDir & "\" --nimcache:\"" & nimcacheDir &
            "\" \"" & rootFile & '"'
