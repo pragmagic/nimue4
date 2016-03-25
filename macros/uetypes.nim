@@ -2,6 +2,16 @@
 import ropes
 
 type
+  MacroOptKind = enum
+    mokKey,
+    mokVal,
+    mokKeyVal
+
+  MacroOpt = object
+    kind: MacroOptKind
+    key: string
+    val: string
+
   TypeKind = enum
     tkClass,
     tkStruct,
@@ -128,10 +138,8 @@ proc extractParamString(callNode: NimNode): Rope =
       result.add(", ")
     result.add(callNode[i].toStrLit.strVal)
 
-proc parseField(node: NimNode): TypeField =
-  assert(node.kind == nnkVarSection)
-
-  let identDefs = node[0]
+proc identDefsToTypeField(identDefs: NimNode): TypeField =
+  assert(identDefs.kind == nnkIdentDefs)
   let nameNode = identDefs[0]
   let fieldName = $nameNode.baseName.ident
 
@@ -145,6 +153,12 @@ proc parseField(node: NimNode): TypeField =
                      valueType: toCppType(typeNode),
                      nimTypeNode: typeNode,
                      defaultValueNode: defaultValueNode)
+
+proc parseField(node: NimNode): TypeField =
+  assert(node.kind == nnkVarSection)
+
+  let identDefs = node[0]
+  result = identDefsToTypeField(identDefs)
 
 proc parseUProperty(typeKind: TypeKind, uPropertyNode: NimNode): TypeField =
   assert(uPropertyNode.kind == nnkCall and uPropertyNode[0].ident == !"UEProperty")
@@ -561,33 +575,19 @@ proc parseType(kind: TypeKind, definition: NimNode, callSite: NimNode): TypeDefi
     opts: opts
   )
 
-macro uclass*(definition: expr, body: stmt): stmt {.immediate.} =
-  let typeDef = parseType(tkClass, definition, callsite())
-  result = genType(typeDef)
-
-macro ustruct*(definition: expr, body: stmt): stmt {.immediate.} =
-  let typeDef = parseType(tkStruct, definition, callsite())
-  result = genType(typeDef)
-
-macro uinterface*(definition: expr, body: stmt): stmt {.immediate.} =
-  let typeDef = parseType(tkInterface, definition, callsite())
-  result = genType(typeDef)
-
-macro uenum*(definition: expr, body: stmt): stmt {.immediate.} =
-  let typeDef = parseType(tkEnum, definition, callsite())
-  result = genType(typeDef)
-
-macro blueprint*(function: stmt): stmt {.immediate.} =
-  if function.kind != nnkProcDef:
-    parseError(function, "blueprint macro is only supported for procs")
-  let name = $(extractIdent(function.name).ident)
-  let category = function.removeStrPragma("category")
+proc checkCategory(node: NimNode, category: string) =
   if category == nil:
-    parseError(function, "blueprint function must have .category pragma")
+    parseError(node, "category is mandatory for blueprints")
   if category.contains('"'):
-    parseError(function, "category name must not contain quotes")
+    parseError(node, "category name must not contain quotes")
 
-  var uFunctionParamStr = rope("BlueprintCallable, Category=\"") & category & "\""
+proc convertBlueprintFunction(function: NimNode, category: string): NimNode =
+  ## Generates nnkStmtList that turns the specified procedure into UE4 blueprint function
+  ## that is accessible from Nim, too
+  assert (function.kind == nnkProcDef)
+
+  let name = $(extractIdent(function.name).ident)
+  let uFunctionParamStr = rope("BlueprintCallable, Category=\"") & category & "\""
   let methods = @[TypeMethod(
     name: rope(name),
     genName: genName(name),
@@ -608,3 +608,126 @@ macro blueprint*(function: stmt): stmt {.immediate.} =
     methods: methods
   )
   result = genType(typeDef)
+
+proc convertBlueprintObject(objNode: NimNode, category: string, ): NimNode =
+  assert(objNode.kind == nnkTypeDef and objNode[2].kind == nnkObjectTy)
+
+  let name = $(extractIdent(objNode[0]).ident)
+  let objTy = objNode[2]
+  let parentName = if objTy[1].kind == nnkOfInherit: $objTy[1].ident else: nil
+
+  var fields = newSeq[TypeField]()
+  for fieldIdentDefs in objTy[2]:
+    var field = identDefsToTypeField(fieldIdentDefs)
+    field.isUProperty = true
+    field.uPropertyParamStr = rope("EditAnywhere, BlueprintReadWrite, Category = \"") & category & "\""
+    fields.add(field)
+
+  let typeDef = TypeDefinition(
+    headerName: cppHeaderName(objNode),
+    name: rope(name),
+    paramStr: rope("BlueprintType"),
+    kind: tkStruct,
+    parentNames: if parentName != nil: @[parentName] else: @[],
+    fields: fields,
+    methods: @[]
+  )
+  result = genType(typeDef)
+
+proc convertBlueprintType(typeNode: NimNode, category: string): NimNode =
+  ## Generates nnkStmtList that turns the specified type definition
+  ## into UE4 blueprint type that is accessible from Nim, too
+  assert(typeNode.kind == nnkTypeDef)
+  checkCategory(typeNode, category)
+
+  if typeNode[1].kind != nnkEmpty:
+    parseError(typeNode[1], "Generic params are not supported for blueprint types for now")
+
+  let name = $(extractIdent(typeNode[0]).ident)
+  case typeNode[2].kind:
+  of nnkObjectTy:
+    result = convertBlueprintObject(typeNode, category)
+  of nnkEnumTy:
+    # TODO
+    # result = convertBlueprintEnum(typeNode, category)
+    parseError(typeNode[2], "enum support will be added soon")
+  else:
+    parseError(typeNode[2], "only object and enum types are supported for blueprints")
+
+iterator parseMacroOpts(callSite: NimNode; part: Slice[int]): MacroOpt =
+  for i in part:
+    let optNode = callSite[i]
+    var opt: MacroOpt
+    case optNode.kind:
+    of nnkExprEqExpr, nnkExprColonExpr:
+      if optNode[0].kind != nnkIdent or optNode[1].kind != nnkStrLit:
+        parseError(optNode, "Key-value pair expected but found " & repr(optNode))
+      opt.kind = mokKeyVal
+      opt.key = ($optNode[0].ident).toLower
+      opt.val = optNode[1].strVal
+    of nnkIdent:
+      opt.kind = mokKey
+      opt.key = ($optNode[0].ident).toLower
+    of nnkStrLit:
+      opt.kind = mokVal
+      opt.val = optNode.strVal
+    else: parseError(optNode, "Unhandled option: " & repr(optNode))
+    yield opt
+
+macro uclass*(definition: expr, body: stmt): stmt {.immediate.} =
+  let typeDef = parseType(tkClass, definition, callsite())
+  result = genType(typeDef)
+
+macro ustruct*(definition: expr, body: stmt): stmt {.immediate.} =
+  let typeDef = parseType(tkStruct, definition, callsite())
+  result = genType(typeDef)
+
+macro uinterface*(definition: expr, body: stmt): stmt {.immediate.} =
+  let typeDef = parseType(tkInterface, definition, callsite())
+  result = genType(typeDef)
+
+macro uenum*(definition: expr, body: stmt): stmt {.immediate.} =
+  let typeDef = parseType(tkEnum, definition, callsite())
+  result = genType(typeDef)
+
+macro blueprint*(function: stmt): stmt {.immediate.} =
+  if function.kind != nnkProcDef:
+    parseError(function, "blueprint pragma is only supported for procs")
+  let category = function.removeStrPragma("category")
+  if category == nil:
+    parseError(function, "blueprint function must have .category pragma")
+
+  result = convertBlueprintFunction(function, category)
+
+macro blueprintSection*(params: expr, body: stmt): stmt {.immediate.} =
+  var category: string
+  for opt in parseMacroOpts(callsite(), 1..len(callsite()) - 2):
+    var handled = true
+    case opt.kind:
+    of mokKeyVal:
+      case opt.key:
+      of "category":
+        category = opt.val
+      else: handled = false
+    of mokVal:
+      if category == nil:
+        category = opt.val
+      else:
+        handled = false
+    else: handled = false
+    if not handled:
+      parseError(callsite(), "Unknown blueprint section option: " & opt.key)
+
+  if category == nil:
+    parseError(params, "category is mandatory for blueprint section")
+
+  result = newStmtList()
+  for statement in body:
+    case statement.kind:
+    of nnkProcDef:
+      result.add(convertBlueprintFunction(statement, category))
+    of nnkTypeSection:
+      for typeDef in statement:
+        result.add(convertBlueprintType(typeDef, category))
+    else:
+      parseError(statement, "only type and proc definitions are supported in blueprint section")

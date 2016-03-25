@@ -126,7 +126,23 @@ class(FText, header: "Internationalization/Text.h", bycopy):
   proc isCultureInvariant(): bool {.noSideEffect.}
   proc shouldGatherForLocalization(): bool {.noSideEffect.}
 
-# TODO: number, currency, date transformation to FText, format
+converter toFText*(s: wstring): FText {.
+  header: "Internationalization/Text.h", importcpp: "'0::FromString(@)", nodecl.}
+
+proc toText*(num: int8 or int16 or int32 or uint8 or uint16 or uint32): FText {.
+  noSideEffect, header: "Internationalization/Text.h", importcpp: "'0::AsNumber(@)".}
+
+proc nsLocText*(ns, key, text: cstring): FText {.noSideEffect, importc: "NSLOCTEXT", nodecl.}
+
+# TODO: this can be made as macro that accepts and implicitly converts non-text types
+proc textFormat*(formatString: FText): FText {.
+  noSideEffect, header: "Internationalization/Text.h", importcpp: "'0::Format(@)", varargs.}
+
+proc `&`*(x, y: FText): FText =
+  # is there a more efficient way?
+  textFormat(TEXT("{0}{1}"), x, y)
+
+# TODO: currency, date transformation to FText
 
 type EName {.header: "UObject/UnrealNames.h" importcpp: "EName".} = enum
   NAME_None = 0
@@ -317,9 +333,6 @@ proc `<`*[T: FString|FName](x, y: T): bool {.noSideEffect, importcpp: "# < #", n
 proc `<=`*[T: FString|FName](x, y: T): bool {.noSideEffect, importcpp: "# <= #", nodecl.}
 proc `==`*[T: FString|FName](x, y: T): bool {.noSideEffect, importcpp: "# == #", nodecl.}
 
-converter toFText*(s: wstring): FText {.
-  header: "Internationalization/Text.h", importcpp: "'0(@)", nodecl.}
-
 converter toFName*(s: wstring): FName {.
   header: "UObject/NameTypes.h", importcpp: "'0(@)", nodecl.}
 
@@ -330,13 +343,11 @@ proc toFString*(s: cstring): FString {.importcpp: "ANSI_TO_TCHAR(@)", nodecl.}
 
 proc toWideString*(s: cstring): wstring {.importcpp: "ANSI_TO_TCHAR(@)", nodecl.}
 
-proc toText(s: FString): FText {.
-  noSideEffect, header: "Internationalization/Text.h", importcpp: "'0::FromString(@)", nodecl.}
+proc toText*(s: FString): FText {.
+  noSideEffect, header: "Internationalization/Text.h", importcpp: "'0::FromString(@)".}
 
-proc toText(s: FName): FText {.
-  noSideEffect, header: "Internationalization/Text.h", importcpp: "'0::FromName(@)", nodecl.}
+proc toText*(s: FName): FText {.
+  noSideEffect, header: "Internationalization/Text.h", importcpp: "'0::FromName(@)".}
 
-proc text(s: FString or FName or FText): wstring {.importcpp: "(*#)", nodecl.}
-
-converter toFName(num: EName): FName =
+converter toFName*(num: EName): FName =
   result = fromEName(num)

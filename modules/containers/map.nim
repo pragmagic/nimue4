@@ -27,7 +27,7 @@ class(TMap[K, V], header: "Containers/Map.h", bycopy):
     ## Reserve memory enough to hold the specified number of elements in the map
 
   proc len(): int32 {.noSideEffect, cppname: "Num".}
-    ## Current number of items in the ma
+    ## Current number of items in the map
 
   proc del(key: K): int32 {.discardable, cppname: "Remove".}
     ## Removes value associated with the key in the map, if any. Returns the number of items removed
@@ -48,7 +48,7 @@ proc makeIterator[K, V](map: TMap[K, V]): TMapIterator[K, V] {.importcpp:"#.Crea
 
 proc keysInternal[K, V](map: TMap[K, V], outArr: var TArray[K]) {.importcpp:"#.GetKeys(@)", header: "Containers/Map.h".}
 proc keys*[K, V](map: TMap[K, V]): TArray[K] =
-  result = makeArray(map.len)
+  result = initArray(map.len)
   keysInternal(map, result)
 
 iterator keys*[K, V](map: TMap[K, V]): K =
