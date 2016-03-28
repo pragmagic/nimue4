@@ -308,7 +308,7 @@ macro class*(className, opts: expr, body: stmt): stmt {.immediate.} =
                   let varNameIdent = extractIdent(n)
                   var cppName = removeStrPragma(varNameNode, "cppname")
                   if cppName == nil:
-                    cppName = ($varNameIdent).capitalize
+                    cppName = if ty.toStrLit.strVal == "bool": $varNameIdent else: ($varNameIdent).capitalize
                   if cppName != $varNameIdent:
                     varNameNode = addVarPragma(varNameNode, makeStrPragma("importcpp", cppName))
 
