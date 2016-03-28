@@ -106,6 +106,7 @@ type
   UStaticMesh* {.header: "Engine/StaticMesh.h", importcpp.} = object of UObject
 
 include modules/misc
+include modules/paths
 
 include modules/components/componentdecls
 

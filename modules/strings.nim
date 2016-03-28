@@ -7,7 +7,7 @@
 
 type
   wchar* {.importcpp: "wchar_t", nodecl.} = object
-  wstring* = ref array[0 .. 1000000, wchar]
+  wstring* = ptr array[0 .. 10000000, wchar]
 
   FString* {.header: "Containers/UnrealString.h", importcpp: "FString", bycopy, nodecl.} = object
 
@@ -19,10 +19,14 @@ type
     FromStart,
     FromEnd
 
+proc toUtf8*(s: wstring): cstring {.importc: "TCHAR_TO_UTF8", nodecl.}
+proc toUtf8*(s: ptr wchar): cstring {.importc: "TCHAR_TO_UTF8", nodecl.}
+proc toWideString*(s: cstring): wstring {.importc: "ANSI_TO_TCHAR", nodecl.}
+
 # in C++ it's actually a macro that prepends "L" to the string literal, making it wide string literal
 proc TEXT*(s: cstring): wstring {.noSideEffect, importc: "TEXT", nodecl.}
 
-proc charArray*(s: FString): var wstring {.importcpp: "#.GetCharArray(@)", nodecl.}
+proc charArray*(s: FString): var TArray[wchar] {.importcpp: "#.GetCharArray(@)", nodecl.}
 proc mid*(s: FString,
          start: Natural,
          count: Natural = high(int32)): FString {.noSideEffect, importcpp: "#.Mid(@)", nodecl.}
@@ -49,14 +53,15 @@ proc trimTrailing(s: FString): FString {.noSideEffect, importcpp: "#.TrimTrailin
 
 proc len*(s: FString): int32 {.noSideEffect, importcpp: "#.Len(@)", nodecl.}
 
-proc `&`*(c: wchar, s: FString): FString {.noSideEffect, importcpp: "# + #", nodecl.}
-proc `&`*(s: FString, c: wchar): FString {.noSideEffect, importcpp: "# + #", nodecl.}
+proc `&`*(c: wchar, s: FString): FString {.noSideEffect, importcpp: "(# + #)", nodecl.}
+proc `&`*(s: FString, c: wchar): FString {.noSideEffect, importcpp: "(# + #)", nodecl.}
+proc `&`*(s: FString, s2: wstring): FString {.noSideEffect, importcpp: "(# + #)", nodecl.}
 
 proc `&=`*(s: var FString, c: FString or wstring or wchar) {.importcpp: "# += #", nodecl.}
 
-proc `&`*(x, y: FString): FString {.noSideEffect, importcpp: "# + #", nodecl.}
+proc `&`*(x, y: FString): FString {.noSideEffect, importcpp: "(# + #)", nodecl.}
 
-proc `/`*(x: FString, y: FString or wstring): FString {.noSideEffect, importcpp: "# / #", nodecl.}
+proc `/`*(x: FString, y: FString or wstring): FString {.noSideEffect, importcpp: "(# / #)", nodecl.}
 proc `/=`*(x: var FString, y: FString or wstring) {.importcpp: "# /= #", nodecl.}
 
 proc `[]`*(s: FString, i: Natural): wchar {.noSideEffect, importcpp: "#[#]", nodecl.}
@@ -110,6 +115,16 @@ proc strip*(s: FString; leading = true; trailing = true): FString {.noSideEffect
     result = trim(result)
   if trailing:
     result = trimTrailing(result)
+
+converter toFString*(s: wstring): FString {.
+  header: "Containers/UnrealString.h", importcpp: "'0(@)", nodecl.}
+
+proc toFString*(s: cstring): FString {.importc: "ANSI_TO_TCHAR", nodecl.}
+
+proc toWideString*(s: FString): wstring {.header: "Containers/UnrealString.h", importcpp: "(*#)".}
+
+proc `$`*(s: FString): string =
+  result = $(s.toWideString().toUtf8())
 
 # TODO: format, parseInt, parseBool, join, repeat for FString
 
@@ -335,13 +350,6 @@ proc `==`*[T: FString|FName](x, y: T): bool {.noSideEffect, importcpp: "# == #",
 
 converter toFName*(s: wstring): FName {.
   header: "UObject/NameTypes.h", importcpp: "'0(@)", nodecl.}
-
-converter toFString*(s: wstring): FString {.
-  header: "Containers/UnrealString.h", importcpp: "'0(@)", nodecl.}
-
-proc toFString*(s: cstring): FString {.importcpp: "ANSI_TO_TCHAR(@)", nodecl.}
-
-proc toWideString*(s: cstring): wstring {.importcpp: "ANSI_TO_TCHAR(@)", nodecl.}
 
 proc toText*(s: FString): FText {.
   noSideEffect, header: "Internationalization/Text.h", importcpp: "'0::FromString(@)".}

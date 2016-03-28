@@ -56,6 +56,8 @@ class(TArray[T], header: "Containers/Array.h", bycopy):
 
   proc reserve(capacity: Natural)
 
+  proc getData(): ptr T
+
 proc initArray*[T](): TArray[T] {.importcpp: "'0(@)", constructor, nodecl.}
 
 proc initArray*[T](initCapacity: Natural): TArray[T] =
