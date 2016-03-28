@@ -54,6 +54,15 @@ proc declareDelegate(name: NimNode,
   addTemplate[2] = bindTemplate[2].copyNimTree()
   addTemplate[3] = bindTemplate[3].copyNimTree()
 
+  var addUObjectTemplate = newProc(
+    name = postfix(ident("addUObject"), "*"),
+    body = newStmtList(parseExpr(bindTemplateBodyStr.replace("Bind", "AddUObject"))),
+    procType = nnkTemplateDef
+  )
+  # copy params
+  addUObjectTemplate[2] = bindTemplate[2].copyNimTree()
+  addUObjectTemplate[3] = bindTemplate[3].copyNimTree()
+
   var executeProc = newProc(
     name = postfix(ident("execute"), "*"),
     body = newEmptyNode(),
@@ -62,6 +71,11 @@ proc declareDelegate(name: NimNode,
   let headerPragma = newNimNode(nnkExprColonExpr).add(ident("header"), header)
   executeProc.pragma = newNimNode(nnkPragma)
   executeProc.pragma.add(headerPragma)
+
+  var broadcastProc = executeProc.copyNimTree()
+  broadcastProc.name = postfix(ident("broadcast"), "*")
+  let importcppBroadcastPragma = newNimNode(nnkExprColonExpr).add(ident("importcpp"), newStrLitNode("#.Broadcast(@)"))
+  broadcastProc.pragma.add(importcppBroadcastPragma)
 
   var executeIfBoundProc = executeProc.copyNimTree()
   executeIfBoundProc.name = postfix(ident("executeIfBound"), "*")
@@ -76,6 +90,7 @@ proc declareDelegate(name: NimNode,
   result = parseStmt("""
 type $1* {.importcpp: "$1", header: $2.} = object
 proc isBound*(delegate: $1) {.importcpp: "#.IsBound(@)", header: $2.}
+proc clear*(delegate: $1) {.importcpp: "#.Clear(@)", header: $2.}
 """.format($(name.ident), header.toStrLit.strVal))
 
   let dynamicProcs = parseStmt("""
@@ -88,13 +103,15 @@ proc removeDynamic*(delegate: $1, obj: ptr, methodName: string) {.importcpp: "Re
     for statement in dynamicProcs:
       result.add(statement)
 
-  result.add(executeProc)
-  result.add(executeIfBoundProc)
-  result.add(bindTemplate)
-  result.add(bindUObjectTemplate)
-
-  if MulticastDelegates.contains(kind):
+  if not MulticastDelegates.contains(kind):
+    result.add(bindTemplate)
+    result.add(bindUObjectTemplate)
+    result.add(executeProc)
+    result.add(executeIfBoundProc)
+  else:
     result.add(addTemplate)
+    result.add(addUObjectTemplate)
+    result.add(broadcastProc)
 
 proc exprListToParamList(callParams: NimNode, start: Natural, to: Natural): seq[NimNode] =
   ## Converts nnkExprColonExpr nodes to nnkIdentDefs
