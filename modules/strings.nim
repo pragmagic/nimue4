@@ -9,19 +9,23 @@ type
   wchar* {.importcpp: "wchar_t", nodecl.} = object
   wstring* = ptr array[0 .. 10000000, wchar]
 
-  FString* {.header: "Containers/UnrealString.h", importcpp: "FString", bycopy, nodecl.} = object
+  FString* {.header: "Containers/UnrealString.h", importcpp: "FString", bycopy.} = object
 
-  ESearchCase {.header: "Containers/UnrealString.h", importcpp: "ESearchCase::Type", nodecl, pure.} = enum
+  ESearchCase {.header: "Containers/UnrealString.h", importcpp: "ESearchCase::Type", pure.} = enum
     CaseSensitive,
     IgnoreCase
 
-  ESearchDir {.header: "Containers/UnrealString.h", importcpp: "ESearchDir::Type", nodecl, pure.} = enum
+  ESearchDir {.header: "Containers/UnrealString.h", importcpp: "ESearchDir::Type", pure.} = enum
     FromStart,
     FromEnd
 
-proc toUtf8*(s: wstring): cstring {.importc: "TCHAR_TO_UTF8", nodecl.}
-proc toUtf8*(s: ptr wchar): cstring {.importc: "TCHAR_TO_UTF8", nodecl.}
-proc toWideString*(s: cstring): wstring {.importc: "ANSI_TO_TCHAR", nodecl.}
+proc toUtf8(s: wstring): cstring {.importc: "TCHAR_TO_UTF8", nodecl.}
+proc toUtf8(s: ptr wchar): cstring {.importc: "TCHAR_TO_UTF8", nodecl.}
+
+proc toAnsi(s: wstring): cstring {.importc: "TCHAR_TO_ANSI", nodecl.}
+
+proc toWideString*(s: cstring): wstring {.importc: "UTF8_TO_TCHAR", nodecl.}
+  ## use it ONLY as an argument in a call
 
 # in C++ it's actually a macro that prepends "L" to the string literal, making it wide string literal
 proc TEXT*(s: cstring): wstring {.noSideEffect, importc: "TEXT", nodecl.}
@@ -116,15 +120,22 @@ proc strip*(s: FString; leading = true; trailing = true): FString {.noSideEffect
   if trailing:
     result = trimTrailing(result)
 
+proc wideString*(s: FString): wstring {.header: "Containers/UnrealString.h", importcpp: "(*#)".}
+
 converter toFString*(s: wstring): FString {.
   header: "Containers/UnrealString.h", importcpp: "'0(@)", nodecl.}
 
-proc toFString*(s: cstring): FString {.importc: "ANSI_TO_TCHAR", nodecl.}
+proc toFString*(s: cstring): FString {.importcpp: "'0(ANSI_TO_TCHAR(@))", nodecl.}
 
-proc toWideString*(s: FString): wstring {.header: "Containers/UnrealString.h", importcpp: "(*#)".}
+proc hackToImportCstrToNimStr(s: cstring): string =
+  ## a hack to make compiler import "cstrToNimStr"
+  ## used in the `$`
+  result = $s
 
 proc `$`*(s: FString): string =
-  result = $(s.toWideString().toUtf8())
+  # couldn't otherwise force Nim compiler to use TCHAR_TO_UTF8 macro as an argument
+  # without generating a temporary variable
+  {.emit: "`result` = `cstrToNimstr`(TCHAR_TO_UTF8(*`s`));".}
 
 # TODO: format, parseInt, parseBool, join, repeat for FString
 

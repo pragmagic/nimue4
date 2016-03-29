@@ -449,6 +449,7 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
       if meth.node.pragma.kind == nnkEmpty:
         meth.node.pragma = newNimNode(nnkPragma)
       meth.node.pragma.add(ident("exportc"))
+      meth.node.pragma.add(ident("cdecl"))
 
       methDefs.add(meth.node)
 

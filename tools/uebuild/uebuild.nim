@@ -234,7 +234,6 @@ proc createNimCfg(outDir: string, moduleDir: string) =
     contents.add("cc=vcc\n")
   contents.add("--path:\"" & moduleDir.replace("\\", "/") & "\"\n")
   contents.add("--path:\"" & getCurrentDir().replace("\\", "/") & "\"\n")
-  contents.add("--define:useRealtimeGC\n")
   contents.add("--experimental\n")
   writeFile(outDir / "nim.cfg", contents)
 
@@ -279,7 +278,7 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
         osCpuFlags &= "--os:" & os
       if cpu != nil:
         osCpuFlags &= " --cpu:" & cpu
-      exec "nim cpp -c --noMain --noCppExceptions --tlsEmulation:off " &
+      exec "nim cpp -c --noMain --noCppExceptions --dynlibOverride:gc --gc:boehm " &
            "-d:useSysAssert -d:useGcAssert --experimental " & osCpuFlags &
            " -p:\"" & getCurrentDir() & "\" -p:\"" & moduleDir & "\" --nimcache:\"" & nimcacheDir &
            "\" \"" & rootFile & '"'
