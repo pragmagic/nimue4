@@ -278,7 +278,7 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
         osCpuFlags &= "--os:" & os
       if cpu != nil:
         osCpuFlags &= " --cpu:" & cpu
-      exec "nim cpp -c --noMain --noCppExceptions --dynlibOverride:gc --gc:boehm " &
+      exec "nim cpp -c --noMain --noCppExceptions --dynlibOverride:gc --dynlibOverride:boehmgc --gc:boehm " &
            "-d:useSysAssert -d:useGcAssert --experimental " & osCpuFlags &
            " -p:\"" & getCurrentDir() & "\" -p:\"" & moduleDir & "\" --nimcache:\"" & nimcacheDir &
            "\" \"" & rootFile & '"'
