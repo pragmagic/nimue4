@@ -278,7 +278,10 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
         osCpuFlags &= "--os:" & os
       if cpu != nil:
         osCpuFlags &= " --cpu:" & cpu
-      exec "nim cpp -c --noMain --noCppExceptions --dynlibOverride:gc --dynlibOverride:boehmgc --gc:boehm " &
+      # default GC doesn't work on OS X and iOS
+      let actualOS = if os == nil: hostOS else: os
+      let gcFlags = if actualOS == "macosx": "--dynlibOverride:gc --gc:boehm " else: ""
+      exec "nim cpp -c --noMain --noCppExceptions " & gcFlags &
            "-d:useSysAssert -d:useGcAssert --experimental " & osCpuFlags &
            " -p:\"" & getCurrentDir() & "\" -p:\"" & moduleDir & "\" --nimcache:\"" & nimcacheDir &
            "\" \"" & rootFile & '"'
