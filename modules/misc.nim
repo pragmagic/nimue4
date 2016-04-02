@@ -30,24 +30,6 @@ type FConvexVolume* {.header: "ConvexVolume.h", importcpp.} = object
 
 type FNavigableGeometryExport* {.header: "AI/NavigationSystemHelpers.h", importcpp.} = object
 
-proc rawUELog*(s: wstring) {.importcpp: "UE_LOG(LogTemp, Log, @)", nodecl, varargs.}
-
-template ueLog*(s: static[string]) =
-  rawUELog(TEXT(s))
-
-macro ueLog*(formatString: string{lit}, args: varargs[expr]): expr =
-  result = callsite()
-  result[0] = newIdentNode("rawUELog")
-  result[1] = newCall("TEXT", result[1])
-
-  for i in 0 .. <args.len:
-    if args[i].getType.typeKind == ntyString or
-       args[i].getType.typeKind == ntyCString:
-      result[i + 2] = newCall("toWideString", result[i + 2])
-
-proc ueLog*[T](t: T) {.inline.} =
-  rawUELog(TEXT("%s"), toWideString($t))
-
 proc ueCast*[T](v: ptr UObject): ptr T {.importcpp: "(Cast<'*0>(@))", nodecl.}
 proc ueNew*[T](): ptr T {.importcpp: "(NewObject<'*0>())", nodecl.}
 
@@ -61,21 +43,5 @@ proc overrideBlendableSettings*(this: IBlendableInterface, view: var FSceneView,
 
 type UAssetUserData {.header: "Engine/AssetUserData.h", importcpp.} = object of UObject
 # proc draw(this: UAssetUserData; pdi: ptr FPrimitiveDrawInterface; view: ptr FSceneView)
-
-var gEngineIni* {.nodecl, importcpp: "GGameIni".}: FString ## Engine ini filename
-var gEditorIni* {.nodecl importcpp: "GEditorIni".}: FString ## Editor ini filename
-var gEditorKeyBindingsIni* {.nodecl, importcpp: "GEditorKeyBindingsIni".}: FString ## Editor Key Bindings ini file
-var gEditorLayoutIni* {.nodecl, importcpp: "GEditorLayoutIni".}: FString ## Editor UI Layout ini filename
-var gEditorSettingsIni* {.nodecl, importcpp: "GEditorSettingsIni".}: FString ## Editor Settings ini filename
-
-# Editor per-project ini files - stored per project.
-var gEditorPerProjectIni* {.nodecl, importcpp: "GEditorPerProjectIni".}: FString ## Editor User Settings ini filename
-
-var gCompatIni* {.nodecl, importcpp: "GCompatIni".}: FString
-var gLightmassIni* {.nodecl, importcpp: "GLightmassIni".}: FString ## Lightmass settings ini filename
-var gScalabilityIni* {.nodecl, importcpp: "GScalabilityIni".}: FString ## Scalability settings ini filename
-var gInputIni* {.nodecl, importcpp: "GInputIni".}: FString ## Input ini filename
-var gGameIni* {.nodecl, importcpp: "GGameIni".}: FString ## Game ini filename
-var gGameUserSettingsIni* {.nodecl, importcpp: "GGameUserSettingsIni".}: FString ## User Game Settings ini filename
 
 # TODO

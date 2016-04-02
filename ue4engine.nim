@@ -23,6 +23,7 @@ include modules/containers/sharedptr
 
 include modules/strings
 include modules/math
+include modules/logging
 
 type
   FOutputDevice* {.header: "Misc/OutputDevice.h", importcpp.} = object
