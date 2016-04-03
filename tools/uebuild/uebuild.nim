@@ -241,6 +241,8 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
   let sourceDir = projectDir / "Source"
   let nimOutDir = getNimOutDir(projectDir)
 
+  # TODO: properly handle deleted files
+
   for sourceDirFile in walkDir(sourceDir):
     if sourceDirFile.kind != pcDir:
       continue

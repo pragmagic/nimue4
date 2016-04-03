@@ -384,8 +384,11 @@ proc genCppDeclarationCode(typeDef: TypeDefinition): string {.compileTime.} =
     of tkStruct: "struct"
     of tkEnum: "enum class"
 
-  let inheritanceExpr = if typeDef.parentNames.len == 0: nil
+  var inheritanceExpr = if typeDef.parentNames.len == 0: nil
     else: rope(" : ") & typeDef.parentNames.mapIt("public `" & it & "`").join(", ") & " "
+
+  if typeDef.kind == tkEnum:
+    inheritanceExpr = rope(" : uint8")
 
   let interfaceHelperType = if typeDef.kind != tkInterface: "" else: """
 /*BEGIN_UNREAL_TYPE*/
@@ -587,6 +590,11 @@ proc convertBlueprintFunction(function: NimNode, category: string): NimNode =
   ## that is accessible from Nim, too
   assert (function.kind == nnkProcDef)
 
+  if function.removePragma("noBlueprint") or
+     function.name.kind != nnkPostfix or
+     function.name.unpackPostfix().op != "*":
+    return function
+
   let name = $(extractIdent(function.name).ident)
   let uFunctionParamStr = rope("BlueprintCallable, Category=\"") & category & "\""
   let methods = @[TypeMethod(
@@ -610,7 +618,7 @@ proc convertBlueprintFunction(function: NimNode, category: string): NimNode =
   )
   result = genType(typeDef)
 
-proc convertBlueprintObject(objNode: NimNode, category: string, ): NimNode =
+proc convertBlueprintObject(objNode: NimNode, category: string): NimNode =
   assert(objNode.kind == nnkTypeDef and objNode[2].kind == nnkObjectTy)
 
   let name = $(extractIdent(objNode[0]).ident)
@@ -635,6 +643,32 @@ proc convertBlueprintObject(objNode: NimNode, category: string, ): NimNode =
   )
   result = genType(typeDef)
 
+proc convertBlueprintEnum(enumNode: NimNode, category: string): NimNode =
+  assert(enumNode.kind == nnkTypeDef and enumNode[2].kind == nnkEnumTy)
+  let name = $(extractIdent(enumNode[0]).ident)
+
+  let enumTy = enumNode[2]
+
+  var fields = newSeq[TypeField]()
+  for fieldIdx in 1..<enumTy.len:
+    let enumFieldIdent = enumTy[fieldIdx]
+    let field = TypeField(
+      name: rope($enumFieldIdent.ident),
+      nameNode: enumFieldIdent
+    )
+    fields.add(field)
+
+  let typeDef = TypeDefinition(
+    headerName: cppHeaderName(enumNode),
+    name: rope(name),
+    paramStr: rope("BlueprintType"),
+    kind: tkEnum,
+    parentNames: @[],
+    fields: fields,
+    methods: @[]
+  )
+  result = genType(typeDef)
+
 proc convertBlueprintType(typeNode: NimNode, category: string): NimNode =
   ## Generates nnkStmtList that turns the specified type definition
   ## into UE4 blueprint type that is accessible from Nim, too
@@ -649,9 +683,7 @@ proc convertBlueprintType(typeNode: NimNode, category: string): NimNode =
   of nnkObjectTy:
     result = convertBlueprintObject(typeNode, category)
   of nnkEnumTy:
-    # TODO
-    # result = convertBlueprintEnum(typeNode, category)
-    parseError(typeNode[2], "enum support will be added soon")
+    result = convertBlueprintEnum(typeNode, category)
   else:
     parseError(typeNode[2], "only object and enum types are supported for blueprints")
 

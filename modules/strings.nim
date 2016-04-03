@@ -28,7 +28,7 @@ proc toWideString*(s: cstring): wstring {.importc: "UTF8_TO_TCHAR", nodecl.}
   ## use it ONLY as an argument in a call
 
 # in C++ it's actually a macro that prepends "L" to the string literal, making it wide string literal
-proc TEXT*(s: cstring): wstring {.noSideEffect, importc: "TEXT", nodecl.}
+proc TEXT*(s: cstring{lit}): wstring {.noSideEffect, importc: "TEXT", nodecl.}
 
 proc charArray*(s: FString): var TArray[wchar] {.importcpp: "#.GetCharArray(@)", nodecl.}
 proc mid*(s: FString,
@@ -126,6 +126,9 @@ converter toFString*(s: wstring): FString {.
   header: "Containers/UnrealString.h", importcpp: "'0(@)", nodecl.}
 
 proc toFString*(s: cstring): FString {.importcpp: "'0(ANSI_TO_TCHAR(@))", nodecl.}
+proc toFString*(n: int8 or int16 or int32 or int64 or uint8 or uint16 or uint32 or uint64): FString {.
+  importcpp: "'0::FromInt(@)", nodecl.}
+proc toFString*(f: float32): FString {.importcpp: "'0::SanitizeFloat(@)", nodecl.}
 
 proc hackToImportCstrToNimStr(s: cstring): string =
   ## a hack to make compiler import "cstrToNimStr"
@@ -152,13 +155,17 @@ class(FText, header: "Internationalization/Text.h", bycopy):
   proc isCultureInvariant(): bool {.noSideEffect.}
   proc shouldGatherForLocalization(): bool {.noSideEffect.}
 
+proc findTextInternal(namespace: FString, key: FString, outText: var FText) {.importcpp: "FText::FindText(@)", nodecl.}
+proc nsLocText*(ns, key: wstring): FText {.inline.} =
+  findTextInternal(ns, key, result)
+
 converter toFText*(s: wstring): FText {.
   header: "Internationalization/Text.h", importcpp: "'0::FromString(@)", nodecl.}
 
 proc toText*(num: int8 or int16 or int32 or uint8 or uint16 or uint32): FText {.
   noSideEffect, header: "Internationalization/Text.h", importcpp: "'0::AsNumber(@)".}
 
-proc nsLocText*(ns, key, text: cstring): FText {.noSideEffect, importc: "NSLOCTEXT", nodecl.}
+proc nsLocText*(ns, key, text: cstring{lit}): FText {.noSideEffect, importc: "NSLOCTEXT", nodecl.}
 
 # TODO: this can be made as macro that accepts and implicitly converts non-text types
 proc textFormat*(formatString: FText): FText {.
