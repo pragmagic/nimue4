@@ -592,10 +592,11 @@ proc convertBlueprintFunction(function: NimNode, category: string): NimNode =
 
   if function.removePragma("noBlueprint") or
      function.name.kind != nnkPostfix or
-     function.name.unpackPostfix().op != "*":
+     $function.name[0] != "*":
     return function
 
   let name = $(extractIdent(function.name).ident)
+
   let uFunctionParamStr = rope("BlueprintCallable, Category=\"") & category & "\""
   let methods = @[TypeMethod(
     name: rope(name),
