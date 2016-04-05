@@ -488,6 +488,8 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
     typeDecl[0][0][2][2] = recList
 
   result = newStmtList()
+  result.add(newNimNode(nnkPragma).add(
+              newNimNode(nnkExprColonExpr).add(ident("this"), ident("this"))))
   if not typeDef.isUtilityType:
     result.add(typeDecl)
   result.add(methDecls)

@@ -38,6 +38,12 @@ type
     Y,
     Z
 
+  FIntPoint* {.header: "Math/IntPoint.h", importcpp: "FIntPoint", bycopy.} = object
+    x*: int32
+    y*: int32
+
+proc initFIntPoint*(x,y: int32): FIntPoint {.header: "Math/IntPoint.h", importcpp: "FIntPoint(@)", constructor.}
+
 class(FVector, header: "Math/Vector.h", bycopy):
   var x: cfloat
   var y: cfloat
