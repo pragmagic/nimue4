@@ -443,7 +443,9 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
       var decl = meth.node.copy()
       decl[^1] = newEmptyNode() # remove body
       let cppName = ($meth.name).capitalize()
-      decl.pragma = parseExpr("{.header: \"$#\", importcpp: \"#.$#(@)\", nodecl.}".format(typeDef.headerName, cppName))
+      let cppPattern = if typeDef.isUtilityType: $typeDef.name & "::" & cppName & "(@)"
+                       else: "#." & cppName & "(@)"
+      decl.pragma = parseExpr("{.header: \"$1\", importcpp: \"$2\", nodecl.}".format(typeDef.headerName, cppPattern))
       methDecls.add(decl)
 
     meth.node[0] = ident($meth.genName)
@@ -624,7 +626,7 @@ proc convertBlueprintObject(objNode: NimNode, category: string): NimNode =
 
   let name = $(extractIdent(objNode[0]).ident)
   let objTy = objNode[2]
-  let parentName = if objTy[1].kind == nnkOfInherit: $objTy[1].ident else: nil
+  let parentName = if objTy[1].kind == nnkOfInherit: $objTy[1][0].ident else: nil
 
   var fields = newSeq[TypeField]()
   for fieldIdentDefs in objTy[2]:
