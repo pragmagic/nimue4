@@ -39,8 +39,8 @@ type
     Z
 
   FIntPoint* {.header: "Math/IntPoint.h", importcpp: "FIntPoint", bycopy.} = object
-    x*: int32
-    y*: int32
+    x* {.importcpp: "X".}: int32
+    y* {.importcpp: "Y".}: int32
 
 proc initFIntPoint*(x,y: int32): FIntPoint {.header: "Math/IntPoint.h", importcpp: "FIntPoint(@)", constructor.}
 
