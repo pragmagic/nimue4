@@ -100,6 +100,8 @@ proc toCppLiteral(nimLiteral: NimNode): Rope =
       result = rope($(nimLiteral.intVal))
     of nnkIdent:
       result = rope($nimLiteral.ident)
+    of nnkNilLit:
+      result = rope("0")
     else:
       parseError(nimLiteral, "literal type expected, but got " & $(nimLiteral.kind))
 
