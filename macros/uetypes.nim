@@ -99,7 +99,7 @@ proc toCppLiteral(nimLiteral: NimNode): Rope =
     of nnkIntLit..nnkUInt64Lit:
       result = rope($(nimLiteral.intVal))
     of nnkIdent:
-      result = rope($(nimLiteral.ident))
+      result = rope($nimLiteral.ident)
     else:
       parseError(nimLiteral, "literal type expected, but got " & $(nimLiteral.kind))
 
@@ -145,8 +145,6 @@ proc identDefsToTypeField(identDefs: NimNode): TypeField =
 
   let typeNode = identDefs[1]
   let defaultValueNode = identDefs[2]
-  if defaultValueNode.kind != nnkEmpty:
-    parseError(defaultValueNode, "default values for fields are not supported for now") # TODO
 
   result = TypeField(name: rope(fieldName),
                      nameNode: nameNode,
@@ -173,14 +171,11 @@ proc parseUProperty(typeKind: TypeKind, uPropertyNode: NimNode): TypeField =
 
 proc parseArgs(node: NimNode): seq[VarDeclaration] =
   assert(node.kind == nnkFormalParams)
-
   result = @[]
   for i in 1 .. < node.len:
     let identDefs = node[i]
     if identDefs.kind != nnkIdentDefs:
       break
-    if identDefs[^1].kind != nnkEmpty:
-      parseError(identDefs, "default values for arguments are not supported for now") # TODO
     if identDefs[^2].kind == nnkEmpty:
       parseError(identDefs, "type inference is not supported for arguments")
 
