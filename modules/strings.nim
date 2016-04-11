@@ -22,13 +22,14 @@ type
 proc toUtf8(s: wstring): cstring {.importc: "TCHAR_TO_UTF8", nodecl.}
 proc toUtf8(s: ptr wchar): cstring {.importc: "TCHAR_TO_UTF8", nodecl.}
 
-proc toAnsi(s: wstring): cstring {.importc: "TCHAR_TO_ANSI", nodecl.}
-
 proc toWideString*(s: cstring): wstring {.importc: "UTF8_TO_TCHAR", nodecl.}
   ## use it ONLY as an argument in a call
 
 # in C++ it's actually a macro that prepends "L" to the string literal, making it wide string literal
 proc TEXT*(s: cstring{lit}): wstring {.noSideEffect, importc: "TEXT", nodecl.}
+proc u16*(s: cstring{lit}): wstring {.noSideEffect, importc: "TEXT", nodecl.}
+# proc u16*(s: string{lit}): wstring {.noSideEffect, importc: "TEXT", nodecl.}
+proc u16*(s: string{sym|ident|call|lvalue|param}): FString {.noSideEffect, importcpp: "FString(UTF8_TO_TCHAR(@))", nodecl.}
 
 proc charArray*(s: FString): var TArray[wchar] {.importcpp: "#.GetCharArray(@)", nodecl.}
 proc mid*(s: FString,
@@ -125,7 +126,10 @@ proc wideString*(s: FString): wstring {.header: "Containers/UnrealString.h", imp
 converter toFString*(s: wstring): FString {.
   header: "Containers/UnrealString.h", importcpp: "'0(@)", nodecl.}
 
-proc toFString*(s: cstring): FString {.importcpp: "'0(ANSI_TO_TCHAR(@))", nodecl.}
+proc toFString*(s: cstring{lit}): FString {.importcpp: "'0(TEXT(@))", nodecl.}
+proc toFString*(s: cstring): FString {.importcpp: "'0(UTF8_TO_TCHAR(@))", nodecl.}
+proc toFString*(s: string{sym|ident|call|lvalue|param}): FString =
+  result = toFString(cstring(s))
 proc toFString*(n: int8 or int16 or int32 or int64 or uint8 or uint16 or uint32 or uint64): FString {.
   importcpp: "'0::FromInt(@)", nodecl.}
 proc toFString*(f: float32): FString {.importcpp: "'0::SanitizeFloat(@)", nodecl.}
