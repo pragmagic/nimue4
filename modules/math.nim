@@ -178,8 +178,8 @@ class(FVector2D, header: "Math/Vector2D.h", bycopy):
   var x: cfloat
   var y: cfloat
 
-  proc makeFVector2D(x, y: cfloat): FVector2D {.constructor.}
-  proc makeFVector2D(vec3d: FVector): FVector2D {.constructor.}
+  proc initFVector2D(x, y: cfloat): FVector2D {.constructor.}
+  proc initFVector2D(vec3d: FVector): FVector2D {.constructor.}
 
   proc set(x,y: cfloat)
 
