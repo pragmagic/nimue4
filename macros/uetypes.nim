@@ -160,16 +160,20 @@ proc parseField(node: NimNode): TypeField =
   let identDefs = node[0]
   result = identDefsToTypeField(identDefs)
 
-proc parseUProperty(typeKind: TypeKind, uPropertyNode: NimNode): TypeField =
+proc parseUProperty(typeKind: TypeKind, uPropertyNode: NimNode): seq[TypeField] =
   assert(uPropertyNode.kind == nnkCall and uPropertyNode[0].ident == !"UEProperty")
 
   if uPropertyNode[^1].kind != nnkStmtList or uPropertyNode[^1][0].kind != nnkVarSection:
     parseError(uPropertyNode, "expected field declaration after UEProperty")
 
-  result = parseField(uPropertyNode[^1][0])
-  result.isUProperty = true
-
-  result.uPropertyParamStr = extractParamString(uPropertyNode)
+  let paramString = extractParamString(uPropertyNode)
+  result = newSeq[TypeField](uPropertyNode[^1].len)
+  for i in 0..<uPropertyNode[^1].len:
+    if uPropertyNode[^1][i].kind != nnkVarSection:
+      parseError(uPropertyNode[^1][i], "expected field declaration after UEProperty")
+    result[i] = parseField(uPropertyNode[^1][i])
+    result[i].isUProperty = true
+    result[i].uPropertyParamStr = paramString
 
 proc parseArgs(node: NimNode): seq[VarDeclaration] =
   assert(node.kind == nnkFormalParams)
@@ -326,37 +330,40 @@ proc genCppMethods(typeDef: TypeDefinition): Rope {.compileTime.} =
 proc genCppImplementationCode(typeDef: TypeDefinition): string {.compileTime.} =
   var code: Rope
   for meth in typeDef.methods:
-    if not meth.isImplementationNeeded():
-      continue
     let methNameCapitalized = ($meth.name).capitalize()
-
-    if not meth.isConstructor:
+    if meth.isBlueprintNative:
       code.add(meth.node.cppReturnType())
       code.add(" ")
-    code.add(typeDef.name & "::" & methNameCapitalized)
-    code.add("(" & toCppArgList(meth.args, true, false) & ")")
+      code.add(typeDef.name & "::" & methNameCapitalized & "_Implementation")
+      code.add("(" & toCppArgList(meth.args, true, false) & ") {}\n\n")
+    elif meth.isImplementationNeeded():
+      if not meth.isConstructor:
+        code.add(meth.node.cppReturnType())
+        code.add(" ")
+      code.add(typeDef.name & "::" & methNameCapitalized)
+      code.add("(" & toCppArgList(meth.args, true, false) & ")")
 
-    code.add(" {\n ")
+      code.add(" {\n ")
 
-    if meth.isCallSuper:
-      let superInvocation = rope("Super::") & methNameCapitalized &
-        "(" & meth.args.mapIt($(it.name)).join(", ") & ");\n"
-      code.add(superInvocation)
+      if meth.isCallSuper:
+        let superInvocation = rope("Super::") & methNameCapitalized &
+          "(" & meth.args.mapIt($(it.name)).join(", ") & ");\n"
+        code.add(superInvocation)
 
-    var invocationCode: Rope
-    for arg in meth.args:
-      if invocationCode.len != 0:
-        invocationCode.add(", ")
-      invocationCode.add(arg.name)
-    let returnOrNothing = rope(if meth.isConstructor or $(meth.node.cppReturnType()) == "void": "" else: "return")
-    var thisOrNothing = rope(if not meth.isStatic: "this" else: "")
-    if thisOrNothing.len != 0 and invocationCode.len != 0:
-      invocationCode = ", " & invocationCode
-    invocationCode = thisOrNothing & invocationCode
-    code.addf("$# `$#`($#);\n",
-                [returnOrNothing, meth.genName, invocationCode])
+      var invocationCode: Rope
+      for arg in meth.args:
+        if invocationCode.len != 0:
+          invocationCode.add(", ")
+        invocationCode.add(arg.name)
+      let returnOrNothing = rope(if meth.isConstructor or $(meth.node.cppReturnType()) == "void": "" else: "return")
+      var thisOrNothing = rope(if not meth.isStatic: "this" else: "")
+      if thisOrNothing.len != 0 and invocationCode.len != 0:
+        invocationCode = ", " & invocationCode
+      invocationCode = thisOrNothing & invocationCode
+      code.addf("$# `$#`($#);\n",
+                  [returnOrNothing, meth.genName, invocationCode])
 
-    code.add("}\n\n")
+      code.add("}\n\n")
 
   if code.len != 0:
     code = rope("/*VARSECTION*/") & code

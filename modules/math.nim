@@ -513,6 +513,8 @@ class(FMatrix, header: "Math/Matrix.h", notypedef):
 proc colorFromHex(hexString: FString): FColor {.
   importcpp: "FColor::FromHex(@)", header: "Math/Color.h", noSideEffect.}
 
+proc initFColor*(r,g,b,a: uint8): FColor {.importcpp: "FColor(@)", nodecl, constructor.}
+
 var WhiteColor* {.importc: "FColor::White", header: "Math/Color.h".}: FColor
 var IdentityTransform* {.importc: "FTransform::Identity", header: "Math/TransformVectorized.h".}: FTransform
 

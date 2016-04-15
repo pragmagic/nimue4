@@ -2047,3 +2047,15 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
   # AWARE
   # var detachFence: FRenderCommandFence
   #   ## A fence to track when the primitive is detached from the scene in the rendering thread.
+
+type TActorIterator {.importcpp: "TActorIterator", header: "EngineUtils.h".} [T: AActor] = object
+proc initActorIterator[T: AActor](world: ptr UWorld): TActorIterator[T] {.importcpp: "'0(@)", nodecl, constructor.}
+proc isValid[T](it: TActorIterator[T]): bool {.importcpp: "(*#)", nodecl, noSideEffect.}
+proc next[T](it: var TActorIterator[T]) {.importcpp: "(++#)", nodecl.}
+proc getActor[T](it: TActorIterator[T]): ptr T {.importcpp: "(*#)", nodecl, noSideEffect.}
+
+iterator actors*[T: AActor](world: ptr UWorld): ptr T =
+  var it = initActorIterator[T](world)
+  while it.isValid:
+    yield it.getActor()
+    it.next()

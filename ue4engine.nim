@@ -110,6 +110,7 @@ include modules/misc
 include modules/paths
 
 include modules/components/componentdecls
+include modules/engine/texture
 
 type
   AActor* {.header: "GameFramework/Actor.h", importcpp.} = object of UObject

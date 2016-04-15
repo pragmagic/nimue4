@@ -12,6 +12,7 @@ class(TArray[T], header: "Containers/Array.h", bycopy):
   proc pop(): T
 
   proc `[]`(i: Natural): T {.noSideEffect.}
+  proc `[]=`(i: Natural, val: T)
 
   proc find(item: T): int32 {.noSideEffect.}
 
@@ -58,15 +59,33 @@ class(TArray[T], header: "Containers/Array.h", bycopy):
 
   proc getData(): ptr T
 
+proc initArrayInternal[T](arr: var TArray[T], val: T, size: int32) {.importcpp: "#.Init(@)", nodecl.}
+
 proc initArray*[T](): TArray[T] {.importcpp: "'0(@)", constructor, nodecl.}
 
 proc initArray*[T](initCapacity: Natural): TArray[T] =
   result = initArray[T]()
   result.reserve(initCapacity)
 
+proc initArray*[T](val: T, size: Natural): TArray[T] =
+  initArrayInternal[T](result, val, int32(size))
+
 iterator items*[T](arr: TArray[T]): T =
   for i in 0 .. <arr.len:
     yield arr[i]
+
+proc `$`*[T](arr: TArray[T]): string =
+  let comma = rope(", ")
+  var isFirst = true
+  var r = rope("[")
+  for item in arr.items():
+    if not isFirst:
+      r.add(comma)
+    else:
+      isFirst = false
+    r.add($item)
+  r.add("]")
+  result = $r
 
 # TODO: might have to manually implement many procs here
 # so that they work properly with Nim (non-C++) types
