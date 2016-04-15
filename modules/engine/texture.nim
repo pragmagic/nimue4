@@ -88,5 +88,22 @@ class(UTexture of UObject, header: "Engine/Texture.h", notypedef):
 class(UTexture2D of UTexture, header: "Engine/Texture2D.h", notypedef):
   proc updateTextureRegions(mipIndex: int32, numRegions: uint32, regions: ptr FUpdateTextureRegion2D, srcPitch: uint32, srcBpp: uint32, srcData: ptr uint8)
 
+proc updateTextureRegions*(texture: ptr UTexture2D, numRegions: uint32, regions: ptr FUpdateTextureRegion2D, srcPitch, srcBpp: uint32, srcData: ptr uint8, regionsMayChange: bool = false) =
+  if not regionsMayChange:
+    texture.updateTextureRegions(numRegions, regions, srcPitch, srcBpp, srcData)
+  else:
+    {.emit: """
+    const uint32 regionsSize = `numRegions` * sizeof(FUpdateTextureRegion2D);
+    FUpdateTextureRegion2D* SrcData = (FUpdateTextureRegion2D*) FMemory::Malloc(regionsSize);
+		FMemory::Memcpy(SrcData, `regions`, regionsSize);
+
+		auto DataCleanup = [](uint8* InSrcData, const FUpdateTextureRegion2D* Regions)
+		{
+			FMemory::Free((void *) Regions);
+		};
+		`texture`->UpdateTextureRegions(0, `numRegions`, SrcData, `srcPitch`, `srcBpp`, `srcData`, DataCleanup);
+""".}
+
+
 proc createTransientTexture*(sizeX, sizeY: int32; format: EPixelFormat = pfB8G8R8A8): ptr UTexture2D {.
   importcpp: "UTexture2D::CreateTransient(@)", nodecl.}
