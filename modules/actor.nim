@@ -530,7 +530,7 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
 
   proc setActorLocation(newLocation: FVector; bSweep: bool = false;
                         outSweepHitResult: ptr FHitResult = nil;
-                        teleport: ETeleportType = ETeleportType.None): bool
+                        teleport: ETeleportType = ETeleportType.None): bool {.discardable.}
     ## Move the actor instantly to the specified location.
     ##
     ## @param NewLocation The new location to teleport the Actor to.

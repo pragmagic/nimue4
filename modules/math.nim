@@ -49,7 +49,7 @@ class(FVector, header: "Math/Vector.h", bycopy):
   var y: cfloat
   var z: cfloat
 
-  proc makeFVector(x, y, z: cfloat): FVector {.constructor.}
+  proc initFVector(x, y, z: cfloat): FVector {.constructor.}
 
   proc set(x, y, z: cfloat)
 
@@ -255,9 +255,9 @@ var UnitVector2D* {.importc: "FVector2D::UnitVector", header: "Math/Vector2D.h".
   ## A unit vector (1,1)
 
 class(FQuat, header: "Math/Quat.h", notypedef):
-  proc makeFQuat(inX, inY, inZ, inW: cfloat): FQuat {.constructor.}
-  proc makeFQuat(m: FMatrix): FQuat {.constructor.}
-  proc makeFQuat(r: FRotator): FQuat {.constructor.}
+  proc initFQuat(inX, inY, inZ, inW: cfloat): FQuat {.constructor.}
+  proc initFQuat(m: FMatrix): FQuat {.constructor.}
+  proc initFQuat(r: FRotator): FQuat {.constructor.}
 
   proc `+`(other: FQuat): FQuat {.noSideEffect.}
   proc `+=`(other: FQuat)
@@ -339,9 +339,9 @@ proc quatCalcTangents(prevP, p, nextP: FQuat; tension: cfloat; outTan: var FQuat
   header: "Math/Quat.h", importcpp: "FQuat::CalcTangents(@)".}
 
 class(FRotator, header: "Math/Rotator.h", notypedef):
-  proc makeFRotator(f: cfloat): FRotator {.constructor.}
-  proc makeFRotator(pitch, yaw, roll: cfloat): FRotator {.constructor.}
-  proc makeFRotator(quat: FQuat): FRotator {.constructor.}
+  proc initFRotator(f: cfloat): FRotator {.constructor.}
+  proc initFRotator(pitch, yaw, roll: cfloat): FRotator {.constructor.}
+  proc initFRotator(quat: FQuat): FRotator {.constructor.}
 
   proc `+`(other: FRotator): FRotator {.noSideEffect.}
   proc `+=`(other: FRotator)
@@ -401,9 +401,9 @@ class(FRotator, header: "Math/Rotator.h", notypedef):
 var ZeroRotator* {.importc: "FRotator::ZeroRotator", header: "Math/Rotator.h".}: FRotator
 
 class(FPlane, header: "Math/Plane.h", notypedef):
-  proc makeFPlane(): FPlane {.constructor.}
+  proc initFPlane(): FPlane {.constructor.}
 
-  proc makeFPlane(x, y, z, w: cfloat) {.constructor.}
+  proc initFPlane(x, y, z, w: cfloat) {.constructor.}
 
   proc planeDot(p: FVector): float {.noSideEffect.}
     ## Calculates distance between plane and a point.
@@ -438,8 +438,8 @@ class(FPlane, header: "Math/Plane.h", notypedef):
     ## Dot product
 
 class(FMatrix, header: "Math/Matrix.h", notypedef):
-  proc makeFMatrix(x,y,z,w: FPlane): FMatrix {.constructor.}
-  proc makeFMatrix(x,y,z,w: FVector): FMatrix {.constructor.}
+  proc initFMatrix(x,y,z,w: FPlane): FMatrix {.constructor.}
+  proc initFMatrix(x,y,z,w: FVector): FMatrix {.constructor.}
 
   proc setIdentity()
     # Set this to identity matrix
