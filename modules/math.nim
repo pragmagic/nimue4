@@ -45,9 +45,9 @@ type
 proc initFIntPoint*(x,y: int32): FIntPoint {.header: "Math/IntPoint.h", importcpp: "FIntPoint(@)", constructor.}
 
 class(FVector, header: "Math/Vector.h", bycopy):
-  var x: cfloat
-  var y: cfloat
-  var z: cfloat
+  var x*: cfloat
+  var y*: cfloat
+  var z*: cfloat
 
   proc initFVector(x, y, z: cfloat): FVector {.constructor.}
 
