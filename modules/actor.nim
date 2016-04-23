@@ -1919,9 +1919,6 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
   proc isNetStartupActor(): bool {.noSideEffect.}
     ## Returns true if this is a replicated actor that was placed in the map
 
-  method findComponentByClass(componentClass: typedesc[UActorComponent]): ptr UActorComponent {.noSideEffect.}
-    ## Searches components array and returns first encountered component of the specified class.
-
   method getComponentByClass(componentClass: typedesc[UActorComponent]): ptr UActorComponent
     ## Script exposed version of FindComponentByClass
     ## UFUNCTION()
@@ -1935,9 +1932,6 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
                           tag: FName): TArray[ptr UActorComponent] {.noSideEffect.}
     ## Gets all the components that inherit from the given class with a given tag.
     ## UFUNCTION(BlueprintCallable, Category = "Actor", meta = (ComponentClass = "ActorComponent"), meta = (DeterminesOutputType = "ComponentClass"))
-
-  proc findComponentByClass[T](): ptr T {.noSideEffect.}
-    ## Templatized version for syntactic nicety.
 
   proc getComponents[T](outComponents: var TArray[ptr T])
     ## Get all components derived from class 'T' and fill in the OutComponents array with the result.
@@ -2047,6 +2041,8 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
   # AWARE
   # var detachFence: FRenderCommandFence
   #   ## A fence to track when the primitive is detached from the scene in the rendering thread.
+
+proc findComponentByClass*[T: UActorComponent](this: ptr AActor): ptr T {.importcpp: "#.FindComponentByClass<'*0>()", nodecl, noSideEffect.}
 
 type TActorIterator {.importcpp: "TActorIterator", header: "EngineUtils.h".} [T: AActor] = object
 proc initActorIterator[T: AActor](world: ptr UWorld): TActorIterator[T] {.importcpp: "'0(@)", nodecl, constructor.}

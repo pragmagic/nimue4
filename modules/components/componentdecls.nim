@@ -1,6 +1,10 @@
 # Copyright 2016 Xored Software, Inc.
 
 type
+  USkeletalMesh* {.header: "Engine/SkeletalMesh.h", importcpp.} = object of UObject
+    bounds* {.importcpp: "Bounds".}: FBoxSphereBounds
+
+type
   UActorComponent* {.header: "Components/ActorComponent.h", importcpp.} = object of UObject
   UInputComponent* {.header: "Components/InputComponent.h", importcpp.} = object of UActorComponent
   UPawnNoiseEmitterComponent* {.header: "Components/PawnNoiseEmitterComponent.h", importcpp.} = object of UActorComponent
@@ -17,6 +21,10 @@ type
 
   UMeshComponent* {.header: "Components/MeshComponent.h", importcpp.} = object of UPrimitiveComponent
   UStaticMeshComponent* {.header: "Components/StaticMeshComponent.h", importcpp.} = object of UMeshComponent
+  USkinnedMeshComponent* {.header: "Components/SkinnedMeshComponent.h", importcpp.} = object of UMeshComponent
+    skeletalMesh* {.importcpp: "SkeletalMesh".}: ptr USkeletalMesh
+
+  USkeletalMeshComponent* {.header: "Components/SkeletalMeshComponent.h", importcpp.} = object of USkinnedMeshComponent
 
   UBillboardComponent* {.header: "Components/BillboardComponent.h", importcpp.} = object of UPrimitiveComponent
 

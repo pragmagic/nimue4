@@ -167,11 +167,11 @@ type
 
   FBoxSphereBounds* {.header: "Math/BoxSphereBounds.h", importcpp.} = object
     ## Structure for a combined axis aligned bounding box and bounding sphere with the same origin. (28 bytes).
-    origin*: FVector
+    origin* {.importcpp: "Origin".}: FVector
       ## Holds the origin of the bounding box and sphere.
-    boxExtent*: FVector
+    boxExtent* {.importcpp: "BoxExtent".}: FVector
       ## Holds the extent of the bounding box.
-    sphereRadius*: float
+    sphereRadius* {.importcpp: "SphereRadius".}: float
       ## Holds the radius of the bounding sphere.
 
 class(FVector2D, header: "Math/Vector2D.h", bycopy):
@@ -514,6 +514,11 @@ proc colorFromHex(hexString: FString): FColor {.
   importcpp: "FColor::FromHex(@)", header: "Math/Color.h", noSideEffect.}
 
 proc initFColor*(r,g,b,a: uint8): FColor {.importcpp: "FColor(@)", nodecl, constructor.}
+
+class(FTransform, header: "Math/TransformVectorized.h", notypedef):
+  proc getTranslation(): FVector {.noSideEffect.}
+  proc getRotation(): FQuat {.noSideEffect.}
+  proc getScale3D(): FVector {.noSideEffect.}
 
 var WhiteColor* {.importc: "FColor::White", header: "Math/Color.h".}: FColor
 var IdentityTransform* {.importc: "FTransform::Identity", header: "Math/TransformVectorized.h".}: FTransform
