@@ -122,6 +122,11 @@ proc replaceInFile(filename: string; sub, to: string) =
   var contents = readFile(filename)
   writeFile(filename, contents.replace(sub, to))
 
+proc writeFileIfNotSame(filename, contents: string) =
+  let currentContents = readFile(filename)
+  if currentContents != contents:
+    writeFile(filename, contents)
+
 proc processFile(file, moduleName: string; outDir: string) =
   let moduleIncludeString = "#include \"$#.h\"\n" % moduleName
   let exportMacro = moduleName.toUpper() & "_API"
@@ -272,7 +277,7 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
     if isNimModule:
       let rootFile = nimOutDir / moduleName & "Root.nim"
       createDir(nimOutDir)
-      writeFile(rootFile, $rootFileContent)
+      writeFileIfNotSame(rootFile, $rootFileContent)
       createNimCfg(nimOutDir, moduleDir)
       # TODO: use -d:release --deadCodeElim:on for release builds
       var osCpuFlags = ""
