@@ -637,7 +637,6 @@ class(UObject, header: "UObject/UObject.h", notypedef):
   proc implements[T](): bool {.noSideEffect.}
     ## Returns true if this object implements the interface T, false otherwise.
 
-
 proc loadObject*[T: UObject](path: wstring): ptr T {.
   header: "UObject/UObjectGlobals.h", importcpp: "(Cast<'*0>(StaticLoadObject('*0::StaticClass(), NULL, #)))".}
 proc loadObject*[T: UObject](path: FString): ptr T =

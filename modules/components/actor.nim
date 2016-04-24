@@ -162,7 +162,7 @@ class(UActorComponent of UObject, header: "Components/ActorComponent.h", notyped
 
   proc getWorld(): ptr UWorld {.noSideEffect.}
 
-  proc componentHasTag(tag: FName): bool {.noSideEffect.}
+  proc hasTag(tag: FName): bool {.noSideEffect, cppname: "ComponentHasTag".}
     ## See if this component contains the supplied tag
     ## UFUNCTION(BlueprintCallable, Category="Components")
 

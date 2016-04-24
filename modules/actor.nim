@@ -1928,10 +1928,6 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
     ## Currently returns an array of UActorComponent which must be cast to the correct type.
     ## UFUNCTION(BlueprintCallable, Category = "Actor", meta = (ComponentClass = "ActorComponent"), meta=(DeterminesOutputType="ComponentClass"))
 
-  proc getComponentsByTag(componentClass: typedesc[UActorComponent];
-                          tag: FName): TArray[ptr UActorComponent] {.noSideEffect.}
-    ## Gets all the components that inherit from the given class with a given tag.
-    ## UFUNCTION(BlueprintCallable, Category = "Actor", meta = (ComponentClass = "ActorComponent"), meta = (DeterminesOutputType = "ComponentClass"))
 
   proc getComponents[T](outComponents: var TArray[ptr T])
     ## Get all components derived from class 'T' and fill in the OutComponents array with the result.
@@ -2022,9 +2018,6 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
     ## @param YPos  [in]  Y position on Canvas for the previously drawn line. YPos += YL, gives position to draw text for next debug line.
     ##              [out] Y position on Canvas for the last line drawn by this function.
 
-  proc getDebugName(actor: ptr AActor): FString {.isStatic.}
-    ## Retrieves actor's name used for logging, or string "NULL" if Actor == NULL
-
   # AWARE
   # proc grabDebugSnapshot(snapshot: ptr FVisualLogEntry) {.noSideEffect.} # when ENABLE_VISUAL_LOG
   #   ##  Hook for Actors to supply visual logger with additional data.
@@ -2042,11 +2035,28 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
   # var detachFence: FRenderCommandFence
   #   ## A fence to track when the primitive is detached from the scene in the rendering thread.
 
+
+proc getDebugName*(actor: ptr AActor): FString {.importcpp: "AActor::GetDebugName(#)", nodecl.}
+
 proc findComponentByClass*[T: UActorComponent](this: ptr AActor): ptr T {.importcpp: "#.FindComponentByClass<'*0>()", nodecl, noSideEffect.}
+
+# proc getComponentsByTag(actor: ptr AActor, class: ptr UClass, tag: FName): TArray[ptr UActorComponent] {.importcpp: "#.GetComponentsByTag(@)", nodecl, noSideEffect.}
+
+proc getComponentsByTagInternal[T: UActorComponent](this: ptr AActor, tag: FName): TArray[ptr UActorComponent] {.importcpp: "#.GetComponentsByTag('**0::StaticClass(), #)", nodecl, noSideEffect.}
+  ## Gets all the components that inherit from the given class with a given tag.
+
+proc getComponentsByTag*[T: UActorComponent](this: ptr AActor, tag: FName): TArray[ptr T] =
+  let concreteArray = getComponentsByTagInternal[T](this, tag)
+  result = initArray[ptr T](concreteArray.len)
+  for item in concreteArray:
+    result.add(cast[ptr T](item))
+
+proc getComponentsByTag*[T: UActorComponent](this: ptr AActor, tag: cstring{lit}): TArray[ptr T] =
+  result = getComponentsByTag[T](this, initFName(tag))
 
 type TActorIterator {.importcpp: "TActorIterator", header: "EngineUtils.h".} [T: AActor] = object
 proc initActorIterator[T: AActor](world: ptr UWorld): TActorIterator[T] {.importcpp: "'0(@)", nodecl, constructor.}
-proc isValid[T](it: TActorIterator[T]): bool {.importcpp: "(*#)", nodecl, noSideEffect.}
+proc isValid[T](it: TActorIterator[T]): bool {.importcpp: "((bool)(#))", nodecl, noSideEffect.}
 proc next[T](it: var TActorIterator[T]) {.importcpp: "(++#)", nodecl.}
 proc getActor[T](it: TActorIterator[T]): ptr T {.importcpp: "(*#)", nodecl, noSideEffect.}
 

@@ -359,7 +359,9 @@ type EName {.header: "UObject/UnrealNames.h" importcpp: "EName".} = enum
   NAME_EditorKeyBindings = 601
 
 class(FName, header: "UObject/NameTypes.h", bycopy):
-  proc makeNone(): FName {.constructor.}
+  proc initFName(): FName {.constructor, noSideEffect.}
+  proc initFName(s: cstring): FName {.constructor, noSideEffect.}
+  proc initFName(s: wstring): FName {.constructor, noSideEffect.}
   proc fromEName(name: EName): FName {.constructor.}
   proc cmp(other: FName): int32 {.noSideEffect.}
   proc toString(): FString {.noSideEffect.}
