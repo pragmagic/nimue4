@@ -123,8 +123,7 @@ proc replaceInFile(filename: string; sub, to: string) =
   writeFile(filename, contents.replace(sub, to))
 
 proc writeFileIfNotSame(filename, contents: string) =
-  let currentContents = readFile(filename)
-  if currentContents != contents:
+  if not fileExists(filename) or readFile(filename) != contents:
     writeFile(filename, contents)
 
 proc processFile(file, moduleName: string; outDir: string) =
