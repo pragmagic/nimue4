@@ -284,7 +284,8 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string) =
         osCpuFlags.add("--os:" & os)
       if cpu != nil:
         osCpuFlags.add(" --cpu:" & cpu)
-      let exceptionFlags = if uePlatform.toLower() == "android": "--noCppExceptions -d:dontWrapNimExceptions"
+      let platform = uePlatform.toLower()
+      let exceptionFlags = if platform == "android" or platform == "ios": "--noCppExceptions -d:dontWrapNimExceptions"
                            else: ""
       # default GC doesn't work on OS X and iOS
       let actualOS = if os == nil: hostOS else: os
