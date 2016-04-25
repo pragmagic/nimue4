@@ -70,7 +70,8 @@ let e = getCurrentException()
 when defined(release):
   ueError("Unhandled exception: %s: %s", e.name, e.msg)
 else:
-  ueFatal("Unhandled exception: %s: %s\n%s", e.name, e.msg, e.getStackTrace())
+  ueError("Unhandled exception: %s: %s\n%s", e.name, e.msg, e.getStackTrace())
+  ueFatal("Crashing after unhandled exception - see previous error message.")
 """)
 
 proc isBlueprintNative(meth: TypeMethod): bool =
