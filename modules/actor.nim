@@ -2065,3 +2065,7 @@ iterator actors*[T: AActor](world: ptr UWorld): ptr T =
   while it.isValid:
     yield it.getActor()
     it.next()
+
+proc findActor*[T: AActor](world: ptr UWorld): ptr T =
+  for actor in actors[T](world):
+    return actor
