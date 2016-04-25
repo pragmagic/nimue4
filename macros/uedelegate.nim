@@ -93,13 +93,12 @@ proc isBound*(delegate: $1) {.importcpp: "#.IsBound(@)", header: $2.}
 proc clear*(delegate: $1) {.importcpp: "#.Clear(@)", header: $2.}
 """.format($(name.ident), header.toStrLit.strVal))
 
-  let dynamicProcs = parseStmt("""
+  if DynamicDelegates.contains(kind):
+    let dynamicProcs = parseStmt("""
 proc bindDynamic*(delegate: $1, obj: ptr, methodName: string) {.importcpp: "BindDynamic", header: $2.}
 proc addDynamic*(delegate: $1, obj: ptr, methodName: string) {.importcpp: "AddDynamic", header: $2.}
 proc removeDynamic*(delegate: $1, obj: ptr, methodName: string) {.importcpp: "RemoveDynamic", header: $2.}
 """.format($(name.ident), header.toStrLit.strVal))
-
-  if DynamicDelegates.contains(kind):
     for statement in dynamicProcs:
       result.add(statement)
 
@@ -112,6 +111,12 @@ proc removeDynamic*(delegate: $1, obj: ptr, methodName: string) {.importcpp: "Re
     result.add(addTemplate)
     result.add(addUObjectTemplate)
     result.add(broadcastProc)
+    let multicastProcs = parseStmt("""
+proc removeAll*(delegate: $1, obj: ptr UObject) {.importcpp: "RemoveAll", header: $2.}
+proc remove*(delegate: $1, obj: ptr UObject, procRef: ref) {.importcpp: "Remove", header: $2.}
+""".format($(name.ident), header.toStrLit.strVal))
+    for statement in multicastProcs:
+      result.add(statement)
 
 proc exprListToParamList(callParams: NimNode, start: Natural, to: Natural): seq[NimNode] =
   ## Converts nnkExprColonExpr nodes to nnkIdentDefs

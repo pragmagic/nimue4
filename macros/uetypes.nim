@@ -64,6 +64,16 @@ type
 
 var genNameCtr {.compileTime.} : uint64 = 0
 
+# let's be a bit more forgiving in release builds and not crash the game on exceptions
+let exceptionHandlingStmt {.compileTime.} = parseStmt("""
+let e = getCurrentException()
+when defined(release):
+  ueError("Unhandled exception: %s: %s", e.name, e.msg)
+else:
+  ueError("Unhandled exception: %s: %s\n%s", e.name, e.msg, e.getStackTrace())
+  ueFatal("Crashing after unhandled exception - see previous error message.")
+""")
+
 proc isBlueprintNative(meth: TypeMethod): bool =
   result = meth.isUFunction and ($meth.uFunctionParamStr).contains("BlueprintNativeEvent")
 
@@ -434,7 +444,6 @@ $2::$2(const `FObjectInitializer`& ObjectInitializer): Super(ObjectInitializer)
 
 proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
   # TODO: generate C++ "const" marker if `noSideEffect` pragma is provided
-
   var methDecls: seq[NimNode] = @[]
   var methDefs: seq[NimNode] = @[]
   for meth in typeDef.methods:
@@ -459,7 +468,14 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
         meth.node.pragma = newNimNode(nnkPragma)
       meth.node.pragma.add(ident("exportc"))
       meth.node.pragma.add(ident("cdecl"))
-
+      when not defined(dontWrapNimExceptions):
+        if not hasPragma(meth.node, "noSideEffect"):
+          meth.node.body = newStmtList(
+            newNimNode(nnkTryStmt).
+              add(meth.node.body).
+              add(
+              newNimNode(nnkExceptBranch).
+                add(exceptionHandlingStmt.copyNimTree())))
       methDefs.add(meth.node)
 
   if typeDef.kind != tkEnum and not typeDef.isUtilityType:

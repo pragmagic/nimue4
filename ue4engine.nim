@@ -243,4 +243,6 @@ include modules/controller
 include modules/playercontroller
 include modules/world
 
+include modules/umg/widgets
+
 proc simpleMoveToLocation*(navSys: ptr UNavigationSystem, controller: ptr APlayerController, goal: FVector) {.header: "AI/Navigation/NavigationSystem.h", importcpp: "#.SimpleMoveToLocation(@)", nodecl.}
