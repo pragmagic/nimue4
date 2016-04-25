@@ -147,6 +147,7 @@ proc `$`*(s: FString): string =
 # TODO: format, parseInt, parseBool, join, repeat for FString
 
 class(FText, header: "Internationalization/Text.h", bycopy):
+  proc initFText(): FText {.constructor.}
   proc isEmpty(): bool {.noSideEffect.}
   proc isEmptyOrWhitespace(): bool {.noSideEffect.}
   proc toString(): FString {.noSideEffect.}
