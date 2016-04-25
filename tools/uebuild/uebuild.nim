@@ -241,7 +241,7 @@ proc createNimCfg(outDir: string, moduleDir: string) =
   contents.add("--experimental\n")
   writeFile(outDir / "nim.cfg", contents)
 
-proc buildNim(projectDir, projectName, os, cpu: string) =
+proc buildNim(projectDir, projectName, os, cpu, uePlatform: string) =
   let sourceDir = projectDir / "Source"
   let nimOutDir = getNimOutDir(projectDir)
 
@@ -281,13 +281,15 @@ proc buildNim(projectDir, projectName, os, cpu: string) =
       # TODO: use -d:release --deadCodeElim:on for release builds
       var osCpuFlags = ""
       if os != nil:
-        osCpuFlags &= "--os:" & os
+        osCpuFlags.add("--os:" & os)
       if cpu != nil:
-        osCpuFlags &= " --cpu:" & cpu
+        osCpuFlags.add(" --cpu:" & cpu)
+      let exceptionFlags = if uePlatform.toLower() == "android": "--noCppExceptions -d:dontWrapNimExceptions"
+                           else: ""
       # default GC doesn't work on OS X and iOS
       let actualOS = if os == nil: hostOS else: os
       let gcFlags = if actualOS == "macosx": "--dynlibOverride:gc --gc:boehm " else: ""
-      exec "nim cpp -c --noMain --noCppExceptions " & gcFlags &
+      exec "nim cpp -c --noMain " & exceptionFlags & " " & gcFlags &
            "-d:useSysAssert -d:useGcAssert --experimental " & osCpuFlags &
            " -p:\"" & getCurrentDir() & "\" -p:\"" & moduleDir & "\" --nimcache:\"" & nimcacheDir &
            "\" \"" & rootFile & '"'
@@ -314,7 +316,7 @@ proc build(task: TaskType, engineDir, projectDir, projectName, target, mode, pla
   if task != ttPreCook:
     (os, cpu) = uePlatformToNimOSCPU(platform)
 
-  buildNim(projectDir, projectName, os, cpu)
+  buildNim(projectDir, projectName, os, cpu, platform)
   runUnrealBuildTool(engineDir, task, target, platform, mode, projectDir / projectName & ".uproject", extraOptions)
 
   if task == ttPreCook:
@@ -325,7 +327,7 @@ proc build(task: TaskType, engineDir, projectDir, projectName, target, mode, pla
     cleanModules(projectDir)
 
     (os, cpu) = uePlatformToNimOSCPU(platform)
-    buildNim(projectDir, projectName, os, cpu)
+    buildNim(projectDir, projectName, os, cpu, platform)
 
 proc clean(engineDir, projectDir, projectName, target, mode, platform, extraOptions: string) =
   let nimOutDir = getNimOutDir(projectDir)
