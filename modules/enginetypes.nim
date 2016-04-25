@@ -669,3 +669,18 @@ class(FClientReceiveData, header: "GameFramework/LocalMessage.h", bycopy):
 class(ULocalMessage of UObject, header: "GameFramework/LocalMessage.h"):
   method clientReceive(clientData: var FClientReceiveData) {.noSideEffect.}
     ## Send message to client
+
+
+## static methods from class UEngineTypes
+proc convertToCollisionChannel*(traceType: ETraceTypeQuery): ECollisionChannel {.
+  importcpp: "UEngineTypes::ConvertToCollisionChannel(@)", header: "Engine/EngineTypes.h", noSideEffect.}
+
+proc convertToCollisionChannel*(collisionChannel: EObjectTypeQuery): ECollisionChannel {.
+  importcpp: "UEngineTypes::ConvertToCollisionChannel(@)", header: "Engine/EngineTypes.h", noSideEffect.}
+
+proc convertToObjectType*(collisionChannel: ECollisionChannel): EObjectTypeQuery {.
+  importcpp: "UEngineTypes::ConvertToObjectType(@)", header: "Engine/EngineTypes.h", noSideEffect.}
+
+proc convertToTraceType*(collisionChannel: ECollisionChannel): ETraceTypeQuery {.
+  importcpp: "UEngineTypes::ConvertToTraceType(@)", header: "Engine/EngineTypes.h", noSideEffect.}
+## end class UEngineTypes

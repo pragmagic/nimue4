@@ -371,7 +371,7 @@ class(APlayerController of AController, header: "GameFramework/PlayerController.
                                     TraceChannel: ETraceTypeQuery;
                                     bTraceComplex: bool; HitResult: var FHitResult): bool {.noSideEffect.}
 
-  proc getHitResultAtScreenPosition(screenPosition: FVector2D; ObjectTypes: TArray[EObjectTypeQuery];
+  proc getHitResultAtScreenPosition(screenPosition: FVector2D; ObjectTypes: TArray[TEnumAsByte[EObjectTypeQuery]];
                                     bTraceComplex: bool; HitResult: var FHitResult): bool {.noSideEffect.}
 
   proc getHitResultUnderCursorByChannel(traceChannel: ETraceTypeQuery;
