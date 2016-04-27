@@ -24,7 +24,7 @@ type
     pitch* {.importcpp: "Pitch".}: cfloat
     roll* {.importcpp: "Roll".}: cfloat
 
-  FTransform* {.header: "Math/TransformVectorized.h", importcpp.} = object
+  FTransform* {.header: "Math/ScalarRegister.h", importcpp.} = object
 
   FColor* {.header: "Math/Color.h", importcpp.} = object
     a* {.importcpp: "A".}: uint8
@@ -515,13 +515,13 @@ proc colorFromHex(hexString: FString): FColor {.
 
 proc initFColor*(r,g,b,a: uint8): FColor {.importcpp: "FColor(@)", nodecl, constructor.}
 
-class(FTransform, header: "Math/TransformVectorized.h", notypedef):
+class(FTransform, header: "Math/ScalarRegister.h", notypedef):
   proc getTranslation(): FVector {.noSideEffect.}
   proc getRotation(): FQuat {.noSideEffect.}
   proc getScale3D(): FVector {.noSideEffect.}
 
 var WhiteColor* {.importc: "FColor::White", header: "Math/Color.h".}: FColor
-var IdentityTransform* {.importc: "FTransform::Identity", header: "Math/TransformVectorized.h".}: FTransform
+var IdentityTransform* {.importc: "FTransform::Identity", header: "Math/ScalarRegister.h".}: FTransform
 
 converter vectorFromForceInit(f: EForceInit): FVector {.importcpp, constructor, header: "Math/Vector.h".}
 converter colorFromForceInit(f: EForceInit): FColor {.importcpp, constructor, header: "Math/Color.h".}
