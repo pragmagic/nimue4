@@ -11,7 +11,7 @@ class(TArray[T], header: "Containers/Array.h", bycopy):
 
   proc pop(): T
 
-  proc `[]`(i: Natural): T {.noSideEffect.}
+  proc `[]`(i: Natural): var T {.noSideEffect.}
   proc `[]=`(i: Natural, val: T)
 
   proc find(item: T): int32 {.noSideEffect.}
