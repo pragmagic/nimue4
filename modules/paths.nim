@@ -3,6 +3,7 @@
 proc gameContentDir*(): FString {.header: "Misc/Paths.h", importcpp:"FPaths::GameContentDir()".}
 proc gameConfigDir*(): FString {.header: "Misc/Paths.h", importcpp:"FPaths::GameConfigDir()".}
 proc gameLogDir*(): FString {.header: "Misc/Paths.h", importcpp:"FPaths::GameLogDir()".}
+proc gameUserDir*(): FString {.header: "Misc/Paths.h", importcpp:"FPaths::GameUserDir()".}
 
 # TODO: the rest
 
