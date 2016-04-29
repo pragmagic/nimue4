@@ -224,6 +224,8 @@ include modules/touchinterface
 
 include modules/core/player
 include modules/core/timermanager
+include modules/core/hal/genericplatformfile
+include modules/core/hal/platformfilemanager
 
 include modules/actor
 
