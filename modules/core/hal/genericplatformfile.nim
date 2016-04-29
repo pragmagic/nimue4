@@ -48,8 +48,8 @@ class(FFileStatData, header: "GenericPlatform/GenericPlatformFile.h"):
   var bIsValid: bool = true
     ## True if file or directory was found, false otherwise. Note that this value being true does not ensure that the other members are filled in with meaningful data, as not all file systems have access to all of this data
 
-  proc make*(): FFileStatData {.constructor.}
-  proc makeFFileStatData*(inCreationTime: FDateTime; inAccessTime: FDateTime;
+  proc initFFileStatData*(): FFileStatData {.constructor.}
+  proc initFFileStatData*(inCreationTime: FDateTime; inAccessTime: FDateTime;
                             inModificationTime: FDateTime; inFileSize: int64;
                             inIsDirectory: bool; inIsReadOnly: bool): FFileStatData {.constructor.}
 
@@ -173,75 +173,51 @@ class(IPlatformFile, header: "GenericPlatform/GenericPlatformFile.h"):
   proc getStatData(filenameOrDirectory: wstring): FFileStatData
     ## Return the stat data for the given file or directory. Check the FFileStatData::bIsValid member before using the returned data
 
-  ## ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  ## ///////// Utility Functions. These have a default implementation that uses the pure virtual operations.
-  ## ///////// Generally, these do not need to be implemented per platform.
-  ## ///////////////////////////////////////////////////////////////////////////////////////////////////////
-
   proc getTimeStampPair(pathA: wstring; pathB: wstring; outTimeStampA: var FDateTime;
                       outTimeStampB: var FDateTime)
 
   proc iterateDirectoryRecursively(directory: wstring;
                                   visitor: var FDirectoryVisitor): bool
-  ##
-  ## Call the Visit function of the visitor once for each file or directory in a directory tree. This function explores subdirectories.
-  ## @param Directory		The directory to iterate the contents of, recursively.
-  ## @param Visitor		Visitor to call for each element of the directory and each element of all subdirectories.
-  ## @return				false if the directory did not exist or if the visitor returned false.
-  ## #
+    ## Call the Visit function of the visitor once for each file or directory in a directory tree. This function explores subdirectories.
+    ## @param Directory		The directory to iterate the contents of, recursively.
+    ## @param Visitor		Visitor to call for each element of the directory and each element of all subdirectories.
+    ## @return				false if the directory did not exist or if the visitor returned false.
 
   proc iterateDirectoryStatRecursively(directory: wstring;
                                       visitor: var FDirectoryStatVisitor): bool
-  ##
-  ## Call the Visit function of the visitor once for each file or directory in a directory tree. This function explores subdirectories.
-  ## @param Directory		The directory to iterate the contents of, recursively.
-  ## @param Visitor		Visitor to call for each element of the directory and each element of all subdirectories.
-  ## @return				false if the directory did not exist or if the visitor returned false.
-  ## #
+    ## Call the Visit function of the visitor once for each file or directory in a directory tree. This function explores subdirectories.
+    ## @param Directory		The directory to iterate the contents of, recursively.
+    ## @param Visitor		Visitor to call for each element of the directory and each element of all subdirectories.
+    ## @return				false if the directory did not exist or if the visitor returned false.
 
   proc deleteDirectoryRecursively(directory: wstring): bool
-  ##
-  ## Delete all files and subdirectories in a directory, then delete the directory itself
-  ## @param Directory		The directory to delete.
-  ## @return				true if the directory was deleted or did not exist.
-  ## #
+    ## Delete all files and subdirectories in a directory, then delete the directory itself
+    ## @param Directory		The directory to delete.
+    ## @return				true if the directory was deleted or did not exist.
 
   proc createDirectoryTree(directory: wstring): bool
-  ## Create a directory, including any parent directories and return true if the directory was created or already existed. *
+    ## Create a directory, including any parent directories and return true if the directory was created or already existed. *
 
   proc copyFile(toFile: wstring; fromFile: wstring): bool
-  ##
-  ## Copy a file. This will fail if the destination file already exists.
-  ## @param ToFile		File to copy to.
-  ## @param FromFile		File to copy from.
-  ## @return			true if the file was copied sucessfully.
-  ## #
+    ## Copy a file. This will fail if the destination file already exists.
+    ## @param ToFile		File to copy to.
+    ## @param FromFile		File to copy from.
+    ## @return			true if the file was copied sucessfully.
 
   proc copyDirectoryTree(destinationDirectory: wstring; source: wstring;
                         bOverwriteAllExisting: bool): bool
-  ##
-  ## Copy a file or a hierarchy of files (directory).
-  ## @param DestinationDirectory			Target path (either absolute or relative) to copy to - always a directory! (e.g. "/home/dest/").
-  ## @param Source						Source file (or directory) to copy (e.g. "/home/source/stuff").
-  ## @param bOverwriteAllExisting			Whether to overwrite everything that exists at target
-  ## @return								true if operation completed successfully.
-  ## #
+    ## Copy a file or a hierarchy of files (directory).
+    ## @param DestinationDirectory			Target path (either absolute or relative) to copy to - always a directory! (e.g. "/home/dest/").
+    ## @param Source						Source file (or directory) to copy (e.g. "/home/source/stuff").
+    ## @param bOverwriteAllExisting			Whether to overwrite everything that exists at target
+    ## @return								true if operation completed successfully.
 
   proc convertToAbsolutePathForExternalAppForRead(filename: wstring): FString
-  ##
-  ## Converts passed in filename to use an absolute path (for reading).
-  ## #
-  ## @param	Filename	filename to convert to use an absolute path, safe to pass in already using absolute path
-  ## #
-  ## @return	filename using absolute path
-  ## #
+    ## Converts passed in filename to use an absolute path (for reading).
+    ## @param	Filename	filename to convert to use an absolute path, safe to pass in already using absolute path
+    ## @return	filename using absolute path
 
   proc convertToAbsolutePathForExternalAppForWrite(filename: wstring): FString
-  ##
-  ## Converts passed in filename to use an absolute path (for writing)
-  ## #
-  ## @param	Filename	filename to convert to use an absolute path, safe to pass in already using absolute path
-  ## #
-  ## @return	filename using absolute path
-  ## #
-
+    ## Converts passed in filename to use an absolute path (for writing)
+    ## @param	Filename	filename to convert to use an absolute path, safe to pass in already using absolute path
+    ## @return	filename using absolute path
