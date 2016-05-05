@@ -510,6 +510,21 @@ class(FMatrix, header: "Math/Matrix.h", notypedef):
   proc toString(): FString {.noSideEffect.}
   proc debugPrint() {.noSideEffect.}
 
+class(TRange[T], header: "Math/Range.h"):
+  proc initRange(lowerBound: T, upperBound: T): TRange[T] {.constructor.}
+  proc hasUpperBound(): bool
+  proc hasLowerBound(): bool
+  proc getLowerBoundValue(): T
+  proc getUpperBoundValue(): T
+
+type
+  FFloatRange {.importcpp, header: "Math/Range.h".} = TRange[cfloat]
+  FDoubleRange {.importcpp, header: "Math/Range.h".} = TRange[cdouble]
+  FInt8Range {.importcpp, header: "Math/Range.h".} = TRange[int8]
+  FInt16Range {.importcpp, header: "Math/Range.h".} = TRange[int16]
+  FInt32Range {.importcpp, header: "Math/Range.h".} = TRange[int32]
+  FInt64Range {.importcpp, header: "Math/Range.h".} = TRange[int64]
+
 proc colorFromHex(hexString: FString): FColor {.
   importcpp: "FColor::FromHex(@)", header: "Math/Color.h", noSideEffect.}
 

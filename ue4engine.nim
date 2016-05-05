@@ -43,6 +43,15 @@ type
   UFunction* {.header: "UObject/Class.h", importcpp.} = object of UStruct
   UInterface* {.header: "Interface.h", importcpp.} = object of UObject
 
+  IEngineLoop* {.header: "UnrealEngine.h", importcpp.} = object
+  UEngine* {.header: "Engine/Engine.h", importcpp.} = object of UObject
+    bSmoothFrameRate: bool
+    smoothedFrameRateRange {.importcpp: "SmoothedFrameRateRange".}: FFloatRange
+    bUseFixedFrameRate: bool
+    fixedFrameRate {.importcpp: "FixedFrameRate".}: cfloat
+
+  UGameEngine* {.header: "Engine/GameEngine.h", importcpp.} = object of UEngine
+
   UCanvas* {.header: "Engine/Canvas.h", importcpp.} = object of UObject
   UWorld* {.header: "Engine/World.h", importcpp.} = object of UObject
     bWorldWasLoadedThisTick*: bool
@@ -167,6 +176,8 @@ type
 
   AEmitter* {.header: "Particles/Emitter.h", importcpp.} = object of AActor
   AEmitterCameraLensEffectBase* {.header: "Particles/EmitterCameraLensEffectBase.h", importcpp.} = object of AEmitter
+
+include modules/core/globals
 
 include modules/containers/subclassof
 

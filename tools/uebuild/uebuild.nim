@@ -238,6 +238,7 @@ proc createNimCfg(outDir: string, moduleDir: string) =
     contents.add("cc=vcc\n")
   contents.add("--path:\"" & moduleDir.replace("\\", "/") & "\"\n")
   contents.add("--path:\"" & getCurrentDir().replace("\\", "/") & "\"\n")
+  contents.add("--define:useRealtimeGC")
   contents.add("--experimental\n")
   writeFile(outDir / "nim.cfg", contents)
 
@@ -289,8 +290,7 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string) =
                            else: ""
       # default GC doesn't work on OS X and iOS
       let actualOS = if os == nil: hostOS else: os
-      let gcFlags = if actualOS == "macosx": "--dynlibOverride:gc --gc:boehm " else: ""
-      exec "nim cpp -c --noMain " & exceptionFlags & " " & gcFlags &
+      exec "nim cpp -c --noMain " & exceptionFlags & " " &
            "-d:useSysAssert -d:useGcAssert --experimental " & osCpuFlags &
            " -p:\"" & getCurrentDir() & "\" -p:\"" & moduleDir & "\" --nimcache:\"" & nimcacheDir &
            "\" \"" & rootFile & '"'

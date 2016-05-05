@@ -35,6 +35,7 @@ type
     isConstructor: bool
     isExported: bool
     isCallSuper: bool
+    isCallSuperAfter: bool
     isAbstract: bool
     isUFunction: bool
     isStatic: bool
@@ -217,6 +218,7 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
   let isAbstract = removePragma(node, "abstract")
   let isVirtual = removePragma(node, "virtual") or (node.kind == nnkMethodDef) or isOverride or isAbstract
   let isCallSuper = removePragma(node, "callSuper")
+  let isCallSuperAfter = removePragma(node, "callSuperAfter")
 
   var procNode = node
   if node.kind == nnkMethodDef:
@@ -232,12 +234,13 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
     isVirtual: isVirtual,
     isConstructor: isConstructor,
     isCallSuper: isCallSuper,
+    isCallSuperAfter: isCallSuperAfter,
     isExported: true, # TODO
     args: parseArgs(node[3]),
     node: procNode
   )
 
-  if result.isCallSuper and not (result.isOverride or result.isConstructor) :
+  if (result.isCallSuper or result.isCallSuperAfter) and not (result.isOverride or result.isConstructor) :
     raise newException(ParseError, lineinfo(node) & ": can only call super from constructor or overriden methods")
 
   if result.isOverride and result.isAbstract:
@@ -355,9 +358,9 @@ proc genCppImplementationCode(typeDef: TypeDefinition): string {.compileTime.} =
 
       code.add(" {\n ")
 
-      if meth.isCallSuper:
-        let superInvocation = rope("Super::") & methNameCapitalized &
+      let superInvocation = rope("Super::") & methNameCapitalized &
           "(" & meth.args.mapIt($(it.name)).join(", ") & ");\n"
+      if meth.isCallSuper:
         code.add(superInvocation)
 
       var invocationCode: Rope
@@ -372,6 +375,8 @@ proc genCppImplementationCode(typeDef: TypeDefinition): string {.compileTime.} =
       invocationCode = thisOrNothing & invocationCode
       code.addf("$# `$#`($#);\n",
                   [returnOrNothing, meth.genName, invocationCode])
+      if meth.isCallSuperAfter:
+        code.add(superInvocation)
 
       code.add("}\n\n")
 
