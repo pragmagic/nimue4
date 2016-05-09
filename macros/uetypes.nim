@@ -1,5 +1,5 @@
 # Copyright 2016 Xored Software, Inc.
-import ropes
+import ropes, hashes
 
 type
   MacroOptKind = enum
@@ -62,8 +62,6 @@ type
     fields: seq[TypeField]
     methods: seq[TypeMethod]
     opts: set[TypeOpt]
-
-var genNameCtr {.compileTime.} : uint64 = 0
 
 # let's be a bit more forgiving in release builds and not crash the game on exceptions
 let exceptionHandlingStmt {.compileTime.} = parseStmt("""
@@ -137,9 +135,8 @@ proc toCppFieldName(name: string, valueType: string): Rope {.compileTime.} =
   else:
     result = rope(name.capitalize())
 
-proc genName(name: string): Rope {.compileTime.} =
-  result = rope(name) & "_" & $genNameCtr
-  inc(genNameCtr)
+proc genName(name: string, relatedNode: NimNode): Rope {.compileTime.} =
+  result = rope(name) & "_" & $abs(hash(fileNameNoExt(relatedNode)))
 
 proc toExprEqExpr(node: NimNode): NimNode =
   result = node
@@ -210,7 +207,7 @@ proc parseArgs(node: NimNode): seq[VarDeclaration] =
       let name = $(identDefs[nameIndex].ident)
       let varDecl = VarDeclaration(
         name: rope(name),
-        genName: genName(name),
+        genName: genName(name, node),
         typeNode: identDefs[^2],
         defaultValue: nil
       )
@@ -238,7 +235,7 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
   let methName = rope(if isConstructor: className else: name)
   result = TypeMethod(
     name: methName,
-    genName: rope(className) & "_" & genName(name),
+    genName: rope(className) & "_" & genName(name, node),
     isAbstract: isAbstract,
     isOverride: isOverride,
     isVirtual: isVirtual,
@@ -639,7 +636,7 @@ proc convertBlueprintFunction(function: NimNode, category: string): NimNode =
   let uFunctionParamStr = rope("BlueprintCallable, Category=\"") & category & "\""
   let methods = @[TypeMethod(
     name: rope(name),
-    genName: genName(name),
+    genName: genName(name, function),
     isStatic: true,
     args: parseArgs(function[3]),
     isUFunction: true,
