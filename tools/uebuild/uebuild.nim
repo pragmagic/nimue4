@@ -238,6 +238,7 @@ proc createNimCfg(outDir: string, moduleDir: string) =
     contents.add("cc=vcc\n")
   contents.add("--path:\"" & moduleDir.replace("\\", "/") & "\"\n")
   contents.add("--path:\"" & getCurrentDir().replace("\\", "/") & "\"\n")
+  contents.add("--define:useRealtimeGC")
   contents.add("--experimental\n")
   writeFile(outDir / "nim.cfg", contents)
 
