@@ -34,6 +34,8 @@ class(TMap[K, V], header: "Containers/Map.h", bycopy):
 
   proc contains(key: K): bool {.noSideEffect.}
 
+proc initMap*[K, V](): TMap[K, V] {.importcpp: "'0(@)", constructor, nodecl.}
+
 type
   TMapIterator {.importcpp: "TBaseMap<'0, '1>::TIterator", header: "Containers/Map.h".} [K, V] = object
 
