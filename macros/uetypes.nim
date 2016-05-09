@@ -141,6 +141,14 @@ proc genName(name: string): Rope {.compileTime.} =
   result = rope(name) & "_" & $genNameCtr
   inc(genNameCtr)
 
+proc toExprEqExpr(node: NimNode): NimNode =
+  result = node
+  if node.kind == nnkExprColonExpr:
+    result = newNimNode(nnkExprEqExpr)
+    node.copyChildrenTo(result)
+  for childIdx in 0..<result.len:
+    result[childIdx] = toExprEqExpr(result[childIdx])
+
 proc extractParamString(callNode: NimNode): Rope =
   ## Extracts string in parens from an expression like
   ## CALL(param1, param2, param3 = value)
@@ -149,7 +157,9 @@ proc extractParamString(callNode: NimNode): Rope =
   for i in 1 .. callNode.len - 2:
     if result.len != 0:
       result.add(", ")
-    result.add(callNode[i].toStrLit.strVal)
+    if callNode[i].kind notin {nnkIdent, nnkExprEqExpr, nnkExprColonExpr}:
+      parseError(callNode[i], "expected ident, assignment or colon expression")
+    result.add(toExprEqExpr(callNode[i]).toStrLit.strVal)
 
 proc identDefsToTypeField(identDefs: NimNode): TypeField =
   assert(identDefs.kind == nnkIdentDefs)
