@@ -1,3 +1,3 @@
 # Copyright 2016 Xored Software, Inc.
 
-var GFrameCounter* {.importcpp, nodecl.}: uint64
+var gFrameCounter* {.importcpp: "GFrameCounter", header: "CoreGlobals.h".}: uint64

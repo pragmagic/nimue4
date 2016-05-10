@@ -34,17 +34,15 @@ class(TMap[K, V], header: "Containers/Map.h", bycopy):
 
   proc contains(key: K): bool {.noSideEffect.}
 
-proc initMap*[K, V](): TMap[K, V] {.importcpp: "'0(@)", constructor, nodecl.}
-
 type
-  TMapIterator {.importcpp: "TBaseMap<'0, '1>::TIterator", header: "Containers/Map.h".} [K, V] = object
+  TMapIterator {.importcpp: "TMap<'0, '1>::TIterator", header: "Containers/Map.h".} [K, V] = object
 
 proc key[K, V](it: TMapIterator[K, V]): K {.
   noSideEffect, importcpp: "#.Key(@)", header: "Containers/Map.h".}
 proc value[K, V](it: TMapIterator[K, V]): V {.noSideEffect, importcpp: "#.Value(@)", header: "Containers/Map.h".}
-proc pair[K, V](it: TMapIterator[K, V]): TPair[K, V] {.noSideEffect, importcpp: "*#", header: "Containers/Map.h".}
-proc isValid[K, V](it: TMapIterator[K, V]): bool {.noSideEffect, importcpp: "#", header: "Containers/Map.h".}
-proc next[K, V](it: var TMapIterator[K, V]) {.importcpp: "#++", header: "Containers/Map.h".}
+proc pair[K, V](it: TMapIterator[K, V]): TPair[K, V] {.noSideEffect, importcpp: "(*#)", header: "Containers/Map.h".}
+proc isValid[K, V](it: TMapIterator[K, V]): bool {.noSideEffect, importcpp: "((bool)(#))", header: "Containers/Map.h".}
+proc next[K, V](it: var TMapIterator[K, V]) {.importcpp: "(++#)", header: "Containers/Map.h".}
 
 proc makeIterator[K, V](map: TMap[K, V]): TMapIterator[K, V] {.importcpp:"#.CreateIterator(@)", header: "Containers/Map.h".}
 
@@ -59,10 +57,11 @@ iterator keys*[K, V](map: TMap[K, V]): K =
     yield it.key()
     it.next()
 
-iterator pairs*[K, V](map: TMap[K, V]): TPair[K, V] =
+iterator pairs*[K, V](map: TMap[K, V]): (K, V) =
   var it = map.makeIterator()
   while it.isValid:
-    yield it.pair()
+    let pair = it.pair()
+    yield (pair.key, pair.value)
     it.next()
 
 iterator values*[K, V](map: TMap[K, V]): V =

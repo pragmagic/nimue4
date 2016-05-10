@@ -289,10 +289,8 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string) =
       let platform = uePlatform.toLower()
       let exceptionFlags = if platform == "android" or platform == "ios": "--noCppExceptions -d:dontWrapNimExceptions"
                            else: ""
-      # default GC doesn't work on OS X and iOS
-      let actualOS = if os == nil: hostOS else: os
-      exec "nim cpp -c --noMain " & exceptionFlags & " " &
-           "-d:useSysAssert -d:useGcAssert --experimental " & osCpuFlags &
+      exec "nim cpp -c --noMain " & exceptionFlags &
+           " --experimental " & osCpuFlags &
            " -p:\"" & getCurrentDir() & "\" -p:\"" & moduleDir & "\" --nimcache:\"" & nimcacheDir &
            "\" \"" & rootFile & '"'
       # export NimMain procedure so that it can be used from module initialization code
