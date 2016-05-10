@@ -12,7 +12,7 @@ class(TMap[K, V], header: "Containers/Map.h", bycopy):
 
   proc `[]`(key: K): var V
   proc `[]=`(key: K, value: V) {.cppname: "Add".}
-  proc getOrDefault(key: K, default: V) {.noSideEffect.}
+  proc add(key: K, value: V)
 
   proc equals(other: TMap[K, V]): bool {.noSideEffect, cppname: "OrderIndependentCompareEqual".}
     ## Order-independent comparison
@@ -33,6 +33,10 @@ class(TMap[K, V], header: "Containers/Map.h", bycopy):
     ## Removes value associated with the key in the map, if any. Returns the number of items removed
 
   proc contains(key: K): bool {.noSideEffect.}
+
+proc getOrDefault*[K, V](map: TMap[K, V], key: K): V =
+  if map.contains(key):
+    return map[key]
 
 type
   TMapIterator {.importcpp: "TMap<'0, '1>::TIterator", header: "Containers/Map.h".} [K, V] = object
