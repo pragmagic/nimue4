@@ -67,9 +67,9 @@ type
 let exceptionHandlingStmt {.compileTime.} = parseStmt("""
 let e = getCurrentException()
 when defined(release):
-  ueError("Unhandled exception: %s: %s", e.name, e.msg)
+  ueError("Unhandled exception: " & $e.name & ": " & e.msg)
 else:
-  ueError("Unhandled exception: %s: %s\n%s", e.name, e.msg, e.getStackTrace())
+  ueError("Unhandled exception: " & $e.name & ": " & e.msg & "\n" & e.getStackTrace())
   ueFatal("Crashing after unhandled exception - see previous error message.")
 """)
 
