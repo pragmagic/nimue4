@@ -134,7 +134,7 @@ proc toFString*(n: int8 or int16 or int32 or int64 or uint8 or uint16 or uint32 
   importcpp: "'0::FromInt(@)", nodecl.}
 proc toFString*(f: float32): FString {.importcpp: "'0::SanitizeFloat(@)", nodecl.}
 
-proc hackToImportCstrToNimStr(s: cstring): string =
+proc hackToImportCstrToNimStr(s: cstring): string {.exportc.} =
   ## a hack to make compiler import "cstrToNimStr"
   ## used in the `$`
   result = $s

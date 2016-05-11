@@ -290,7 +290,7 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string) =
       let exceptionFlags = if platform == "android" or platform == "ios": "--noCppExceptions -d:dontWrapNimExceptions"
                            else: ""
       exec "nim cpp -c --noMain " & exceptionFlags &
-           " --experimental " & osCpuFlags &
+           " --experimental -d:release " & osCpuFlags &
            " -p:\"" & getCurrentDir() & "\" -p:\"" & moduleDir & "\" --nimcache:\"" & nimcacheDir &
            "\" \"" & rootFile & '"'
       # export NimMain procedure so that it can be used from module initialization code
