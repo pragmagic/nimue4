@@ -237,16 +237,16 @@ proc parseField(node: NimNode): TypeField =
   result = identDefsToTypeField(identDefs)
 
 proc parseUProperty(typeKind: TypeKind, uPropertyNode: NimNode): seq[TypeField] =
-  assert(uPropertyNode.kind == nnkCall and uPropertyNode[0].ident == !"UEProperty")
+  assert(uPropertyNode.kind == nnkCall and uPropertyNode[0].ident == !"UProperty")
 
   if uPropertyNode[^1].kind != nnkStmtList or uPropertyNode[^1][0].kind != nnkVarSection:
-    parseError(uPropertyNode, "expected field declaration after UEProperty")
+    parseError(uPropertyNode, "expected field declaration after UProperty")
 
   let paramString = extractParamString(uPropertyNode)
   result = newSeq[TypeField](uPropertyNode[^1].len)
   for i in 0..<uPropertyNode[^1].len:
     if uPropertyNode[^1][i].kind != nnkVarSection:
-      parseError(uPropertyNode[^1][i], "expected field declaration after UEProperty")
+      parseError(uPropertyNode[^1][i], "expected field declaration after UProperty")
     result[i] = parseField(uPropertyNode[^1][i])
     if result[i].isUProperty:
       parseError(uPropertyNode[^1][i], "UE pragmas are not compatible with UProperty block")
@@ -363,11 +363,11 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
   )
 
 proc parseUFunction(className: string, node: NimNode): TypeMethod =
-  assert(node.kind == nnkCall and node[0].ident == !"UEFunction")
+  assert(node.kind == nnkCall and node[0].ident == !"UFunction")
 
   const supportedRoutines = {nnkProcDef, nnkMethodDef}
   if node[^1].kind != nnkStmtList or not supportedRoutines.contains(node[^1][0].kind):
-    parseError(node, "expected proc or mehtod declaration after `UEFunction`")
+    parseError(node, "expected proc or mehtod declaration after `UFunction`")
 
   result = parseMethod(className, node[^1][0])
 
@@ -704,17 +704,17 @@ proc parseType(kind: TypeKind, definition: NimNode, callSite: NimNode): TypeDefi
   for statement in body:
     case statement.kind:
       of nnkCall:
-        if statement[0].ident == !"UEProperty":
+        if statement[0].ident == !"UProperty":
           assert(kind != tkInterface)
           fields.add(parseUProperty(kind, statement))
-        elif statement[0].ident == !"UEFunction":
+        elif statement[0].ident == !"UFunction":
           var meth = parseUFunction(name, statement)
           if kind == tkInterface:
             meth.isVirtual = true
             meth.isAbstract = true
           methods.add(meth)
         else:
-          parseError(statement, "expected UEProperty or UEFunction")
+          parseError(statement, "expected UProperty or UFunction")
       of nnkVarSection:
         assert(kind != tkInterface)
         fields.add(parseField(statement))
