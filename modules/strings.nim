@@ -375,6 +375,10 @@ proc `==`*[T: FString|FName](x, y: T): bool {.noSideEffect, importcpp: "# == #",
 
 converter toFName*(s: wstring): FName {.
   header: "UObject/NameTypes.h", importcpp: "'0(@)", nodecl.}
+proc toFName*(s: cstring{lit}): FName {.importcpp: "'0(TEXT(@))", nodecl.}
+proc toFName*(s: cstring): FName {.importcpp: "'0(UTF8_TO_TCHAR(@))", nodecl.}
+proc toFName*(s: string{sym|ident|call|lvalue|param}): FName =
+  result = toFName(cstring(s))
 
 proc toText*(s: FString): FText {.
   noSideEffect, header: "Internationalization/Text.h", importcpp: "'0::FromString(@)".}
