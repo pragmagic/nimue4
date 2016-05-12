@@ -5,22 +5,34 @@ import macros, strutils, ropes
 type
   ParseError* = object of Exception
 
+iterator pragmas*(node: NimNode): tuple[key: NimIdent, value: string, index: int] =
+  assert node.kind in {nnkPragma, nnkEmpty}
+  for index in countdown(node.len - 1, 0):
+    if node[index].kind == nnkExprColonExpr:
+      let val = $(node[index][1])
+      yield (node[index][0].ident, val, index)
+    elif node[index].kind == nnkIdent:
+      yield (node[index].ident, nil, index)
+
 proc removePragma*(statement: NimNode, pname: string): bool =
   ## Removes the pragma from the node and returns whether pragma was removed
-  var pragmas = statement.pragma()
-  let pname = !pname
-  for index in 0 .. < pragmas.len:
-    if pragmas[index].kind == nnkIdent and pragmas[index].ident == pname or
-       pragmas[index].kind == nnkExprColonExpr and pragmas[index][0].ident == pname:
-      pragmas.del(index)
+  if not (RoutineNodes.contains(statement.kind) or statement.kind == nnkPragmaExpr):
+    return false
+  var pragmas = if RoutineNodes.contains(statement.kind): statement.pragma() else: statement[1]
+  let pnameIdent = !pname
+  for ident, val, i in pragmas(pragmas):
+    if ident == pnameIdent:
+      pragmas.del(i)
       return true
 
 proc hasPragma*(statement: NimNode, pname: string): bool =
   ## Checks if the pragma is present in the `statement`
-  var pragmas = statement.pragma()
-  let pname = !pname
-  for index in 0 .. < pragmas.len:
-    if pragmas[index].kind == nnkIdent and pragmas[index].ident == pname:
+  if not (RoutineNodes.contains(statement.kind) or statement.kind == nnkPragmaExpr):
+    return false
+  var pragmas = if RoutineNodes.contains(statement.kind): statement.pragma() else: statement[1]
+  let pnameIdent = !pname
+  for ident, val, i in pragmas(pragmas):
+    if ident == pnameIdent:
       return true
 
 proc removeStrPragma*(statement: NimNode, pname: string): string =
@@ -31,15 +43,11 @@ proc removeStrPragma*(statement: NimNode, pname: string): string =
 
   result = nil
   var pragmas = if RoutineNodes.contains(statement.kind): statement.pragma() else: statement[1]
-  let pname = !pname
-  for index in 0 .. < pragmas.len:
-    if pragmas[index].kind == nnkExprColonExpr and pragmas[index][0].ident == pname:
-      let val = $(pragmas[index][1])
-      pragmas.del(index)
-      return val
-    if pragmas[index].kind == nnkIdent and pragmas[index].ident == pname:
-      pragmas.del(index)
-      return ""
+  let pnameIdent = !pname
+  for ident, val, i in pragmas(pragmas):
+    if ident == pnameIdent:
+      pragmas.del(i)
+      return (if val.isNil: "" else: val)
 
 proc fileNameNoExt*(node: NimNode): string =
   ## Returns name of the file containing the `node` without extension
@@ -138,9 +146,9 @@ template parseError*(node: NimNode, msg: string) =
 proc extractIdent*(node: NimNode): NimNode =
   ## returns ident node
   case node.kind
-  of nnkPragmaExpr:
-    result = extractIdent(node[0])
+  of nnkIdent:
+    result = node
   of nnkPostfix:
     result = extractIdent(node[1])
   else:
-    result = node
+    result = extractIdent(node[0])

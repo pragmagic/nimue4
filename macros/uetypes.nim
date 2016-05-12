@@ -100,7 +100,6 @@ proc doc(n: NimNode): string =
     result = n.body[0].strVal
 
 proc toCppLiteral(nimLiteral: NimNode): Rope =
-  # TODO: make this more compatible to C++ standards
   case nimLiteral.kind:
     of nnkStrLit..nnkTripleStrLit:
       result = rope(repr(nimLiteral.strVal))
@@ -161,19 +160,75 @@ proc extractParamString(callNode: NimNode): Rope =
       parseError(callNode[i], "expected ident, assignment or colon expression")
     result.add(toExprEqExpr(callNode[i]).toStrLit.strVal)
 
+template addWithComma(str: expr, addition: expr) =
+  if str.len > 0:
+    str.add(",")
+  str.add(addition)
+
 proc identDefsToTypeField(identDefs: NimNode): TypeField =
   assert(identDefs.kind == nnkIdentDefs)
-  let nameNode = identDefs[0]
-  let fieldName = $nameNode.baseName.ident
-
+  var nameNode = identDefs[0]
+  let fieldName = $extractIdent(nameNode)
   let typeNode = identDefs[1]
   let defaultValueNode = identDefs[2]
+
+  var isUProperty = removePragma(nameNode, "ue")
+  var uPropertyParamStr: Rope
+  var displayName: string = nil
+
+  if nameNode.kind == nnkPragmaExpr:
+    let pragmaNode = nameNode[1]
+    for ident, val, i in pragmas(pragmaNode):
+      if ident == !"category":
+        let category = val
+        if category == nil:
+          parseError(pragmaNode, "value expected for category")
+        if category.contains('"'):
+          parseError(pragmaNode, "category name must not contain quotes")
+        uPropertyParamStr.addWithComma("Category = \"" & category & "\"")
+      elif ident == !"ue":
+        if val != nil:
+          displayName = val
+      elif ident == !"bpDelegate":
+        if val != nil:
+          displayName = val
+        uPropertyParamStr.addWithComma("BlueprintAssignable")
+      elif ident == !"transient":
+        if val != nil:
+          parseError(pragmaNode, "value is unexpected for transient pragma")
+        uPropertyParamStr.addWithComma("transient")
+      elif ident == !"bpReadOnly":
+        if val != nil:
+          displayName = val
+        uPropertyParamStr.addWithComma("BlueprintReadOnly")
+      elif ident == !"bpReadWrite":
+        if val != nil:
+          displayName = val
+        uPropertyParamStr.addWithComma("BlueprintReadWrite")
+      elif ident == !"editorReadOnly":
+        if val != nil:
+          displayName = val
+        uPropertyParamStr.addWithComma("VisibleAnywhere")
+      elif ident == !"editorReadWrite":
+        if val != nil:
+          displayName = val
+        uPropertyParamStr.addWithComma("EditAnywhere")
+      else: continue
+      isUProperty = true
+      pragmaNode.del(i)
+    if pragmaNode.len == 0:
+      nameNode = nameNode[0]
+
+  if displayName != nil:
+    uPropertyParamStr.addWithComma("meta=(DisplayName = \"" & displayName & "\")")
 
   result = TypeField(name: rope(fieldName),
                      nameNode: nameNode,
                      valueType: toCppType(typeNode),
                      nimTypeNode: typeNode,
-                     defaultValueNode: defaultValueNode)
+                     defaultValueNode: defaultValueNode,
+                     isUProperty: isUProperty,
+                     uPropertyParamStr: uPropertyParamStr)
 
 proc parseField(node: NimNode): TypeField =
   assert(node.kind == nnkVarSection)
@@ -193,6 +248,8 @@ proc parseUProperty(typeKind: TypeKind, uPropertyNode: NimNode): seq[TypeField] 
     if uPropertyNode[^1][i].kind != nnkVarSection:
       parseError(uPropertyNode[^1][i], "expected field declaration after UEProperty")
     result[i] = parseField(uPropertyNode[^1][i])
+    if result[i].isUProperty:
+      parseError(uPropertyNode[^1][i], "UE pragmas are not compatible with UProperty block")
     result[i].isUProperty = true
     result[i].uPropertyParamStr = paramString
 
@@ -216,11 +273,6 @@ proc parseArgs(node: NimNode): seq[VarDeclaration] =
       )
       result.add(varDecl)
 
-template addWithComma(str: expr, addition: expr) =
-  if str.len > 0:
-    str.add(",")
-  str.add(addition)
-
 proc parseMethod(className: string, node: NimNode): TypeMethod =
   assert(node.kind == nnkProcDef or node.kind == nnkMethodDef)
 
@@ -228,49 +280,63 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
     raise newException(ParseError, lineinfo(node[2]) & ": generic params are not supported for now")
 
   let name = $(node[0].basename.ident)
+
   let isOverride = removePragma(node, "override")
   let isConstructor = removePragma(node, "constructor")
   let isAbstract = removePragma(node, "abstract")
   let isVirtual = removePragma(node, "virtual") or (node.kind == nnkMethodDef) or isOverride or isAbstract
   let isCallSuper = removePragma(node, "callSuper")
   let isCallSuperAfter = removePragma(node, "callSuperAfter")
+
   var isUFunction = removePragma(node, "ue")
   var uFunctionParamStr: Rope
   var displayName: string = nil
+  var isBpExpandable = false
+  var expandableName: Rope
 
-  let category = removeStrPragma(node, "category")
-  if category != nil:
-    if category.contains('"'):
-      parseError(node, "category name must not contain quotes")
-    isUFunction = true
-    uFunctionParamStr.addWithComma("Category = \"" & category & "\"")
+  for ident, val, i in pragmas(node.pragma):
+    if ident == !"category":
+      let category = val
+      if category == nil:
+        parseError(node, "value expected for category")
+      if category.contains('"'):
+        parseError(node, "category name must not contain quotes")
+      uFunctionParamStr.addWithComma("Category = \"" & category & "\"")
+    elif ident == !"console":
+      isUFunction = true
+      uFunctionParamStr.addWithComma("Exec")
+    elif ident == !"bpCallable":
+      isUFunction = true
+      if val != nil:
+        displayName = val
+      uFunctionParamStr.addWithComma("BlueprintCallable")
+    elif ident == !"bpOverridable":
+      isUFunction = true
+      if val != nil:
+        displayName = val
+      if node.body.kind != nnkEmpty:
+        uFunctionParamStr.addWithComma("BlueprintNativeEvent")
+      else:
+        uFunctionParamStr.addWithComma("BlueprintImplementableEvent")
+    elif ident == !"bpExpandable":
+      expandableName = rope(val)
+      isBpExpandable = true
+    else: continue
+    node.pragma.del(i)
 
-  if removePragma(node, "console"):
-    isUFunction = true
-    uFunctionParamStr.addWithComma("Exec")
-
-  let callableName = removeStrPragma(node, "bpCallable")
-  if callableName != nil:
-    isUFunction = true
-    if callableName.len > 0: displayName = callableName
-    uFunctionParamStr.addWithComma("BlueprintCallable")
-
-  let eventName = removeStrPragma(node, "bpOverridable")
-  if eventName != nil:
-    isUFunction = true
-    if eventName.len > 0: displayName = eventName
-    uFunctionParamStr.addWithComma("BlueprintNativeEvent")
-
-  let expandableEventName = removeStrPragma(node, "bpExpandable")
-  if expandableEventName != nil:
-    if callableName != nil: parseError(node, "bpCallable is not compatible with bpExpandable")
-    if eventName != nil: parseError(node, "bpOverridable is not compatible with bpExpandable")
-    isUFunction = false
+  if isBpExpandable and isUFunction:
+    parseError(node, "bpExpandable is not compatible with other BP pragmas")
 
   if displayName != nil:
     if displayName.contains('"'):
       parseError(node, "the display name must not contain quotes")
-    uFunctionParamStr.addWithComma("meta=(DisplayName = \"" & category & "\")")
+    uFunctionParamStr.addWithComma("meta=(DisplayName = \"" & displayName & "\")")
+
+  if (isCallSuper or isCallSuperAfter) and not (isOverride or isConstructor):
+    parseError(node, "can only call super from constructor or overriden methods")
+
+  if isOverride and isAbstract:
+    parseError(node, "cannot override and be abstract at the same time")
 
   var procNode = node
   if node.kind == nnkMethodDef:
@@ -290,17 +356,11 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
     isExported: true, # TODO
     isUFunction: isUFunction,
     uFunctionParamStr: uFunctionParamStr,
-    isBpExpandable: expandableEventName != nil,
-    expandableName: rope(expandableEventName),
+    isBpExpandable: isBpExpandable,
+    expandableName: expandableName,
     args: parseArgs(node[3]),
     node: procNode
   )
-
-  if (result.isCallSuper or result.isCallSuperAfter) and not (result.isOverride or result.isConstructor) :
-    parseError(node, "can only call super from constructor or overriden methods")
-
-  if result.isOverride and result.isAbstract:
-    parseError(node, "cannot override abstract method")
 
 proc parseUFunction(className: string, node: NimNode): TypeMethod =
   assert(node.kind == nnkCall and node[0].ident == !"UEFunction")
