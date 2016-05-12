@@ -39,8 +39,11 @@ type
     isAbstract: bool
     isUFunction: bool
     isStatic: bool
+    isBpExpandable: bool
+    expandableName: Rope
     args: seq[VarDeclaration]
     uFunctionParamStr: Rope
+      ## can be non-nil even for non-UFunction (for bpExpandable)
     node: NimNode
 
   TypeField = ref object
@@ -213,6 +216,11 @@ proc parseArgs(node: NimNode): seq[VarDeclaration] =
       )
       result.add(varDecl)
 
+template addWithComma(str: expr, addition: expr) =
+  if str.len > 0:
+    str.add(",")
+  str.add(addition)
+
 proc parseMethod(className: string, node: NimNode): TypeMethod =
   assert(node.kind == nnkProcDef or node.kind == nnkMethodDef)
 
@@ -226,6 +234,43 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
   let isVirtual = removePragma(node, "virtual") or (node.kind == nnkMethodDef) or isOverride or isAbstract
   let isCallSuper = removePragma(node, "callSuper")
   let isCallSuperAfter = removePragma(node, "callSuperAfter")
+  var isUFunction = removePragma(node, "ue")
+  var uFunctionParamStr: Rope
+  var displayName: string = nil
+
+  let category = removeStrPragma(node, "category")
+  if category != nil:
+    if category.contains('"'):
+      parseError(node, "category name must not contain quotes")
+    isUFunction = true
+    uFunctionParamStr.addWithComma("Category = \"" & category & "\"")
+
+  if removePragma(node, "console"):
+    isUFunction = true
+    uFunctionParamStr.addWithComma("Exec")
+
+  let callableName = removeStrPragma(node, "bpCallable")
+  if callableName != nil:
+    isUFunction = true
+    if callableName.len > 0: displayName = callableName
+    uFunctionParamStr.addWithComma("BlueprintCallable")
+
+  let eventName = removeStrPragma(node, "bpOverridable")
+  if eventName != nil:
+    isUFunction = true
+    if eventName.len > 0: displayName = eventName
+    uFunctionParamStr.addWithComma("BlueprintNativeEvent")
+
+  let expandableEventName = removeStrPragma(node, "bpExpandable")
+  if expandableEventName != nil:
+    if callableName != nil: parseError(node, "bpCallable is not compatible with bpExpandable")
+    if eventName != nil: parseError(node, "bpOverridable is not compatible with bpExpandable")
+    isUFunction = false
+
+  if displayName != nil:
+    if displayName.contains('"'):
+      parseError(node, "the display name must not contain quotes")
+    uFunctionParamStr.addWithComma("meta=(DisplayName = \"" & category & "\")")
 
   var procNode = node
   if node.kind == nnkMethodDef:
@@ -243,24 +288,31 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
     isCallSuper: isCallSuper,
     isCallSuperAfter: isCallSuperAfter,
     isExported: true, # TODO
+    isUFunction: isUFunction,
+    uFunctionParamStr: uFunctionParamStr,
+    isBpExpandable: expandableEventName != nil,
+    expandableName: rope(expandableEventName),
     args: parseArgs(node[3]),
     node: procNode
   )
 
   if (result.isCallSuper or result.isCallSuperAfter) and not (result.isOverride or result.isConstructor) :
-    raise newException(ParseError, lineinfo(node) & ": can only call super from constructor or overriden methods")
+    parseError(node, "can only call super from constructor or overriden methods")
 
   if result.isOverride and result.isAbstract:
-    raise newException(ParseError, lineinfo(node) & ": cannot override abstract method")
+    parseError(node, "cannot override abstract method")
 
 proc parseUFunction(className: string, node: NimNode): TypeMethod =
   assert(node.kind == nnkCall and node[0].ident == !"UEFunction")
 
   const supportedRoutines = {nnkProcDef, nnkMethodDef}
   if node[^1].kind != nnkStmtList or not supportedRoutines.contains(node[^1][0].kind):
-    raise newException(ParseError, lineinfo(node) & ": expected proc or mehtod declaration after `UEFunction`")
+    parseError(node, "expected proc or mehtod declaration after `UEFunction`")
 
   result = parseMethod(className, node[^1][0])
+
+  if result.isUFunction:
+    parseError(node, "shortcut pragmas are not allowed for fully-specified UFunction")
 
   result.isUFunction = true
   result.uFunctionParamStr = extractParamString(node)
@@ -313,39 +365,55 @@ proc genCppFields(typeDef: TypeDefinition): Rope {.compileTime.} =
         result.add(" = " & toCppLiteral(field.defaultValueNode))
       result.add(";\n")
 
+proc genCppMethod(typeDef: TypeDefinition, meth: TypeMethod): Rope {.compileTime.} =
+  var friendArgList = toCppArgList(meth.args)
+  let returnType = if meth.isConstructor: rope("void") else: meth.node.cppReturnType()
+  var friendSignature = rope("friend ") & returnType & " `" & meth.genName & "`("
+  if not typeDef.isUtilityType:
+    friendSignature.add(typeDef.name & "*")
+    if friendArgList.len != 0:
+      friendSignature.add(", ")
+  friendSignature.add(friendArgList)
+  friendSignature.add(");\n")
+
+  let methNameCapitalized = rope(($meth.name).capitalize())
+  let signature = toCppSignature(meth, methNameCapitalized)
+
+  if meth.isImplementationNeeded():
+    # friend declaration is needed so that Nim procs have access to
+    # private/protected fields
+    result.add(friendSignature)
+  let doc = meth.node.doc()
+  if doc != nil:
+    result.add("/** \n")
+    for line in doc.splitLines():
+      result.add(" *  " & line & "\n")
+    result.add(" */\n")
+  if meth.isUFunction:
+    result.add("UFUNCTION($#)\n".format(meth.uFunctionParamStr))
+
+  result.add(signature)
+  if meth.isAbstract:
+    result.add(" = 0;\n")
+  else:
+    result.add(";\n")
+
 proc genCppMethods(typeDef: TypeDefinition): Rope {.compileTime.} =
   for meth in typeDef.methods:
-    var friendArgList = toCppArgList(meth.args)
-    let returnType = if meth.isConstructor: rope("void") else: meth.node.cppReturnType()
-    var friendSignature = rope("friend ") & returnType & " `" & meth.genName & "`("
-    if not typeDef.isUtilityType:
-      friendSignature.add(typeDef.name & "*")
-      if friendArgList.len != 0:
-        friendSignature.add(", ")
-    friendSignature.add(friendArgList)
-    friendSignature.add(");\n")
-
-    let methNameCapitalized = rope(($meth.name).capitalize())
-    let signature = toCppSignature(meth, methNameCapitalized)
-
-    if meth.isImplementationNeeded():
-      # friend declaration is needed so that Nim procs have access to
-      # private/protected fields
-      result.add(friendSignature)
-    let doc = meth.node.doc()
-    if doc != nil:
-      result.add("/** \n")
-      for line in doc.splitLines():
-        result.add(" *  " & line & "\n")
-      result.add(" */\n")
-    if meth.isUFunction:
-      result.add("UFUNCTION($#)\n".format(meth.uFunctionParamStr))
-
-    result.add(signature)
-    if meth.isAbstract:
-      result.add(" = 0;\n")
-    else:
-      result.add(";\n")
+    result.add(genCppMethod(typeDef, meth))
+    if meth.isBpExpandable:
+      var bpMeth = TypeMethod(
+        name: rope("Receive" & ($meth.name).capitalize()),
+        genName: meth.genName,
+        args: meth.args,
+        node: meth.node,
+        isUFunction: true
+      )
+      let displayName = if meth.expandableName != nil: meth.expandableName
+                        else: rope(($meth.name).capitalize())
+      bpMeth.uFunctionParamStr = rope("BlueprintImplementableEvent, meta=(DisplayName=\"") & displayName & "\")"
+      bpMeth.uFunctionParamStr.addWithComma(meth.uFunctionParamStr)
+      result.add(genCppMethod(typeDef, bpMeth))
 
 proc genCppImplementationCode(typeDef: TypeDefinition): string {.compileTime.} =
   var code: Rope
@@ -365,24 +433,34 @@ proc genCppImplementationCode(typeDef: TypeDefinition): string {.compileTime.} =
 
       code.add(" {\n ")
 
+      let invocationArgs = meth.args.mapIt($(it.name)).join(", ")
       let superInvocation = rope("Super::") & methNameCapitalized &
-          "(" & meth.args.mapIt($(it.name)).join(", ") & ");\n"
+          "(" & invocationArgs & ");\n"
       if meth.isCallSuper:
         code.add(superInvocation)
 
-      var invocationCode: Rope
-      for arg in meth.args:
-        if invocationCode.len != 0:
-          invocationCode.add(", ")
-        invocationCode.add(arg.name)
-      let returnOrNothing = rope(if meth.isConstructor or $(meth.node.cppReturnType()) == "void": "" else: "return")
-      var thisOrNothing = rope(if not meth.isStatic: "this" else: "")
-      if thisOrNothing.len != 0 and invocationCode.len != 0:
-        invocationCode = ", " & invocationCode
-      invocationCode = thisOrNothing & invocationCode
-      code.addf("$# `$#`($#);\n",
+      if meth.node.body.kind != nnkEmpty:
+        var invocationCode: Rope
+        for arg in meth.args:
+          if invocationCode.len != 0:
+            invocationCode.add(", ")
+          invocationCode.add(arg.name)
+        let needReturn = not(meth.isBpExpandable or meth.isCallSuperAfter or meth.isConstructor or $(meth.node.cppReturnType()) == "void")
+        let returnOrNothing = rope(if needReturn: "return" else: "")
+        var thisOrNothing = rope(if not meth.isStatic: "this" else: "")
+        if thisOrNothing.len != 0 and invocationCode.len != 0:
+          invocationCode = ", " & invocationCode
+        invocationCode = thisOrNothing & invocationCode
+        code.addf("$# `$#`($#);\n",
                   [returnOrNothing, meth.genName, invocationCode])
+
+      if meth.isBpExpandable:
+        let returnOrNothing = if $(meth.node.cppReturnType()) == "void": "" else: "return "
+        code.add(returnOrNothing & "`this`->Receive" & methNameCapitalized & "(" & invocationArgs & ");\n")
+
       if meth.isCallSuperAfter:
+        let returnOrNothing = if $(meth.node.cppReturnType()) == "void": "" else: "return "
+        code.add(returnOrNothing)
         code.add(superInvocation)
 
       code.add("}\n\n")
@@ -476,19 +554,17 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
     meth.node[0] = ident($meth.genName)
 
     if meth.isImplementationNeeded():
-      if meth.node.pragma.kind == nnkEmpty:
-        meth.node.pragma = newNimNode(nnkPragma)
-      meth.node.pragma.add(ident("exportc"))
-      meth.node.pragma.add(ident("cdecl"))
-      when not defined(dontWrapNimExceptions):
-        if not hasPragma(meth.node, "noSideEffect"):
-          meth.node.body = newStmtList(
-            newNimNode(nnkTryStmt).
-              add(meth.node.body).
-              add(
-              newNimNode(nnkExceptBranch).
-                add(exceptionHandlingStmt.copyNimTree())))
-      methDefs.add(meth.node)
+      if not meth.isBpExpandable or meth.node.body.kind != nnkEmpty:
+        when not defined(dontWrapNimExceptions):
+          if not hasPragma(meth.node, "noSideEffect"):
+            meth.node.body = newStmtList(
+              newNimNode(nnkTryStmt).
+                add(meth.node.body).
+                add(
+                newNimNode(nnkExceptBranch).
+                  add(exceptionHandlingStmt.copyNimTree())))
+
+        methDefs.add(meth.node)
 
   if typeDef.kind != tkEnum and not typeDef.isUtilityType:
     let staticClassMeth = parseStmt("""

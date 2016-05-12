@@ -10,7 +10,8 @@ proc removePragma*(statement: NimNode, pname: string): bool =
   var pragmas = statement.pragma()
   let pname = !pname
   for index in 0 .. < pragmas.len:
-    if pragmas[index].kind == nnkIdent and pragmas[index].ident == pname:
+    if pragmas[index].kind == nnkIdent and pragmas[index].ident == pname or
+       pragmas[index].kind == nnkExprColonExpr and pragmas[index][0].ident == pname:
       pragmas.del(index)
       return true
 
@@ -36,6 +37,9 @@ proc removeStrPragma*(statement: NimNode, pname: string): string =
       let val = $(pragmas[index][1])
       pragmas.del(index)
       return val
+    if pragmas[index].kind == nnkIdent and pragmas[index].ident == pname:
+      pragmas.del(index)
+      return ""
 
 proc fileNameNoExt*(node: NimNode): string =
   ## Returns name of the file containing the `node` without extension
