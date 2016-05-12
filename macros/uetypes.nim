@@ -193,9 +193,13 @@ proc identDefsToTypeField(identDefs: NimNode): TypeField =
         if val != nil:
           displayName = val
         uPropertyParamStr.addWithComma("BlueprintAssignable")
+      elif ident == !"config":
+        if val != nil:
+          parseError(pragmaNode, "value is not expected for config pragma")
+        uPropertyParamStr.addWithComma("Config")
       elif ident == !"transient":
         if val != nil:
-          parseError(pragmaNode, "value is unexpected for transient pragma")
+          parseError(pragmaNode, "value is not expected for transient pragma")
         uPropertyParamStr.addWithComma("transient")
       elif ident == !"bpReadOnly":
         if val != nil:
