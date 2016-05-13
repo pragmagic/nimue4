@@ -26,11 +26,27 @@ type
 
   FTransform* {.header: "Math/ScalarRegister.h", importcpp.} = object
 
+  EGammaSpace* {.header: "Math/Color.h", importcpp, size: sizeof(cint), pure.} = enum
+    ## Enum for the different kinds of gamma spaces we expect to need to convert from/to.
+    Linear,
+      ## No gamma correction is applied to this space, the incoming colors are assumed to already be in linear space.
+    Pow22,
+      ## A simplified sRGB gamma correction is applied, pow(1/2.2).
+    sRGB,
+      ## Use the standard sRGB conversion.
+
   FColor* {.header: "Math/Color.h", importcpp.} = object
     a* {.importcpp: "A".}: uint8
     r* {.importcpp: "R".}: uint8
     g* {.importcpp: "G".}: uint8
     b* {.importcpp: "B".}: uint8
+
+  FLinearColor* {.header: "Math/Color.h", importcpp.} = object
+    ## A linear, 32-bit/component floating point RGBA color.
+    r* {.importcpp: "R".}: cfloat
+    g* {.importcpp: "G".}: cfloat
+    b* {.importcpp: "B".}: cfloat
+    a* {.importcpp: "A".}: cfloat
 
   EAxis* {.header: "Math/Axis.h", importcpp: "EAxis::Type", size: sizeof(cint), pure.} = enum
     None,

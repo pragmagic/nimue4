@@ -85,6 +85,7 @@ type
   UNavArea* {.header: "AI/Navigation/NavAreas/NavArea.h", importcpp.} = object of UObject
   UAISystemBase* {.header: "AI/AISystemBase.h", importcpp.} = object of UObject
   UAvoidanceManager* {.header :"AI/Navigation/AvoidanceManager.h", importcpp.} = object of UObject
+  UNavigationDataChunk* {.header: "AI/Navigation/NavigationDataChunk.h", importcpp.} = object of UObject
 
   UBodySetup* {.header: "PhysicsEngine/BodySetup.h", importcpp.} = object of UObject
   UPhysicsCollisionHandler* {.header: "PhysicsEngine/PhysicsCollisionHandler.h", importcpp.} = object of UObject
@@ -125,6 +126,7 @@ type
 
   UBlueprintCore* {.header: "Engine/BlueprintCore.h", importcpp.} = object of UObject
   UBlueprint* {.header: "Engine/Blueprint.h", importcpp.} = object of UBlueprintCore
+  ULevelScriptBlueprint* {.header: "Engine/LevelScriptBlueprint.h", importcpp.} = object of UBlueprint
 
   FPostProcessSettings* {.header: "Scene.h", importcpp.} = object
 
@@ -170,6 +172,9 @@ type
   AHUD* {.header: "GameFramework/HUD.h", importcpp.} = object of AActor
 
   ALevelScriptActor* {.header: "Engine/LevelScriptActor.h", importcpp.} = object of AActor
+  ALevelBounds* {.header: "Engine/LevelBounds.h", importcpp.} = object of AActor
+
+  ANavigationObjectBase* {.header: "NavigationObjectBase.h", importcpp.} = object of AActor
 
   # TODO: move out
   EViewTargetBlendFunction* {.header: "Camera/PlayerCameraManager.h", importcpp, size: sizeof(cint).} = enum
@@ -194,6 +199,8 @@ type
   AEmitter* {.header: "Particles/Emitter.h", importcpp.} = object of AActor
   AEmitterCameraLensEffectBase* {.header: "Particles/EmitterCameraLensEffectBase.h", importcpp.} = object of AEmitter
   AParticleEventManager* {.header: "Particles/ParticleEventManager.h", importcpp.} = object of AActor
+
+  AInstancedFoliageActor* {.header: "InstancedFoliageActor.h", importcpp.} = object of AActor
 
 include modules/core/globals
 
@@ -320,8 +327,6 @@ include modules/net/serialization
 
 include modules/touchinterface
 
-# include modules/core/world
-# include modules/core/level
 # include modules/core/canvas
 
 include modules/core/player
@@ -343,6 +348,8 @@ include modules/playerstate
 
 include modules/controller
 include modules/playercontroller
+
+include modules/level
 include modules/world
 
 include modules/engine/hud

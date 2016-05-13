@@ -26,6 +26,10 @@ type
   USkinnedMeshComponent* {.header: "Components/SkinnedMeshComponent.h", importcpp.} = object of UMeshComponent
     skeletalMesh* {.importcpp: "SkeletalMesh".}: ptr USkeletalMesh
 
+  UModelComponent* {.header: "Components/ModelComponent.h", importcpp.} = object of UPrimitiveComponent
+    ## ModelComponents are PrimitiveComponents that represent elements of BSP geometry in a ULevel object.
+    ## They are used exclusively by ULevel and are not intended as general-purpose components.
+
   USkeletalMeshComponent* {.header: "Components/SkeletalMeshComponent.h", importcpp.} = object of USkinnedMeshComponent
 
   UBillboardComponent* {.header: "Components/BillboardComponent.h", importcpp.} = object of UPrimitiveComponent

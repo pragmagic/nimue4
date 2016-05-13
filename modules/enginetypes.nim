@@ -472,6 +472,55 @@ type
       ## Portal to enter through, default is "".
     valid* {.importcpp: "Valid".}: int32
 
+  ETextureSizingType* {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(cint).} = enum
+    TextureSizingType_UseSingleTextureSize,
+      ## Use TextureSize for all material properties
+    TextureSizingType_UseAutomaticBiasedSizes,
+      ## Use automatically biased texture sizes based on TextureSize
+    TextureSizingType_UseManualOverrideTextureSize,
+      ## Use per property manually overriden texture sizes
+    TextureSizingType_UseSimplygonAutomaticSizing,
+      ## Use Simplygon's automatic texture sizing
+    TextureSizingType_MAX
+
+class(FMaterialProxySettings, header: "Engine/EngineTypes.h", bycopy):
+  var textureSize: FIntPoint
+    ## Size of generated BaseColor map
+  var textureSizingType: ETextureSizingType
+  var gutterSpace: cfloat
+  var bNormalMap: bool
+    ## Whether to generate normal map
+  var bMetallicMap: bool
+    ## Whether to generate metallic map
+  var metallicConstant: cfloat
+    ## Metallic constant
+  var bRoughnessMap: bool
+    ## Whether to generate roughness map
+  var roughnessConstant: cfloat
+    ## Roughness constant
+  var bSpecularMap: bool
+    ## Whether to generate specular map
+  var specularConstant: cfloat
+    ## Specular constant
+  var bEmissiveMap: bool
+    ## Whether to generate emissive map
+  var bOpacityMap: bool
+    ## Whether to generate opacity map
+  var diffuseTextureSize: FIntPoint
+    ## Override diffuse map size
+  var normalTextureSize: FIntPoint
+    ## Override normal map size
+  var metallicTextureSize: FIntPoint
+    ## Override metallic map size
+  var roughnessTextureSize: FIntPoint
+    ## Override roughness map size
+  var specularTextureSize: FIntPoint
+    ## Override specular map size
+  var emissiveTextureSize: FIntPoint
+    ## Override emissive map size
+  var opacityTextureSize: FIntPoint
+    ## Override opacity map size)
+
 class(FHitResult, header: "Engine/EngineTypes.h", bycopy):
     var bBlockingHit: bool
     var bStartPenetrating: bool
