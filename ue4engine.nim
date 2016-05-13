@@ -26,7 +26,11 @@ include modules/math
 include modules/logging
 
 type
-  FOutputDevice* {.header: "Misc/OutputDevice.h", importcpp.} = object
+  FOutputDevice* {.header: "Misc/OutputDevice.h", importcpp, inheritable.} = object
+  FOutputDeviceRedirector {.header: "HAL/OutputDevices.h", importcpp.} = object of FOutputDevice
+  FExec* {.header: "Misc/OutputDevice.h", importcpp, inheritable.} = object
+  FAudioDevice* {.header: "AudoDevice.h", importcpp.} = object of FExec
+
   FArchive* {.header: "Serialization/ArchiveBase.h", importcpp.} = object
   FSceneInterface* {.header: "SceneInterface.h", importcpp.} = object
   FReferenceCollector* {.header: "UObject/UObjectGlobals.h", importcpp.} = object
@@ -35,6 +39,7 @@ type
 # and UE types have lots of inter-dependencies
 type
   UObject* {.header: "UObject/UObject.h", importcpp, inheritable.} = object
+  UPackage* {.header: "UObject/CoreObject.h", importcpp.} = object of UObject
 
   UProperty* {.header: "UObject/UnrealTypes.h", importcpp.} = object of UObject
   UClass* {.header: "UObject/Class.h", importcpp.} = object of UObject
@@ -51,6 +56,7 @@ type
     fixedFrameRate {.importcpp: "FixedFrameRate".}: cfloat
 
   UGameEngine* {.header: "Engine/GameEngine.h", importcpp.} = object of UEngine
+  UGameViewportClient* {.header: "Engine/GameViewportClient.h", importcpp.} = object of UObject
 
   UCanvas* {.header: "Engine/Canvas.h", importcpp.} = object of UObject
   UWorld* {.header: "Engine/World.h", importcpp.} = object of UObject
@@ -73,12 +79,15 @@ type
                                 importcpp.} = object
   UForceFeedbackEffect* {.header: "GameFramework/ForceFeedbackEffect.h",
                           importcpp.} = object of UObject
-  FPlayerMuteList* {.header: "GameFramework/PlayerMuteList.h", importcpp: "FPlayerMuteList".} = object
+  FPlayerMuteList* {.header: "GameFramework/PlayerMuteList.h", importcpp.} = object
 
-  UNavigationSystem* {.header: "AI/Navigation/NavigationSystem.h", importcpp: "UNavigationSystem".} = object of UObject
-  UNavArea* {.header: "AI/Navigation/NavAreas/NavArea.h", importcpp: "UNavArea".} = object of UObject
+  UNavigationSystem* {.header: "AI/Navigation/NavigationSystem.h", importcpp.} = object of UObject
+  UNavArea* {.header: "AI/Navigation/NavAreas/NavArea.h", importcpp.} = object of UObject
+  UAISystemBase* {.header: "AI/AISystemBase.h", importcpp.} = object of UObject
+  UAvoidanceManager* {.header :"AI/Navigation/AvoidanceManager.h", importcpp.} = object of UObject
 
   UBodySetup* {.header: "PhysicsEngine/BodySetup.h", importcpp.} = object of UObject
+  UPhysicsCollisionHandler* {.header: "PhysicsEngine/PhysicsCollisionHandler.h", importcpp.} = object of UObject
 
   UDamageType* {.header: "GameFramework/DamageType.h", importcpp.} = object of UObject
     bCausedByWorld: bool
@@ -97,6 +106,7 @@ type
       ## Damage fall-off for radius damage (exponent).  Default 1.0=linear, 2.0=square of distance, etc.
 
   UNetDriver* {.header: "Engine/NetDriver.h", importcpp.} = object of UObject
+  UDemoNetDriver* {.header: "Engine/DemoNetDriver.h", importcpp.} = object of UNetDriver
 
   UTexture* {.header: "Engine/Texture.h", importcpp.} = object of UObject
   UTexture2D* {.header: "Engine/Texture2D.h", importcpp.} = object of UTexture
@@ -110,6 +120,11 @@ type
   UMaterialInterface* {.header: "Materials/MaterialInterface.h", importcpp.} = object of UObject
   UMaterialInstance* {.header: "Materials/MaterialInstance.h", importcpp.} = object of UMaterialInterface
   UMaterialInstanceDynamic* {.header: "Materials/MaterialInstanceDynamic.h", importcpp.} = object of UMaterialInstance
+  UMaterialParameterCollectionInstance* {.header: "Materials/MaterialParameterCollectionInstance.h", importcpp.} = object of UObject
+  UMaterialParameterCollection* {.header: "Materials/MaterialParameterCollection.h", importcpp.} = object of UObject
+
+  UBlueprintCore* {.header: "Engine/BlueprintCore.h", importcpp.} = object of UObject
+  UBlueprint* {.header: "Engine/Blueprint.h", importcpp.} = object of UBlueprintCore
 
   FPostProcessSettings* {.header: "Scene.h", importcpp.} = object
 
@@ -147,12 +162,14 @@ type
     ## GameState is replicated and is valid on servers and clients.
   AWorldSettings* {.header: "GameFramework/WorldSettings.h", importcpp.} = object of AInfo
   AGameMode* {.header: "GameFramework/GameMode.h", importcpp.} = object of AInfo
+  APlayerState* {.header: "GameFramework/PlayerState.h", importcpp.} = object of AInfo
+  AGameNetworkManager* {.header: "GameFramework/GameNetworkManager.h", importcpp.} = object of AInfo
 
   AMatineeActor* {.header: "GameFramework/MatineeActor.h", importcpp.} = object of AActor
 
-  APlayerState* {.header: "GameFramework/PlayerState.h", importcpp.} = object of AInfo
-
   AHUD* {.header: "GameFramework/HUD.h", importcpp.} = object of AActor
+
+  ALevelScriptActor* {.header: "Engine/LevelScriptActor.h", importcpp.} = object of AActor
 
   # TODO: move out
   EViewTargetBlendFunction* {.header: "Camera/PlayerCameraManager.h", importcpp, size: sizeof(cint).} = enum
@@ -176,6 +193,7 @@ type
 
   AEmitter* {.header: "Particles/Emitter.h", importcpp.} = object of AActor
   AEmitterCameraLensEffectBase* {.header: "Particles/EmitterCameraLensEffectBase.h", importcpp.} = object of AEmitter
+  AParticleEventManager* {.header: "Particles/ParticleEventManager.h", importcpp.} = object of AActor
 
 include modules/core/globals
 
@@ -202,6 +220,79 @@ include modules/ai/navigationtypes
 include modules/engine/brush
 include modules/engine/volume
 include modules/engine/physicsvolume
+
+type
+  AAudioVolume* {.header: "Sound/AudioVolume.h", importcpp.} = object of AVolume
+    priority {.importcpp: "Priority".}: cfloat
+    bEnabled: bool
+
+  UReverbEffect* {.header: "Sound/ReverbEffect.h", importcpp.} = object of UObject
+    density* {.importcpp: "Density".}: cfloat
+      ## Density - 0.0 < 1.0 < 1.0 - Coloration of the late reverb - lower value is more
+      ## UPROPERTY(Category=ReverbParameters, meta=(ClampMin = "0.0", ClampMax = "1.0"), EditAnywhere)
+    diffusion* {.importcpp: "Diffusion".}: cfloat
+      ## Diffusion - 0.0 < 1.0 < 1.0 - Echo density in the reverberation decay - lower is more grainy
+      ## UPROPERTY(Category=ReverbParameters, meta=(ClampMin = "0.0", ClampMax = "1.0"), EditAnywhere)
+    gain* {.importcpp: "Gain".}: cfloat
+      ## Reverb Gain - 0.0 < 0.32 < 1.0 - overall reverb gain - master volume control
+      ## UPROPERTY(Category=ReverbParameters, meta=(ClampMin = "0.0", ClampMax = "1.0"), EditAnywhere)
+    gainHF* {.importcpp: "GainHF".}: cfloat
+      ## Reverb Gain High Frequency - 0.0 < 0.89 < 1.0 - attenuates the high frequency reflected sound
+      ## UPROPERTY(Category=ReverbParameters, meta=(ClampMin = "0.0", ClampMax = "1.0"), EditAnywhere)
+    decayTime* {.importcpp: "DecayTime".}: cfloat
+      ## Decay Time - 0.1 < 1.49 < 20.0 Seconds - larger is more reverb
+      ## UPROPERTY(Category=ReverbParameters, meta=(ClampMin = "0.1", ClampMax = "20.0"), EditAnywhere)
+    decayHFRatio* {.importcpp: "DecayHFRatio".}: cfloat
+      ## Decay High Frequency Ratio - 0.1 < 0.83 < 2.0 - how much the quicker or slower the high frequencies decay relative to the lower frequencies.
+      ## UPROPERTY(Category=ReverbParameters, meta=(ClampMin = "0.1", ClampMax = "2.0"), EditAnywhere)
+    reflectionsGain* {.importcpp: "ReflectionsGain".}: cfloat
+      ## Reflections Gain - 0.0 < 0.05 < 3.16 - controls the amount of initial reflections
+      ## UPROPERTY(Category=ReverbParameters, meta=(ClampMin = "0.0", ClampMax = "3.16"), EditAnywhere)
+    reflectionsDelay* {.importcpp: "ReflectionsDelay".}: cfloat
+      ## Reflections Delay - 0.0 < 0.007 < 0.3 Seconds - the time between the listener receiving the direct path sound and the first reflection
+      ## UPROPERTY(Category=ReverbParameters, meta=(ClampMin = "0.0", ClampMax = "0.3"), EditAnywhere)
+    lateGain* {.importcpp: "LateGain".}: cfloat
+      ## Late Reverb Gain - 0.0 < 1.26 < 10.0 - gain of the late reverb
+      ## UPROPERTY(Category=ReverbParameters, meta=(ClampMin = "0.0", ClampMax = "10.0"), EditAnywhere)
+    lateDelay* {.importcpp: "LateDelay".}: cfloat
+      ## Late Reverb Delay - 0.0 < 0.011 < 0.1 Seconds - time difference between late reverb and first reflections
+      ## UPROPERTY(Category=ReverbParameters, meta=(ClampMin = "0.0", ClampMax = "0.1"), EditAnywhere)
+    airAbsorptionGainHF* {.importcpp: "AirAbsorptionGainHF".}: cfloat
+      ## Air Absorption - 0.892 < 0.994 < 1.0 - lower value means more absorption
+      ## UPROPERTY(Category=ReverbParameters, meta=(ClampMin = "0.892", ClampMax = "1.0"), EditAnywhere)
+    roomRolloffFactor* {.importcpp: "RoomRolloffFactor".}: cfloat
+      ## Room Rolloff - 0.0 < 0.0 < 10.0 - multiplies the attenuation due to distance
+      ## UPROPERTY(Category=ReverbParameters, meta=(ClampMin = "0.0", ClampMax = "10.0"), EditAnywhere)
+
+  FReverbSettings* {.header: "Sound/AudioVolume.h", importcpp.} = object
+    bApplyReverb*: bool
+      ## Whether to apply the reverb settings below.
+    reverbEffect* {.importcpp: "ReverbEffect".}: ptr UReverbEffect
+      ## The reverb asset to employ.
+    volume* {.importcpp: "Volume".}: cfloat
+      ## Volume level of the reverb affect.
+    fadeTime* {.importcpp: "FadeTime".}: cfloat
+      ## Time to fade from the current reverb settings into this setting, in seconds.
+
+  FInteriorSettings* {.header: "Sound/AudioVolume.h", importcpp.} = object
+    bIsWorldSettings*: bool
+      ## Whether these interior settings are the default values for the world
+    exteriorVolume* {.importcpp: "ExteriorVolume".}: cfloat
+      ## The desired volume of sounds outside the volume when the player is inside the volume
+    exteriorTime* {.importcpp: "ExteriorTime".}: cfloat
+      ## The time over which to interpolate from the current volume to the desired volume of sounds outside the volume when the player enters the volume
+    exteriorLPF* {.importcpp: "ExteriorLPF".}: cfloat
+      ## The desired LPF frequency cutoff in hertz of sounds outside the volume when the player is inside the volume
+    exteriorLPFTime* {.importcpp: "ExteriorLPFTime".}: cfloat
+      ## The time over which to interpolate from the current LPF to the desired LPF of sounds outside the volume when the player enters the volume
+    interiorVolume* {.importcpp: "InteriorVolume".}: cfloat
+      ## The desired volume of sounds inside the volume when the player is outside the volume
+    interiorTime* {.importcpp: "InteriorTime".}: cfloat
+      ## The time over which to interpolate from the current volume to the desired volume of sounds inside the volume when the player enters the volume
+    interiorLPF* {.importcpp: "InteriorLPF".}: cfloat
+      ## The desired LPF frequency cutoff in hertz of sounds inside  the volume when the player is outside the volume
+    interiorLPFTime* {.importcpp: "InteriorLPFTime".}: cfloat
+      ## The time over which to interpolate from the current LPF to the desired LPF of sounds inside the volume when the player enters the volume
 
 include modules/components/scene
 include modules/components/springarm

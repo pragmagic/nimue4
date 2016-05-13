@@ -15,6 +15,8 @@ type
   UPrimitiveComponent* {.header: "Components/PrimitiveComponent.h", importcpp.} = object of USceneComponent
   UDrawFrustumComponent* {.header: "Components/DrawFrustumComponent.h", importcpp.} = object of UPrimitiveComponent
 
+  ULineBatchComponent* {.header: "Components/LineBatchComponent.h", importcpp.} = object of UPrimitiveComponent
+
   UShapeComponent* {.header: "Components/ShapeComponent.h", importcpp.} = object of UPrimitiveComponent
   UCapsuleComponent* {.header: "Components/CapsuleComponent.h", importcpp.} = object of UShapeComponent
   USphereComponent* {.header: "Components/SphereComponents.h", importcpp.} = object of UShapeComponent

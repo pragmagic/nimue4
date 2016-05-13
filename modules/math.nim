@@ -42,6 +42,11 @@ type
     x* {.importcpp: "X".}: int32
     y* {.importcpp: "Y".}: int32
 
+  FIntVector* {.header: "Math/IntVector.h", importcpp: "FIntVector", bycopy.} = object
+    x* {.importcpp: "X".}: int32
+    y* {.importcpp: "Y".}: int32
+    z* {.importcpp: "Z".}: int32
+
 proc initFIntPoint*(x,y: int32): FIntPoint {.header: "Math/IntPoint.h", importcpp: "FIntPoint(@)", constructor.}
 
 class(FVector, header: "Math/Vector.h", bycopy):
@@ -535,8 +540,8 @@ class(FTransform, header: "Math/ScalarRegister.h", notypedef):
   proc getRotation(): FQuat {.noSideEffect.}
   proc getScale3D(): FVector {.noSideEffect.}
 
-var WhiteColor* {.importc: "FColor::White", header: "Math/Color.h".}: FColor
-var IdentityTransform* {.importc: "FTransform::Identity", header: "Math/ScalarRegister.h".}: FTransform
+var whiteColor* {.importc: "FColor::White", header: "Math/Color.h".}: FColor
+var identityTransform* {.importc: "FTransform::Identity", header: "Math/ScalarRegister.h".}: FTransform
 
 converter vectorFromForceInit(f: EForceInit): FVector {.importcpp, constructor, header: "Math/Vector.h".}
 converter colorFromForceInit(f: EForceInit): FColor {.importcpp, constructor, header: "Math/Color.h".}

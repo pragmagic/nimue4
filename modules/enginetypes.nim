@@ -351,6 +351,27 @@ type
       ## Note: WalkableSlopeAngle will be ignored.
     WalkableSlope_Max
 
+  EFlushLevelStreamingType* {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(cint), pure.} = enum
+    None
+    Full
+      ## Allow multiple load requests
+    Visibility
+      ## Flush visibility only, do not allow load requests, flushes async loading as well
+
+  EWorldType* {.header: "Engine/EngineTypes.h", importcpp: "EWorldType::Type", size: sizeof(cint), pure.} = enum
+    None,
+      ## An untyped world, in most cases this will be the vestigial worlds of streamed in sub-levels
+    Game,
+      ## The game world
+    Editor,
+      ## A world being edited in the editor
+    PIE,
+      ## A Play In Editor world
+    Preview,
+      ## A preview world for an editor tool
+    Inactive
+      ## An editor world that was loaded but not currently being edited in the level editor
+
   FResponseChannel* {.header: "Engine/EngineTypes.h", importcpp.} = object
     channel* {.importcpp: "Channel".}: FName
     response* {.importcpp: "Response".}: ECollisionResponse
@@ -434,6 +455,22 @@ type
     bodySpeedThresholdSq* {.importcpp: "BodySpeedThresholdSq".}: cfloat
       ## min squared body speed to perform velocity adjustment
 
+  FURL* {.header: "Engine/EngineBaseTypes.h", importcpp.} = object
+    protocol* {.importcpp: "Protocol".}: FString
+      ## Protocol, i.e. "unreal" or "http".
+    host* {.importcpp: "Host".}: FString
+      ## Optional hostname, i.e. "204.157.115.40" or "unreal.epicgames.com", blank if local.
+    port* {.importcpp: "Port".}: int32
+      ## Optional host port.
+    map* {.importcpp: "Map".}: FString
+      ## Map name, i.e. "SkyCity", default is "Entry".
+    redirectURL* {.importcpp: "RedirectURL".}: FString
+      ## Optional place to download Map if client does not possess it
+    op* {.importcpp: "Op".}: TArray[FString]
+      ## Options.
+    portal* {.importcpp: "Portal".}: FString
+      ## Portal to enter through, default is "".
+    valid* {.importcpp: "Valid".}: int32
 
 class(FHitResult, header: "Engine/EngineTypes.h", bycopy):
     var bBlockingHit: bool

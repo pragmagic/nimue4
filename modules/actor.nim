@@ -1581,7 +1581,7 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
   proc uninitializeComponents()
     ## Iterate over components array and call UninitializeComponent
 
-  proc drawDebugComponents(baseColor: FColor = WhiteColor) {.noSideEffect.}
+  proc drawDebugComponents(baseColor: FColor = whiteColor) {.noSideEffect.}
     ## Debug rendering to visualize the component tree for this actor.
 
   method markComponentsAsPendingKill()

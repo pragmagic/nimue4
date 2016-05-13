@@ -61,6 +61,17 @@ class(TArray[T], header: "Containers/Array.h", bycopy):
 
 proc initArrayInternal[T](arr: var TArray[T], val: T, size: int32) {.importcpp: "#.Init(@)", nodecl.}
 
+type
+  TArrayIterator {.importcpp: "TArray<'0>::TIterator".} [T] = object
+  TArrayConstIterator {.importcpp: "TArray<'0>::TConstIterator".} [T] = object
+  TAnyArrayIterator[T] = TArrayIterator[T] or TArrayConstIterator[T]
+
+proc isValid[T](it: TAnyArrayIterator[T]): bool {.noSideEffect, importcpp: "((bool)(#))", header: "Containers/Array.h".}
+proc next[T](it: var TAnyArrayIterator[T]) {.importcpp: "(++#)", header: "Containers/Array.h".}
+
+proc value[T](it: TArrayIterator[T]): var T {.noSideEffect, importcpp: "(*#)", header: "Containers/Array.h".}
+proc value[T](it: TArrayConstIterator[T]): T {.noSideEffect, importcpp: "(*#)", header: "Containers/Array.h".}
+
 proc initArray*[T](): TArray[T] {.importcpp: "'0(@)", constructor, nodecl.}
 
 proc initArray*[T](initCapacity: Natural): TArray[T] =
