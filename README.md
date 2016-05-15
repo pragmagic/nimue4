@@ -1,19 +1,19 @@
 # Nim Integration for Unreal Engine 4
 
-This project contains Nim library and tools that allow to create Unreal Engine 4 games on Nim programming language.
+This repo contains Nim library and tools that allow to create Unreal Engine 4 games on [Nim programming language](http://nim-lang.org/).
 
 
-The project is in early development, so breaking changes are possible - backward compatibility is not guaranteed yet.
+The integration is in early development, so breaking changes are possible - backward compatibility is not guaranteed yet.
 
 
-The project is being used by an indie development team to create a mobile strategy game.
+This integration is being used by an indie development team to create a mobile strategy game.
 
 ## Why Nim?
 
 Nim is a native programming language that allows excellent programming productivity while not sacrificing the application's performance. It compiles directly into C++, so almost all the features UE4 provides can be made available in Nim.
 
 
-Nim's syntax and semantics are simple and elegant, so Nim can be easily taught to scripters in game development teams. Nim also has reach meta-programming capabilities, allowing you to extend capabilities of Nim, which is great for the variety of domains a game developer usually encounters.
+Nim's syntax and semantics are simple and elegant, so Nim can be easily taught to scripters in game development teams. Nim also has rich support for meta-programming, allowing you to extend capabilities of Nim, which is great for the variety of domains a game developer usually encounters.
 
 ## Getting Started
 
@@ -29,29 +29,29 @@ Nim's syntax and semantics are simple and elegant, so Nim can be easily taught t
 
 ### Setting up Unreal Engine 4
 
-This library has been tested to work with Unreal Engine 4.10 and 4.11. It may work with earlier versions, too, as long as you don't use features added in recent versions. Notice that the library intentionally doesn't provide wrappers for deprecated methods and fields.
+This library has been tested to work with Unreal Engine 4.10 and 4.11 on Windows and OS X. It may work with earlier versions of UE4, too, as long as you don't use features added in recent versions. Notice that the library intentionally doesn't provide wrappers for deprecated methods and fields.
 
 Follow instructions on the [official Unreal Engine site](https://www.unrealengine.com/) to set up Unreal Engine 4.
 
 ### Setting up Unreal Project with Nim support
 
 1. Create a new UE4 project using the Unreal Editor.
-2. Put files from `nimue4/stubs/` folder into the project's root folder.
+2. Copy files from `nimue4/stubs/` folder into the project's root folder.
 3. Open the project's root folder in VSCode (`File` -> `Open Folder`).
 4. Change paths to nimue4 and Nim inside `build.cmd` and `build.sh` files. If on Windows, change path to Visual Studio, if necessary.
 5. Add these lines to the game module's build rules constructor (`YourGame.Build.cs`):
-```csharp
-var moduleDir = Path.GetDirectoryName(RulesCompiler.GetModuleFilename(this.GetType().Name));
-PrivateIncludePaths.Add(Path.Combine(Environment.GetEnvironmentVariable("NIM_HOME"), "lib"));
-PublicIncludePaths.Add(Path.Combine(moduleDir, ".nimgen", "Public"));
-PrivateIncludePaths.Add(Path.Combine(moduleDir, ".nimgen", "Private"));
-UEBuildConfiguration.bForceEnableExceptions = true;
-```
-6. Add these lines to `Config/DefaultEngine.ini`:
-```ini
-[/Script/Engine.Engine]
-GameEngine=/Script/YourGame.NimGameEngine
-```
+    ```csharp
+    var moduleDir = Path.GetDirectoryName(RulesCompiler.GetModuleFilename(this.GetType().Name));
+    PrivateIncludePaths.Add(Path.Combine(Environment.GetEnvironmentVariable("NIM_HOME"), "lib"));
+    PublicIncludePaths.Add(Path.Combine(moduleDir, ".nimgen", "Public"));
+    PrivateIncludePaths.Add(Path.Combine(moduleDir, ".nimgen", "Private"));
+    UEBuildConfiguration.bForceEnableExceptions = true;
+    ```
+6. Add these lines to `Config/DefaultEngine.ini` (change `YourGame` to your project's name):
+    ```ini
+    [/Script/Engine.Engine]
+    GameEngine=/Script/YourGame.NimGameEngine
+    ```
 7. From now on, run `build.cmd deploy` on Windows or `build.sh deploy` on OS X/Linux to compile and deploy your code.
 
 ## Documentation
@@ -70,6 +70,6 @@ If you have any questions or feedback, feel free to submit an issue on GitHub.
 
 ## License
 
-This project is licensed under the MIT license. Read LICENSE file for details.
+This project is licensed under the MIT license. Read [LICENSE](https://github.com/pragmagic/nimue4/blob/master/LICENSE) file for details.
 
 Copyright (c) 2016 Xored Software, Inc.
