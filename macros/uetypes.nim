@@ -138,7 +138,7 @@ proc toCppFieldName(name: string, valueType: string): Rope {.compileTime.} =
     result = rope(name.capitalize())
 
 proc genName(name: string, relatedNode: NimNode): Rope {.compileTime.} =
-  result = rope(name) & "_" & $abs(hash(fileNameNoExt(relatedNode)))
+  result = rope(name) & "_nim"
 
 proc toExprEqExpr(node: NimNode): NimNode =
   result = node
