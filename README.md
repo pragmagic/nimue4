@@ -1,19 +1,19 @@
 # Nim Integration for Unreal Engine 4
 
-This project contains Nim library and tools allowing to create Unreal Engine 4 games on Nim programming language.
+This project contains Nim library and tools that allow to create Unreal Engine 4 games on Nim programming language.
 
 
 The project is in early development, so breaking changes are possible - backward compatibility is not guaranteed yet.
 
 
-The project is currently being used by an indie development team to create a mobile strategy game.
+The project is being used by an indie development team to create a mobile strategy game.
 
 ## Why Nim?
 
 Nim is a native programming language that allows excellent programming productivity while not sacrificing the application's performance. It compiles directly into C++, so almost all the features UE4 provides can be made available in Nim.
 
 
-Nim's syntax and semantics are simple and elegant, allowing Nim to be easily taught to scripters in game development teams. Nim also has reach meta-programming capabilities, allowing you to extend capabilities of Nim, which is great for the variety of domains a game developer usually encounters.
+Nim's syntax and semantics are simple and elegant, so Nim can be easily taught to scripters in game development teams. Nim also has reach meta-programming capabilities, allowing you to extend capabilities of Nim, which is great for the variety of domains a game developer usually encounters.
 
 ## Getting Started
 
@@ -23,12 +23,13 @@ Nim's syntax and semantics are simple and elegant, allowing Nim to be easily tau
 
 2. [Visual Studio Code](https://code.visualstudio.com/) is the recommended environment for working with Nim code. Install VSCode by following the instructions on the website, then install `nim` extension by bringing up the command palette (`ctrl-shift-p`), selecting `Install Extension` and typing `nim`. Also, install `c#` extension to work with C# code (UE4 build files).
 
-3. Clone this repository into a folder of your choice. You will then specify that folder when setting up UE4 project(s):
-`git clone https://github.com/pragmagic/nimue4.git`
+3. Clone this repository into a folder of your choice:
+
+```git clone https://github.com/pragmagic/nimue4.git```
 
 ### Setting up Unreal Engine 4
 
-This library has been tested to work with Unreal Engine 4.10 and 4.11. It may work with earlier versions, too, as long as you don't use features added in recent versions. Note that the library intentionally doesn't provide wrappers for deprecated methods and fields.
+This library has been tested to work with Unreal Engine 4.10 and 4.11. It may work with earlier versions, too, as long as you don't use features added in recent versions. Notice that the library intentionally doesn't provide wrappers for deprecated methods and fields.
 
 Follow instructions on the [official Unreal Engine site](https://www.unrealengine.com/) to set up Unreal Engine 4.
 
@@ -36,8 +37,8 @@ Follow instructions on the [official Unreal Engine site](https://www.unrealengin
 
 1. Create a new UE4 project using the Unreal Editor.
 2. Put files from `nimue4/stubs/` folder into the project's root folder.
-3. Change paths to nimue4 and Nim in `build.cmd` and `build.sh` files. If on Windows, change path to Visual Studio, if necessary.
-4. Open the project's root folder in VSCode (`File` -> `Open Folder`).
+3. Open the project's root folder in VSCode (`File` -> `Open Folder`).
+4. Change paths to nimue4 and Nim inside `build.cmd` and `build.sh` files. If on Windows, change path to Visual Studio, if necessary.
 5. Add these lines to the game module's build rules constructor (`YourGame.Build.cs`):
 ```csharp
 var moduleDir = Path.GetDirectoryName(RulesCompiler.GetModuleFilename(this.GetType().Name));
