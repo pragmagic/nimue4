@@ -23,6 +23,7 @@ type
 
   UMeshComponent* {.header: "Components/MeshComponent.h", importcpp.} = object of UPrimitiveComponent
   UStaticMeshComponent* {.header: "Components/StaticMeshComponent.h", importcpp.} = object of UMeshComponent
+    staticMesh* {.importcpp: "StaticMesh".}: ptr UStaticMesh
   USkinnedMeshComponent* {.header: "Components/SkinnedMeshComponent.h", importcpp.} = object of UMeshComponent
     skeletalMesh* {.importcpp: "SkeletalMesh".}: ptr USkeletalMesh
 
