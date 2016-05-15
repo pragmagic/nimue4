@@ -15,48 +15,29 @@ Nim is a native programming language that allows excellent programming productiv
 
 Nim's syntax and semantics are simple and elegant, so Nim can be easily taught to scripters in game development teams. Nim also has rich support for meta-programming, allowing you to extend capabilities of Nim, which is great for the variety of domains a game developer usually encounters.
 
+## Features
+
+* Gameplay programming (most of the basic classes are available, more wrappers coming soon)
+* Blueprint support
+* Delegate declaration and usage support
+* Support for UProperty and UFunction macros and their specifiers
+
+The integration lacks support for:
+
+* Multiple Unreal modules written on Nim in a single project
+* Creating editor extensions
+* Debugging Nim code directly. But since Nim functions map to C++ functions clearly, you can use existing C++ debugging and profiling tools.
+
 ## Getting Started
 
-### Setting up Nim and nimue4
+See the [Getting Started](https://github.com/pragmagic/nimue4/wiki/Getting-Started) page on the wiki.
 
-1. Compile Nim for your platform as described at https://github.com/nim-lang/Nim/. Notice that nimue4 currently depends on `devel` branch (upcoming release) of Nim. So, after cloning the repository, run `git checkout devel`, and then follow the compilation instructions.
 
-2. [Visual Studio Code](https://code.visualstudio.com/) is the recommended environment for working with Nim code. Install VSCode by following the instructions on the website, then install `nim` extension by bringing up the command palette (`ctrl-shift-p`), selecting `Install Extension` and typing `nim`. Also, install `c#` extension to work with C# code (UE4 build files).
-
-3. Clone this repository into a folder of your choice:
-
-```git clone https://github.com/pragmagic/nimue4.git```
-
-### Setting up Unreal Engine 4
-
-This library has been tested to work with Unreal Engine 4.10 and 4.11 on Windows and OS X. It may work with earlier versions of UE4, too, as long as you don't use features added in recent versions. Notice that the library intentionally doesn't provide wrappers for deprecated methods and fields.
-
-Follow instructions on the [official Unreal Engine site](https://www.unrealengine.com/) to set up Unreal Engine 4.
-
-### Setting up Unreal Project with Nim support
-
-1. Create a new UE4 project using the Unreal Editor.
-2. Copy files from `nimue4/stubs/` folder into the project's root folder.
-3. Open the project's root folder in VSCode (`File` -> `Open Folder`).
-4. Change paths to nimue4 and Nim inside `build.cmd` and `build.sh` files. If on Windows, change path to Visual Studio, if necessary.
-5. Add these lines to the game module's build rules constructor (`YourGame.Build.cs`):
-    ```csharp
-    var moduleDir = Path.GetDirectoryName(RulesCompiler.GetModuleFilename(this.GetType().Name));
-    PrivateIncludePaths.Add(Path.Combine(Environment.GetEnvironmentVariable("NIM_HOME"), "lib"));
-    PublicIncludePaths.Add(Path.Combine(moduleDir, ".nimgen", "Public"));
-    PrivateIncludePaths.Add(Path.Combine(moduleDir, ".nimgen", "Private"));
-    UEBuildConfiguration.bForceEnableExceptions = true;
-    ```
-6. Add these lines to `Config/DefaultEngine.ini` (change `YourGame` to your project's name):
-    ```ini
-    [/Script/Engine.Engine]
-    GameEngine=/Script/YourGame.NimGameEngine
-    ```
-7. From now on, run `build.cmd deploy` on Windows or `build.sh deploy` on OS X/Linux to compile and deploy your code.
+If you are new to Nim, make sure to see the [Learn section](http://nim-lang.org/learn.html) of the Nim's website.
 
 ## Documentation
 
-See the project's [[wiki|Wiki]] for nimue4 documentation.
+See the repo's [wiki](https://github.com/pragmagic/nimue4/wiki/) for nimue4 documentation.
 
 See the Nim website's [documentation section](http://nim-lang.org/documentation.html) for the Nim language documentation.
 
