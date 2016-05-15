@@ -243,6 +243,10 @@ proc createNimCfg(outDir: string, moduleDir: string) =
   contents.add("--experimental\n")
   writeFile(outDir / "nim.cfg", contents)
 
+proc copyNimFiles(dir: string) =
+  for file in walkDirRec(getAppDir() / "nimfiles", {pcFile}):
+    copyFile(file, dir / extractFilename(file))
+
 proc buildNim(projectDir, projectName, os, cpu, uePlatform: string) =
   let sourceDir = projectDir / "Source"
   let nimOutDir = getNimOutDir(projectDir)
@@ -280,6 +284,7 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string) =
       createDir(nimOutDir)
       writeFileIfNotSame(rootFile, $rootFileContent)
       createNimCfg(nimOutDir, moduleDir)
+      copyNimFiles(nimOutDir)
       # TODO: use -d:release --deadCodeElim:on for release builds
       var osCpuFlags = ""
       if os != nil:
