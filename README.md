@@ -24,8 +24,8 @@ Nim's syntax and semantics are simple and elegant, so Nim can be easily taught t
 
 The integration lacks support for:
 
-* Multiple Unreal modules written on Nim in a single project
-* Creating editor extensions
+* Creating editor extensions (coming soon)
+* Creating Unreal plug-ins with Nim
 * Debugging Nim code directly. But since Nim functions map to C++ functions clearly, you can use existing C++ debugging and profiling tools.
 
 ## Getting Started
