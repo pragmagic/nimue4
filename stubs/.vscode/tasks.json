@@ -1,0 +1,45 @@
+{
+  "version": "0.1.0",
+  "echoCommand": true,
+  "command": "${workspaceRoot}/build.cmd",
+  "options": {
+    "cwd": "${workspaceRoot}"
+  },
+  "osx": {
+    "command": "nim"
+  },
+  "isShellCommand": true,
+  "tasks": [
+    {
+      "taskName": "deploy",
+      "isBuildCommand": true,
+      "showOutput": "silent"
+    },
+    {
+      "taskName": "build",
+      "isBuildCommand": false,
+      "showOutput": "silent"
+    },
+    {
+      "taskName": "clean",
+      "isBuildCommand": false,
+      "showOutput": "silent"
+    }
+  ],
+  "problemMatcher": {
+    "fileLocation": [
+      "relative",
+      "${workspaceRoot}",
+      "${workspaceRoot}/Source/KingdomClient/model/",
+      "${workspaceRoot}/Source/KingdomClient/"
+    ],
+    "severity": "error",
+    "pattern": {
+      "regexp": "^([^(]*)\\(((\\d+)(, (\\d+))?)\\)\\s*((Warning|Error|Hint):)?(.*)$",
+      "file": 1,
+      "line": 3,
+      "column": 5,
+      "message": 8
+    }
+  }
+}

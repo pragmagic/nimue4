@@ -1,0 +1,25 @@
+{
+  "files.exclude": {
+    "Binaries/**": true,
+    "Build/**": true,
+    "Intermediate/Build/**": true,
+    "Intermediate/ReimportCache/**": true,
+    "Content/Developers/**": true,
+    "Content/Collections/**": true,
+    "**/nimcache/**": true,
+    "**/.nimgen/**": true,
+    "Saved/**": true
+  },
+  "search.exclude": {
+    "**/*.uasset": true,
+    "**/*.psd": true
+  },
+  "files.trimTrailingWhitespace": true,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.rulers": [ 120 ],
+  "nim.buildOnSave": false,
+  "nim.lintOnSave": true,
+  "nim.buildCommand": "cpp",
+  "nim.project": "Intermediate/Nim/MyProjectRoot.nim"
+}
