@@ -39,8 +39,8 @@ type
     isAbstract: bool
     isUFunction: bool
     isStatic: bool
-    isBpExpandable: bool
-    expandableName: Rope
+    isBpExtendable: bool
+    extendableName: Rope
     args: seq[VarDeclaration]
     uFunctionParamStr: Rope
       ## can be non-nil even for non-UFunction (for bpExpandable)
@@ -295,8 +295,8 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
   var isUFunction = removePragma(node, "ue")
   var uFunctionParamStr: Rope
   var displayName: string = nil
-  var isBpExpandable = false
-  var expandableName: Rope
+  var isBpExtendable = false
+  var extendableName: Rope
 
   for ident, val, i in pragmas(node.pragma):
     if ident == !"category":
@@ -322,14 +322,14 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
         uFunctionParamStr.addWithComma("BlueprintNativeEvent")
       else:
         uFunctionParamStr.addWithComma("BlueprintImplementableEvent")
-    elif ident == !"bpExpandable":
-      expandableName = rope(val)
-      isBpExpandable = true
+    elif ident == !"bpExtendable":
+      extendableName = rope(val)
+      isBpExtendable = true
     else: continue
     node.pragma.del(i)
 
-  if isBpExpandable and isUFunction:
-    parseError(node, "bpExpandable is not compatible with other BP pragmas")
+  if isBpExtendable and isUFunction:
+    parseError(node, "bpExtendable is not compatible with other BP pragmas")
 
   if displayName != nil:
     if displayName.contains('"'):
@@ -360,8 +360,8 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
     isExported: true, # TODO
     isUFunction: isUFunction,
     uFunctionParamStr: uFunctionParamStr,
-    isBpExpandable: isBpExpandable,
-    expandableName: expandableName,
+    isBpExtendable: isBpExtendable,
+    extendableName: extendableName,
     args: parseArgs(node[3]),
     node: procNode
   )
@@ -465,7 +465,7 @@ proc genCppMethod(typeDef: TypeDefinition, meth: TypeMethod): Rope {.compileTime
 proc genCppMethods(typeDef: TypeDefinition): Rope {.compileTime.} =
   for meth in typeDef.methods:
     result.add(genCppMethod(typeDef, meth))
-    if meth.isBpExpandable:
+    if meth.isBpExtendable:
       var bpMeth = TypeMethod(
         name: rope("Receive" & ($meth.name).capitalize()),
         genName: meth.genName,
@@ -473,7 +473,7 @@ proc genCppMethods(typeDef: TypeDefinition): Rope {.compileTime.} =
         node: meth.node,
         isUFunction: true
       )
-      let displayName = if meth.expandableName != nil: meth.expandableName
+      let displayName = if meth.extendableName != nil: meth.extendableName
                         else: rope(($meth.name).capitalize())
       bpMeth.uFunctionParamStr = rope("BlueprintImplementableEvent, meta=(DisplayName=\"") & displayName & "\")"
       bpMeth.uFunctionParamStr.addWithComma(meth.uFunctionParamStr)
@@ -509,7 +509,7 @@ proc genCppImplementationCode(typeDef: TypeDefinition): string {.compileTime.} =
           if invocationCode.len != 0:
             invocationCode.add(", ")
           invocationCode.add(arg.name)
-        let needReturn = not(meth.isBpExpandable or meth.isCallSuperAfter or meth.isConstructor or $(meth.node.cppReturnType()) == "void")
+        let needReturn = not(meth.isBpExtendable or meth.isCallSuperAfter or meth.isConstructor or $(meth.node.cppReturnType()) == "void")
         let returnOrNothing = rope(if needReturn: "return" else: "")
         var thisOrNothing = rope(if not meth.isStatic: "this" else: "")
         if thisOrNothing.len != 0 and invocationCode.len != 0:
@@ -518,7 +518,7 @@ proc genCppImplementationCode(typeDef: TypeDefinition): string {.compileTime.} =
         code.addf("$# `$#`($#);\n",
                   [returnOrNothing, meth.genName, invocationCode])
 
-      if meth.isBpExpandable:
+      if meth.isBpExtendable:
         let returnOrNothing = if $(meth.node.cppReturnType()) == "void": "" else: "return "
         code.add(returnOrNothing & "`this`->Receive" & methNameCapitalized & "(" & invocationArgs & ");\n")
 
@@ -618,7 +618,7 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
     meth.node[0] = ident($meth.genName)
 
     if meth.isImplementationNeeded():
-      if not meth.isBpExpandable or meth.node.body.kind != nnkEmpty:
+      if not meth.isBpExtendable or meth.node.body.kind != nnkEmpty:
         when not defined(dontWrapNimExceptions):
           if not hasPragma(meth.node, "noSideEffect"):
             meth.node.body = newStmtList(
