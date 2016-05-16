@@ -15,6 +15,16 @@ const RetValDelegates = {dkSimpleRetVal, dkMulticastRetVal, dkDynamicRetVal, dkD
 const DynamicDelegates = {dkDynamic, dkDynamicMulticast, dkDynamicRetVal, dkDynamicMulticastRetVal}
 const MulticastDelegates = {dkMulticast, dkMulticastRetVal, dkDynamicMulticast, dkDynamicMulticastRetVal}
 
+proc copyDelegateTemplate(t: NimNode; tBody: string; oldName, newName: string): NimNode =
+  result = newProc(
+    name = postfix(ident(newName.toLower()), "*"),
+    body = newStmtList(parseExpr(tBody.replace(oldName, newName))),
+    procType = nnkTemplateDef
+  )
+  # copy params
+  result[2] = t[2].copyNimTree()
+  result[3] = t[3].copyNimTree()
+
 proc declareDelegate(name: NimNode,
                      kind: DelegateKind,
                      header: NimNode,
@@ -36,32 +46,13 @@ proc declareDelegate(name: NimNode,
   )
   bindTemplate[2] = newNimNode(nnkGenericParams).add(newIdentDefs(ident("T"), newEmptyNode()))
 
-  var bindUObjectTemplate = newProc(
-    name = postfix(ident("bindUObject"), "*"),
-    body = newStmtList(parseExpr(bindTemplateBodyStr.replace("Bind", "BindUObject"))),
-    procType = nnkTemplateDef
-  )
-  # copy params
-  bindUObjectTemplate[2] = bindTemplate[2].copyNimTree()
-  bindUObjectTemplate[3] = bindTemplate[3].copyNimTree()
+  var bindUObjectTemplate = copyDelegateTemplate(bindTemplate, bindTemplateBodyStr, "Bind", "BindUObject")
+  var addTemplate = copyDelegateTemplate(bindTemplate, bindTemplateBodyStr, "Bind", "Add")
+  var addUObjectTemplate = copyDelegateTemplate(bindTemplate, bindTemplateBodyStr, "Bind", "AddUObject")
 
-  var addTemplate = newProc(
-    name = postfix(ident("add"), "*"),
-    body = newStmtList(parseExpr(bindTemplateBodyStr.replace("Bind", "Add"))),
-    procType = nnkTemplateDef
-  )
-  # copy params
-  addTemplate[2] = bindTemplate[2].copyNimTree()
-  addTemplate[3] = bindTemplate[3].copyNimTree()
-
-  var addUObjectTemplate = newProc(
-    name = postfix(ident("addUObject"), "*"),
-    body = newStmtList(parseExpr(bindTemplateBodyStr.replace("Bind", "AddUObject"))),
-    procType = nnkTemplateDef
-  )
-  # copy params
-  addUObjectTemplate[2] = bindTemplate[2].copyNimTree()
-  addUObjectTemplate[3] = bindTemplate[3].copyNimTree()
+  var bindDynamicTemplate = copyDelegateTemplate(bindTemplate, bindTemplateBodyStr, "Bind", "BindDynamic")
+  var addDynamicTemplate = copyDelegateTemplate(bindTemplate, bindTemplateBodyStr, "Bind", "AddDynamic")
+  var removeDynamicTemplate = copyDelegateTemplate(bindTemplate, bindTemplateBodyStr, "Bind", "RemoveDynamic")
 
   var executeProc = newProc(
     name = postfix(ident("execute"), "*"),
@@ -89,34 +80,32 @@ proc declareDelegate(name: NimNode,
 
   result = parseStmt("""
 type $1* {.importcpp: "$1", header: $2.} = object
-proc isBound*(delegate: $1) {.importcpp: "#.IsBound(@)", header: $2.}
+proc isBound*(delegate: $1): bool {.importcpp: "#.IsBound(@)", header: $2.}
 proc clear*(delegate: $1) {.importcpp: "#.Clear(@)", header: $2.}
 """.format($(name.ident), header.toStrLit.strVal))
 
   if DynamicDelegates.contains(kind):
-    let dynamicProcs = parseStmt("""
-proc bindDynamic*(delegate: $1, obj: ptr, methodName: string) {.importcpp: "BindDynamic", header: $2.}
-proc addDynamic*(delegate: $1, obj: ptr, methodName: string) {.importcpp: "AddDynamic", header: $2.}
-proc removeDynamic*(delegate: $1, obj: ptr, methodName: string) {.importcpp: "RemoveDynamic", header: $2.}
-""".format($(name.ident), header.toStrLit.strVal))
-    for statement in dynamicProcs:
-      result.add(statement)
+    result.add(removeDynamicTemplate)
 
   if not MulticastDelegates.contains(kind):
-    result.add(bindTemplate)
-    result.add(bindUObjectTemplate)
     result.add(executeProc)
     result.add(executeIfBoundProc)
+    if DynamicDelegates.contains(kind):
+      result.add(bindDynamicTemplate)
+    else:
+      result.add(bindTemplate)
+      result.add(bindUObjectTemplate)
   else:
-    result.add(addTemplate)
-    result.add(addUObjectTemplate)
     result.add(broadcastProc)
+    if DynamicDelegates.contains(kind):
+      result.add(addDynamicTemplate)
+    else:
+      result.add(addTemplate)
+      result.add(addUObjectTemplate)
     let multicastProcs = parseStmt("""
 proc removeAll*(delegate: $1, obj: ptr UObject) {.importcpp: "RemoveAll", header: $2.}
-proc remove*(delegate: $1, obj: ptr UObject, procRef: ref) {.importcpp: "Remove", header: $2.}
 """.format($(name.ident), header.toStrLit.strVal))
-    for statement in multicastProcs:
-      result.add(statement)
+    result.add(multicastProcs)
 
 proc exprListToParamList(callParams: NimNode, start: Natural, to: Natural): seq[NimNode] =
   ## Converts nnkExprColonExpr nodes to nnkIdentDefs
