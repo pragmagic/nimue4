@@ -345,6 +345,7 @@ include modules/spectatorpawn
 include modules/info
 include modules/gamemode
 include modules/playerstate
+include modules/gamestate
 
 include modules/controller
 include modules/playercontroller
