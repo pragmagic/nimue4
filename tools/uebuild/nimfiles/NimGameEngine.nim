@@ -9,7 +9,6 @@ uclass(UNimGameEngine of UGameEngine, Config=Engine):
   var maxFrameTime: cfloat = 0.016
 
   method init(loop: ptr IEngineLoop) {.override, callSuperAfter.} =
-    GC_disable()
     var stackTop {.volatile.}: pointer
     {.emit: "setStackBottom((void*)(&`stackTop`));".}
 

@@ -181,9 +181,6 @@ proc createModuleFilesIfNeeded(targetDir, moduleName: string; isNimModule, isPri
   let moduleFile = targetDir / "Private" / moduleName & ".cpp"
   let moduleHeaderFile = targetDir / "Public" / moduleName & ".h"
 
-  if fileExists(moduleHeaderFile):
-    return
-
   createDir(moduleFile.parentDir())
   createDir(moduleHeaderFile.parentDir())
 
@@ -191,8 +188,8 @@ proc createModuleFilesIfNeeded(targetDir, moduleName: string; isNimModule, isPri
   let appendixTemplate = if isPrimaryModule: primaryModuleAppendix else: moduleAppendix
   let cppTemplate = moduleFileTemplate & appendixTemplate
 
-  writeFile(moduleFile, cppTemplate.format(moduleName))
-  writeFile(moduleHeaderFile, moduleHeaderTemplate.format(moduleName))
+  writeFileIfNotSame(moduleFile, cppTemplate.format(moduleName))
+  writeFileIfNotSame(moduleHeaderFile, moduleHeaderTemplate.format(moduleName))
 
 proc runUnrealBuildTool(engineDir: string; task: TaskType;
                         target, platform, mode, uprojectFile: string;
@@ -243,9 +240,11 @@ proc createNimCfg(outDir: string, moduleDir: string) =
   contents.add("--experimental\n")
   writeFile(outDir / "nim.cfg", contents)
 
-proc copyNimFiles(dir: string) =
+proc copyNimFilesAddingImports(dir: string, rootFileContent: var Rope) =
   for file in walkDirRec(getAppDir() / "nimfiles", {pcFile}):
-    copyFile(file, dir / extractFilename(file))
+    let filename = extractFilename(file)
+    copyFile(file, dir / filename)
+    rootFileContent.addf("import \"$#\"\n", [rope(filename)])
 
 proc buildNim(projectDir, projectName, os, cpu, uePlatform: string) =
   let sourceDir = projectDir / "Source"
@@ -274,6 +273,8 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string) =
         rootFileContent = rootFileContent & "import \"" & importArg & "\"\n"
         expectedFilenames.incl(file.changeFileExt("h").extractFilename())
 
+    rootFileContent.add("GC_disable()\n")
+
     let isPrimaryModule = (moduleName == projectName)
     let isNimModule = (rootFileContent.len != 0)
     createModuleFilesIfNeeded(targetDir, moduleName, isNimModule, isPrimaryModule)
@@ -282,9 +283,10 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string) =
     if isNimModule:
       let rootFile = nimOutDir / moduleName & "Root.nim"
       createDir(nimOutDir)
+      copyNimFilesAddingImports(nimOutDir, rootFileContent)
       writeFileIfNotSame(rootFile, $rootFileContent)
       createNimCfg(nimOutDir, moduleDir)
-      copyNimFiles(nimOutDir)
+
       # TODO: use -d:release --deadCodeElim:on for release builds
       var osCpuFlags = ""
       if os != nil:
@@ -306,13 +308,15 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string) =
     for file in walkDirRec(nimcacheDir, {pcFile}):
       if file.endsWith(".h") and not expectedFilenames.contains(extractFilename(file)):
         let cppFile = file.changeFileExt("cpp")
+        let filename = file.extractFilename()
+        let cppFilename = cppFile.extractFilename()
         removeFile file
         removeFile cppFile
         removeFile targetDir / file.extractFilename()
         removeFile targetDir / "Public" / file.extractFilename()
         removeFile targetDir / "Private" / file.extractFilename()
-        removeFile targetDir / cppFile.extractFilename()
-        removeFile targetDir / "Private" / cppFile.extractFilename()
+        removeFile targetDir / cppFilename
+        removeFile targetDir / "Private" / cppFilename
       elif file.endsWith(".cpp"):
         processFile(file, moduleName, targetDir)
 
