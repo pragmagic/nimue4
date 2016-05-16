@@ -1420,7 +1420,7 @@ class(UWorld of UObject, header: "Engine/World.h", notypedef):
 
   proc spawnActor(inClass: ptr UClass; location: ptr FVector = nil;
                 rotation: ptr FRotator = nil;
-                spawnParameters: FActorSpawnParameters = FActorSpawnParameters()): ptr AActor
+                spawnParameters = initFActorSpawnParameters()): ptr AActor
     ## Spawn Actors with given transform and SpawnParameters
     ##
     ## @param	Class					Class to Spawn
@@ -1431,7 +1431,7 @@ class(UWorld of UObject, header: "Engine/World.h", notypedef):
     ## @return	Actor that just spawned
 
   proc spawnActor(class: ptr UClass; transform: ptr FTransform;
-                spawnParameters: FActorSpawnParameters = FActorSpawnParameters()): ptr AActor
+                spawnParameters = initFActorSpawnParameters()): ptr AActor
     ## Spawn Actors with given transform and SpawnParameters
     ##
     ## @param	Class					Class to Spawn
@@ -1441,7 +1441,7 @@ class(UWorld of UObject, header: "Engine/World.h", notypedef):
     ## @return	Actor that just spawned
 
   proc spawnActorAbsolute(class: ptr UClass; absoluteTransform: FTransform;
-      spawnParameters: FActorSpawnParameters = FActorSpawnParameters()): ptr AActor
+      spawnParameters = initFActorSpawnParameters()): ptr AActor
     ## Spawn Actors with given absolute transform (override root component transform) and SpawnParameters
     ##
     ## @param	Class					Class to Spawn
@@ -1450,40 +1450,40 @@ class(UWorld of UObject, header: "Engine/World.h", notypedef):
     ##
     ## @return	Actor that just spawned
 
-  proc spawnActor[t](spawnParameters: FActorSpawnParameters = FActorSpawnParameters()): ptr t
+  proc spawnActor[T](spawnParameters = initFActorSpawnParameters()): ptr T
     ## Templated version of SpawnActor that allows you to specify a class type via the template type
 
-  proc spawnActor[t](location: FVector; rotation: FRotator; spawnParameters: FActorSpawnParameters = FActorSpawnParameters()): ptr t
+  proc spawnActor[T](location: FVector; rotation: FRotator; spawnParameters = initFActorSpawnParameters()): ptr T
     ## Templated version of SpawnActor that allows you to specify location and rotation in addition to class type via the template type
 
-  proc spawnActor[t](class: ptr UClass; spawnParameters: FActorSpawnParameters = FActorSpawnParameters()): ptr t
+  proc spawnActor[T](class: ptr UClass; spawnParameters = initFActorSpawnParameters()): ptr T
     ## Templated version of SpawnActor that allows you to specify the class type via parameter while the return type is a parent class of that type
 
-  proc spawnActor[t](class: ptr UClass; location: FVector; rotation: FRotator;
-      spawnParameters: FActorSpawnParameters = FActorSpawnParameters()): ptr t
+  proc spawnActor[T](class: ptr UClass; location: FVector; rotation: FRotator;
+      spawnParameters = initFActorSpawnParameters()): ptr T
     ## Templated version of SpawnActor that allows you to specify the rotation and location in addition
     ## class type via parameter while the return type is a parent class of that type
 
-  proc spawnActor[t](class: ptr UClass; transform: FTransform; spawnParameters: FActorSpawnParameters = FActorSpawnParameters()): ptr t
+  proc spawnActor[T](class: ptr UClass; transform: FTransform; spawnParameters = initFActorSpawnParameters()): ptr T
     ## Templated version of SpawnActor that allows you to specify whole Transform
     ## class type via parameter while the return type is a parent class of that type
 
-  proc spawnActorAbsolute[t](absoluteLocation: FVector; absoluteRotation: FRotator;
-      spawnParameters: FActorSpawnParameters = FActorSpawnParameters()): ptr t
+  proc spawnActorAbsolute[T](absoluteLocation: FVector; absoluteRotation: FRotator;
+      spawnParameters = initFActorSpawnParameters()): ptr T
     ## Templated version of SpawnActorAbsolute that allows you to specify absolute location and rotation in addition to class type via the template type
 
-  proc spawnActorAbsolute[t](class: ptr UClass; transform: FTransform; spawnParameters: FActorSpawnParameters = initFActorSpawnParameters()): ptr t
+  proc spawnActorAbsolute[T](class: ptr UClass; transform: FTransform; spawnParameters = initFActorSpawnParameters()): ptr T
     ## Templated version of SpawnActorAbsolute that allows you to specify whole absolute Transform
     ## class type via parameter while the return type is a parent class of that type
 
-  proc spawnActorDeferred[t](class: ptr UClass; transform: FTransform;
+  proc spawnActorDeferred[T](class: ptr UClass; transform: FTransform;
                             owner: ptr AActor = nil;
-                            instigator: ptr APawn = nil; collisionHandlingOverride: ESpawnActorCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod.Undefined): ptr t
+                            instigator: ptr APawn = nil; collisionHandlingOverride: ESpawnActorCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod.Undefined): ptr T
     ## Spawns given class and returns class T pointer, forcibly sets world transform (note this allows scale as well). WILL NOT run Construction Script of Blueprints
     ## to give caller an opportunity to set parameters beforehand.  Caller is responsible for invoking construction
     ## manually by calling UGameplayStatics::FinishSpawningActor (see AActor::OnConstruction).
 
-  proc getAuthGameMode[t](): ptr t {.noSideEffect.}
+  proc getAuthGameMode[T](): ptr T {.noSideEffect.}
     ## Returns the current GameMode instance cast to the template type.
     ## This can only return a valid pointer on the server. Will always return null on a client
 
