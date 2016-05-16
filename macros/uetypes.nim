@@ -601,13 +601,14 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
   var methDecls: seq[NimNode] = @[]
   var methDefs: seq[NimNode] = @[]
   for meth in typeDef.methods:
+    var nodeCopy = meth.node.copyNimTree()
     if not typeDef.isUtilityType:
       let thisDef = newNimNode(nnkIdentDefs).add(
         ident("this"), newNimNode(nnkPtrTy).add(ident($typeDef.name)), newEmptyNode())
-      meth.node[3].insert(1, thisDef)
+      nodeCopy[3].insert(1, thisDef)
 
     if not meth.isConstructor:
-      var decl = meth.node.copy()
+      var decl = nodeCopy.copy()
       decl[^1] = newEmptyNode() # remove body
       let cppName = ($meth.name).capitalize()
       let cppPattern = if typeDef.isUtilityType: $typeDef.name & "::" & cppName & "(@)"
@@ -615,20 +616,20 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
       decl.pragma = parseExpr("{.header: \"$1\", importcpp: \"$2\", nodecl.}".format(typeDef.headerName, cppPattern))
       methDecls.add(decl)
 
-    meth.node[0] = ident($meth.genName)
+    nodeCopy[0] = ident($meth.genName)
 
     if meth.isImplementationNeeded():
-      if not meth.isBpExtendable or meth.node.body.kind != nnkEmpty:
+      if not meth.isBpExtendable or nodeCopy.body.kind != nnkEmpty:
         when not defined(dontWrapNimExceptions):
-          if not hasPragma(meth.node, "noSideEffect"):
-            meth.node.body = newStmtList(
+          if not hasPragma(nodeCopy, "noSideEffect"):
+            nodeCopy.body = newStmtList(
               newNimNode(nnkTryStmt).
-                add(meth.node.body).
+                add(nodeCopy.body).
                 add(
                 newNimNode(nnkExceptBranch).
                   add(exceptionHandlingStmt.copyNimTree())))
 
-        methDefs.add(meth.node)
+        methDefs.add(nodeCopy)
 
   if typeDef.kind != tkEnum and not typeDef.isUtilityType:
     let staticClassMeth = parseStmt("""
@@ -766,9 +767,7 @@ proc convertBlueprintFunction(function: NimNode, category: string): NimNode =
   ## that is accessible from Nim, too
   assert (function.kind == nnkProcDef)
 
-  if function.removePragma("noBlueprint") or
-     function.name.kind != nnkPostfix or
-     $function.name[0] != "*":
+  if function.removePragma("noBlueprint"):
     return function
 
   let name = $(extractIdent(function.name).ident)
