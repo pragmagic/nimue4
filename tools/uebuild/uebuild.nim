@@ -35,10 +35,14 @@ const nimModuleFileTemplate = """
 
   extern "C" {void NimMain(void);}
 
-  class $1GameModule: public FDefaultGameModuleImpl {
-    virtual void StartupModule() override {
+  struct NimInitializer {
+    NimInitializer() {
       NimMain();
     }
+  };
+  static NimInitializer nimInitializer;
+
+  class $1GameModule: public FDefaultGameModuleImpl {
   };
 """
 
