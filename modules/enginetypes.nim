@@ -351,6 +351,25 @@ type
       ## Note: WalkableSlopeAngle will be ignored.
     WalkableSlope_Max
 
+  EMovementMode* {.importcpp, header: "Engine/EngineTypes.h", size: sizeof(cint).} = enum
+    MOVE_None,
+      ## None (movement is disabled).
+    MOVE_Walking,
+      ## Walking on a surface.
+    MOVE_NavWalking,
+      ## Simplified walking on navigation data (e.g. navmesh).
+      ## If bGenerateOverlapEvents is true, then we will perform sweeps with each navmesh move.
+      ## If bGenerateOverlapEvents is false then movement is cheaper but characters can overlap other objects without some extra process to repel/resolve their collisions.
+    MOVE_Falling,
+      ## Falling under the effects of gravity, such as after jumping or walking off the edge of a surface.
+    MOVE_Swimming,
+      ## Swimming through a fluid volume, under the effects of gravity and buoyancy.
+    MOVE_Flying,
+      ## Flying, ignoring the effects of gravity. Affected by the current physics volume's fluid friction.
+    MOVE_Custom,
+      ## User-defined custom movement mode, including many possible sub-modes.
+    MOVE_MAX
+
   EFlushLevelStreamingType* {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(cint), pure.} = enum
     None
     Full

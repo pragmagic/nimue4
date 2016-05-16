@@ -21,6 +21,9 @@ type
     REPNOTIFY_OnChanged = 0, ## Only call the property's RepNotify function if it changes from the local value
     REPNOTIFY_Always = 1, ## Always Call the property's RepNotify function when it is received from the server
 
+class(IRepChangedPropertyTracker, header: "UObject/CoreNet.h"):
+  method setCustomIsActiveOverride(repIndex: uint16, bIsActive: bool)
+
 class(FLifetimeProperty, header: "UObject/CoreNet.h"):
   ##  This class is used to track a property that is marked to be replicated for the lifetime of the actor channel.
   ##  This doesn't mean the property will necessarily always be replicated, it just means:

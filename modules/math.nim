@@ -562,3 +562,9 @@ var identityTransform* {.importc: "FTransform::Identity", header: "Math/ScalarRe
 converter vectorFromForceInit(f: EForceInit): FVector {.importcpp, constructor, header: "Math/Vector.h".}
 converter colorFromForceInit(f: EForceInit): FColor {.importcpp, constructor, header: "Math/Color.h".}
 converter vector2DFromForceInit(f: EForceInit): FVector2D {.importcpp, constructor, header: "Math/Vector2D.h".}
+
+type
+  FVector_NetQuantize* {.header: "Engine/NetSerialization.h", importcpp, bycopy.} = object of FVector
+  FVector_NetQuantize10* {.header: "Engine/NetSerialization.h", importcpp, bycopy.} = object of FVector
+  FVector_NetQuantize100* {.header: "Engine/NetSerialization.h", importcpp, bycopy.} = object of FVector
+  FVector_NetQuantizeNormal* {.header: "Engine/NetSerialization.h", importcpp, bycopy.} = object of FVector

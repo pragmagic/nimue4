@@ -132,6 +132,17 @@ type
 
   UStaticMesh* {.header: "Engine/StaticMesh.h", importcpp.} = object of UObject
 
+  FRootMotionMovementParams* {.header: "Animation/AnimationAsset.h", importcpp.} = object
+    bHasRootMotion*: bool
+    blendWeight* {.importcpp: "BlendWeight".}: cfloat
+    rootMotionTransform* {.importcpp: "RootMotionTransform".}: FTransform
+
+  UAnimationAsset* {.header: "Animation/AnimationAsset.h", importcpp.} = object of UObject
+  UAnimSequenceBase* {.header: "Animation/AnimSequenceBase.h", importcpp.} = object of UAnimationAsset
+  UAnimCompositeBase* {.header: "Animation/AnimCompositeBase.h", importcpp.} = object of UAnimSequenceBase
+  UAnimMontage* {.header: "Animation/AnimMontage.h", importcpp.} = object of UAnimCompositeBase
+  FAnimMontageInstance* {.header: "Animation/AnimMontage.h", importcpp.} = object
+
 include modules/misc
 include modules/paths
 
@@ -323,7 +334,6 @@ include modules/sound/base
 
 include modules/net/connection
 include modules/net/nettypes
-include modules/net/serialization
 
 include modules/touchinterface
 
@@ -339,7 +349,7 @@ include modules/actor
 include modules/pawn
 include modules/defaultpawn
 include modules/spectatorpawn
-# include modules/character
+include modules/character
 # include modules/matineeactor
 
 include modules/info
