@@ -597,7 +597,6 @@ $2::$2(const `FObjectInitializer`& ObjectInitializer): Super(ObjectInitializer)
   result = $code
 
 proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
-  # TODO: generate C++ "const" marker if `noSideEffect` pragma is provided
   var methDecls: seq[NimNode] = @[]
   var methDefs: seq[NimNode] = @[]
   for meth in typeDef.methods:
@@ -665,20 +664,24 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
               newNimNode(nnkExprColonExpr).add(ident("this"), ident("this"))))
   if not typeDef.isUtilityType:
     result.add(typeDecl)
-  result.add(methDecls)
-  result.add(methDefs)
+
   for nameInd in 1 .. < typeDef.parentNames.len:
     # generate converter for each secondary parent type
     let parentName = typeDef.parentNames[nameInd]
     var conv = newProc(
-      name = ident("to" & parentName),
-      params = [ident(parentName), newIdentDefs(ident("this"), ident($typeDef.name))],
+      name = postfix(ident("to" & parentName), "*"),
+      params = [newNimNode(nnkPtrTy).add(ident(parentName)),
+                newIdentDefs(ident("this"), newNimNode(nnkPtrTy).add(ident($typeDef.name)))],
       body = newEmptyNode(),
       procType = nnkConverterDef
     )
     conv.pragma = newNimNode(nnkPragma)
     conv.pragma.add(makeStrPragma("importcpp", "#"))
     conv.pragma.add(ident("nodecl"))
+    result.add(conv)
+
+  result.add(methDecls)
+  result.add(methDefs)
 
   let declarationCode = genCppDeclarationCode(typeDef)
   let implementationCode = genCppImplementationCode(typeDef)

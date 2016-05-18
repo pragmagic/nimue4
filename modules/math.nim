@@ -147,6 +147,9 @@ class(FVector, header: "Math/Vector.h", bycopy):
   proc size2D(): cfloat
   proc sizeSquared2D(): cfloat
 
+proc `*`*(scale: cfloat, vec: FVector): FVector {.importcpp: "(# * #)", nodecl, noSideEffect.}
+  ## Gets the result of scaling the vector (multiplying each component by a value).
+
 var ZeroVector* {.importc: "FVector::ZeroVector", header: "Math/Vector.h".}: FVector
   ## A zero vector (0,0,0)
 var UpVector* {.importc: "FVector::UpVector", header: "Math/Vector.h".}: FVector

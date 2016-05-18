@@ -24,9 +24,6 @@ class(TArray[T], header: "Containers/Array.h", bycopy):
   proc insert(other: TArray[T], i: Natural): int32 {.discardable.}
   proc insert(item: T, i: Natural): int32 {.discardable.}
 
-  proc delete(i: Natural, count: Natural = 1) {.cppname: "RemoveAt".}
-  proc del(i: Natural, count: Natural = 1) {.cppname: "RemoveAtSwap".}
-
   proc clear() {.cppname: "Empty".}
 
   proc setLen(newLen: Natural) {.cppname: "SetNum".}
@@ -58,6 +55,25 @@ class(TArray[T], header: "Containers/Array.h", bycopy):
   proc reserve(capacity: Natural)
 
   proc getData(): ptr T
+
+  proc isValidIndex(i: Natural): bool {.noSideEffect.}
+    ## Tests if index is valid, i.e. greater than zero and less than number of
+    ## elements in array.
+
+proc deleteInternal[T](arr: var TArray[T], i: Natural, count: Natural = 1) {.importcpp: "RemoveAt", header: "Containers/Array.h".}
+proc delInternal[T](arr: var TArray[T], i: Natural, count: Natural = 1) {.importcpp: "RemoveAtSwap", header: "Containers/Array.h".}
+
+proc delete[T](arr: var TArray[T], i: Natural) {.inline.} =
+  arr.deleteInternal(i)
+
+proc delete[T](arr: var TArray[T], first, last: Natural) {.inline.} =
+  arr.deleteInternal(first, last - first + 1)
+
+proc del[T](arr: var TArray[T], i: Natural) {.inline.} =
+  arr.delInternal(i)
+
+proc del[T](arr: var TArray[T], first, last: Natural) {.inline.} =
+  arr.delInternal(first, last - first + 1)
 
 proc initArrayInternal[T](arr: var TArray[T], val: T, size: int32) {.importcpp: "#.Init(@)", nodecl.}
 

@@ -14,6 +14,8 @@ converter intToInt32*(i: int): int32 =
   ## to avoid casting all the time when working with Nim arrays/seqs
   result = int32(i)
 
+proc cnew*[T](): ptr T {.importcpp: "(new '*0#@)", nodecl.}
+
 include "modules/containers/array"
 include "modules/containers/map"
 include "modules/containers/set"
@@ -48,15 +50,19 @@ type
   UFunction* {.header: "UObject/Class.h", importcpp.} = object of UStruct
   UInterface* {.header: "Interface.h", importcpp.} = object of UObject
 
+  UGameViewportClient* {.header: "Engine/GameViewportClient.h", importcpp.} = object of UObject
+
   IEngineLoop* {.header: "UnrealEngine.h", importcpp.} = object
   UEngine* {.header: "Engine/Engine.h", importcpp.} = object of UObject
     bSmoothFrameRate: bool
     smoothedFrameRateRange {.importcpp: "SmoothedFrameRateRange".}: FFloatRange
     bUseFixedFrameRate: bool
     fixedFrameRate {.importcpp: "FixedFrameRate".}: cfloat
+    gameViewport {.importcpp: "GameViewport".}: ptr UGameViewportClient
 
   UGameEngine* {.header: "Engine/GameEngine.h", importcpp.} = object of UEngine
-  UGameViewportClient* {.header: "Engine/GameViewportClient.h", importcpp.} = object of UObject
+
+  UGameplayTagsManager* {.header: "GameplayTagsManager.h", importcpp.} = object of UObject
 
   UCanvas* {.header: "Engine/Canvas.h", importcpp.} = object of UObject
   UWorld* {.header: "Engine/World.h", importcpp.} = object of UObject
@@ -205,6 +211,7 @@ type
 
   FViewTargetTransitionParams* {.header: "Camera/PlayerCameraManager.h", importcpp.} = object
   APlayerCameraManager* {.header: "Camera/PlayerCameraManager.h", importcpp.} = object of AActor
+    PCOwner*: ptr APlayerController
   ACameraActor* {.header: "Camera/CameraActor.h", importcpp.} = object of AActor
 
   AEmitter* {.header: "Particles/Emitter.h", importcpp.} = object of AActor
@@ -214,6 +221,8 @@ type
   AInstancedFoliageActor* {.header: "InstancedFoliageActor.h", importcpp.} = object of AActor
 
 include modules/core/globals
+
+include modules/engine/engine
 
 include modules/containers/subclassof
 

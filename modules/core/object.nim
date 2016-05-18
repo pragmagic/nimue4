@@ -650,3 +650,10 @@ proc ctorLoadObject*(T: typedesc, path: static[string]): ptr T {.inline.} =
   var thePath: string
   shallowCopy(thePath, path)
   {.emit: "static ConstructorHelpers::FObjectFinder<" & T.name & "> rCont(UTF8_TO_TCHAR((`thePath`)->data));`result`=rCont.Object;".}
+
+proc ctorLoadClass*(T: typedesc, path: static[string]): TSubclassOf[T] {.inline.} =
+  ## Loads object of the specified type from the specified path.
+  ## Must only be used from constructors.
+  var thePath: string
+  shallowCopy(thePath, path)
+  {.emit: "static ConstructorHelpers::FClassFinder<" & T.name & "> rCont(UTF8_TO_TCHAR((`thePath`)->data));`result`=rCont.Object;".}

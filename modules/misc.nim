@@ -44,4 +44,6 @@ proc overrideBlendableSettings*(this: IBlendableInterface, view: var FSceneView,
 type UAssetUserData {.header: "Engine/AssetUserData.h", importcpp.} = object of UObject
 # proc draw(this: UAssetUserData; pdi: ptr FPrimitiveDrawInterface; view: ptr FSceneView)
 
+proc setSuppressTransitionMessage*(viewport: ptr UGameViewportClient, bSuppress: bool) {.importcpp: "SetSuppressTransitionMessage", nodecl.}
+
 # TODO
