@@ -6,7 +6,7 @@
 
 const theHeader = "GameFramework/PlayerInput.h"
 
-class(FKeyBind, header: theHeader):
+wclass(FKeyBind, header: theHeader):
   ## Struct containing mappings for legacy method of binding keys to exec commands.
   var key: FKey ## The key to be bound to the command
   var command: FString ## The command to execute when the key is pressed/released
@@ -21,7 +21,7 @@ class(FKeyBind, header: theHeader):
 
   proc makeFKeyBind(): FKeyBind {.constructor.}
 
-class(FInputAxisProperties, header: theHeader):
+wclass(FInputAxisProperties, header: theHeader):
   ## Configurable properties for control axes, used to transform raw input into game ready values.
   var deadZone: cfloat ## What the dead zone of the axis is.  For control axes such as analog sticks.
   var sensitivity: cfloat  ## Scaling factor to multiply raw value by.
@@ -30,12 +30,12 @@ class(FInputAxisProperties, header: theHeader):
 
   proc makeFInputAxisProperties(): FInputAxisProperties {.constructor.}
 
-class(FInputAxisConfigEntry, header: theHeader):
+wclass(FInputAxisConfigEntry, header: theHeader):
   ## Configurable properties for control axes.
   var axisKeyName: FName ## Axis Key these properties apply to
   var axisProperties: FInputAxisProperties ## Properties for the Axis Key
 
-class(FInputActionKeyMapping, header: theHeader):
+wclass(FInputActionKeyMapping, header: theHeader):
   ##  Defines a mapping between an action and key
   ##
   ##  @see https://docs.unrealengine.com/latest/INT/Gameplay/Input/index.html
@@ -60,7 +60,7 @@ class(FInputActionKeyMapping, header: theHeader):
                                   bInCtrl: bool = false; bInAlt: bool = false;
                                   bInCmd: bool = false): FInputActionKeyMapping {.constructor.}
 
-class(FInputAxisKeyMapping, header: theHeader):
+wclass(FInputAxisKeyMapping, header: theHeader):
   ##  Defines a mapping between an axis and key
   ##
   ##  @see https://docs.unrealengine.com/latest/INT/Gameplay/Input/index.html
@@ -74,7 +74,7 @@ class(FInputAxisKeyMapping, header: theHeader):
   proc makeFInputAxisKeyMapping(inAxisName: FName = NAME_None;
                                 inKey: FKey = EKeys.Invalid; inScale: cfloat = 1.0): FInputAxisKeyMapping {.constructor.}
 
-class(UPlayerInput of UObject, header: theHeader):
+wclass(UPlayerInput of UObject, header: theHeader):
   ## Object within PlayerController that processes player input.
   ## Only exists on the client in network games.
   ##

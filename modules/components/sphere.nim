@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(USphereComponent of UShapeComponent, header: "Components/SphereComponents.h", notypedef):
+wclass(USphereComponent of UShapeComponent, header: "Components/SphereComponents.h", notypedef):
   ## A sphere generally used for simple collision.
   ## Bounds are rendered as lines in the editor.
   ##

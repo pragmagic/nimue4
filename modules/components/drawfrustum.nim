@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(UDrawFrustumComponent of UPrimitiveComponent, header:"Components/DrawFrustumComponent.h", notypedef):
+wclass(UDrawFrustumComponent of UPrimitiveComponent, header:"Components/DrawFrustumComponent.h", notypedef):
   ## Utility component for drawing a view frustum.
   ## Origin is at the component location, frustum points down position X axis.
   ## UCLASS(collapsecategories, hidecategories=Object, editinlinenew, MinimalAPI)

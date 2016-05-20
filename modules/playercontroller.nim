@@ -20,7 +20,7 @@ type
     Update,
     Stop,
 
-class(FDynamicForceFeedbackDetails, header: "GameFramework/PlayerController.h"):
+wclass(FDynamicForceFeedbackDetails, header: "GameFramework/PlayerController.h"):
   var bAffectsLeftLarge: bool
   var bAffectsLeftSmall: bool
   var bAffectsRightLarge: bool
@@ -33,10 +33,10 @@ class(FDynamicForceFeedbackDetails, header: "GameFramework/PlayerController.h"):
   proc update(values: var FForceFeedbackValues) {.noSideEffect.}
 
 ## Abstract base class for Input Mode structures
-class(FInputModeDataBase, header: "GameFramework/PlayerController.h"):
+wclass(FInputModeDataBase, header: "GameFramework/PlayerController.h"):
   discard
 
-class(FInputModeUIOnly of FInputModeDataBase, header: "GameFramework/PlayerController.h"):
+wclass(FInputModeUIOnly of FInputModeDataBase, header: "GameFramework/PlayerController.h"):
   ## Data structure used to setup an input mode that allows only the UI to respond to user input.
 
   proc makeFInputModeUIOnly(): FInputModeUIOnly {.constructor.}
@@ -45,7 +45,7 @@ class(FInputModeUIOnly of FInputModeDataBase, header: "GameFramework/PlayerContr
     ## Whether to lock the mouse to the viewport
 
 
-class(FInputModeGameAndUI of FInputModeDataBase, header: "GameFramework/PlayerController.h"):
+wclass(FInputModeGameAndUI of FInputModeDataBase, header: "GameFramework/PlayerController.h"):
   ## Data structure used to setup an input mode that allows the UI to respond to user input, and if the UI doesn't handle it player input / player controller gets a chance.
   proc makeFInputModeGameAndUI(): FInputModeGameAndUI {.constructor.}
 
@@ -55,12 +55,12 @@ class(FInputModeGameAndUI of FInputModeDataBase, header: "GameFramework/PlayerCo
   proc setHideCursorDuringCapture(inHideCursorDuringCapture: bool): var FInputModeGameAndUI
     ## Whether to hide the cursor during temporary mouse capture caused by a mouse down
 
-class(FInputModeGameOnly of FInputModeDataBase, header: "GameFramework/PlayerController.h"):
+wclass(FInputModeGameOnly of FInputModeDataBase, header: "GameFramework/PlayerController.h"):
   ## Data structure used to setup an input mode that allows
   ##  only the player input / player controller to respond to user input.
   proc makeFInputModeGameOnly(): FInputModeGameOnly {.constructor.}
 
-class(APlayerController of AController, header: "GameFramework/PlayerController.h", notypedef):
+wclass(APlayerController of AController, header: "GameFramework/PlayerController.h", notypedef):
   ## PlayerControllers are used by human players to control Pawns.
   ##
   ## ControlRotation (accessed via GetControlRotation()), determines the aiming
@@ -607,7 +607,7 @@ class(APlayerController of AController, header: "GameFramework/PlayerController.
                             rate: cfloat = 0; blendInTime: cfloat = 0;
                             blendOutTime: cfloat = 0; bLoop: bool = false;
                             bRandomStartTime: bool = false; space: ECameraAnimPlaySpace = CameraLocal;
-                            customPlaySpace: FRotator = ZeroRotator)
+                            customPlaySpace: FRotator = zeroRotator)
     ## Play the indicated CameraAnim on this camera.
     ## @param AnimToPlay - Camera animation to play
     ## @param Scale - "Intensity" scalar.  This is the scale at which the anim was first played.
@@ -623,7 +623,7 @@ class(APlayerController of AController, header: "GameFramework/PlayerController.
 
   proc clientPlayCameraShake(shake: TSubclassOf[UCameraShake]; scale: cfloat = 0;
                              playSpace: ECameraAnimPlaySpace = CameraLocal;
-                             userPlaySpaceRot: FRotator = ZeroRotator)
+                             userPlaySpaceRot: FRotator = zeroRotator)
     ## Play Camera Shake
     ## @param Shake - Camera shake animation to play
     ## @param Scale - Scalar defining how "intense" to play the anim
@@ -1145,7 +1145,7 @@ class(APlayerController of AController, header: "GameFramework/PlayerController.
     ## @param TargetPawn   is the pawn which is the current ViewTarget
     ## @param DeltaSeconds is the time interval since the last smoothing update
 
-  proc consoleCommand(command: FString; bWriteToLog: bool = true): FString
+  proc consoleCommand(command: FString; bWriteToLog: bool = true): FString {.discardable.}
     ## Executes the Exec() command on the UPlayer object
     ##
     ## @param Command command to execute (string of commands optionally separated by a | (pipe))

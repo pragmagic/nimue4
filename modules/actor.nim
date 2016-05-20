@@ -34,7 +34,7 @@ declareBuiltinDelegate(FMakeNoiseDelegate, dkDynamicMulticast, "GameFramework/Ac
 when not defined(UE_BUILD_SHIPPING):
   declareBuiltinDelegate(FOnProcessEvent, dkDynamicMulticastRetVal, "GameFramework/Actor.h", bool, actor: ptr AActor, f: ptr UFunction, obj: ptr)
 
-class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
+wclass(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
   # AWARE
   # proc getLifetimeReplicatedProps(outLifetimeProps: var TArray[FLifetimeProperty])
 
@@ -171,14 +171,14 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
     ## Called on client when updated AttachmentReplication value is received for this actor.
     ## UFUNCTION()
 
-  var role: TEnumAsByte[ENetRole]
+  var role: ENetRole
     ## Describes how much control the local machine has over the actor.
     ## UPROPERTY(Replicated)
 
-  var netDormancy: TEnumAsByte[ENetDormancy]
+  var netDormancy: ENetDormancy
     ## Dormancy setting for actor to take itself off of the replication list without being destroyed on clients.
 
-  var autoReceiveInput: TEnumAsByte[EAutoReceiveInput]
+  var autoReceiveInput: EAutoReceiveInput
     ## Automatically registers this actor to receive input from a player.
     ## UPROPERTY(EditAnywhere, Category=Input)
 
@@ -543,7 +543,7 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
     ## @param OutSweepHitResult The hit result from the move if swept.
     ## @return  Whether the location was successfully set if not swept, or whether movement occurred if swept.
 
-  proc setActorRotation(newRotation: FRotator): bool
+  proc setActorRotation(newRotation: FRotator): bool {.discardable.}
     ## Set the Actor's rotation instantly to the specified rotation.
     ##
     ## @param NewRotation The new rotation for the Actor.
@@ -551,7 +551,7 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
     ##
     ## UFUNCTION(BlueprintCallable, Category="Utilities|Transformation")
 
-  proc setActorRotation(newRotation: FQuat): bool
+  proc setActorRotation(newRotation: FQuat): bool {.discardable.}
 
   proc K2_SetActorLocationAndRotation(newLocation: FVector; newRotation: FRotator;
                                       bSweep: bool; sweepHitResult: var FHitResult;
@@ -941,7 +941,7 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
   # AI functions.
 
   proc makeNoise(loudness: cfloat = 1.0; noiseInstigator: ptr APawn = nil;
-                 noiseLocation: FVector = ZeroVector; maxRange: cfloat = 0.0;
+                 noiseLocation: FVector = zeroVector; maxRange: cfloat = 0.0;
                  tag: FName = NAME_None)
     ## Trigger a noise caused by a given Pawn, at a given location.
     ## Note that the NoiseInstigator Pawn MUST have a PawnNoiseEmitterComponent for the noise to be detected by a PawnSensingComponent.
@@ -1910,7 +1910,7 @@ class(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
   proc isInPersistentLevel(bIncludeLevelStreamingPersistent: bool = false): bool {.noSideEffect.}
     ## whether this Actor is in the persistent level, i.e. not a sublevel
 
-  proc getWorldTimerManager(): var FTimerManager {.noSideEffect.}
+  proc getWorldTimerManager(): ptr FTimerManager {.cppname: "(& #.GetWorldTimerManager())", noSideEffect.}
     ## Get the timer instance from the actors world
 
   proc getGameInstance(): ptr UGameInstance {.noSideEffect.}

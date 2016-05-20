@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(FSceneInterface, header: "Public/SceneInterface.h", notypedef):
+wclass(FSceneInterface, header: "Public/SceneInterface.h", notypedef):
   proc addPrimitive(primitive: ptr UPrimitiveComponent)
     ## Adds a new primitive component to the scene
     ##

@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(TArray[T], header: "Containers/Array.h", bycopy):
+wclass(TArray[T], header: "Containers/Array.h", bycopy):
   proc capacity(): uint32 {.noSideEffect, cppname: "Max".}
     ## number of items that can fit in the array without memory reallocation
   proc slack(): int32 {.noSideEffect, cppname: "GetSlack".}
@@ -60,19 +60,22 @@ class(TArray[T], header: "Containers/Array.h", bycopy):
     ## Tests if index is valid, i.e. greater than zero and less than number of
     ## elements in array.
 
+  proc fill(val: T, times: Natural) {.cppname: "Init".}
+    ## Sets the size of the array, filling it with the given element.
+
 proc deleteInternal[T](arr: var TArray[T], i: Natural, count: Natural = 1) {.importcpp: "RemoveAt", header: "Containers/Array.h".}
 proc delInternal[T](arr: var TArray[T], i: Natural, count: Natural = 1) {.importcpp: "RemoveAtSwap", header: "Containers/Array.h".}
 
-proc delete[T](arr: var TArray[T], i: Natural) {.inline.} =
+proc delete*[T](arr: var TArray[T], i: Natural) {.inline.} =
   arr.deleteInternal(i)
 
-proc delete[T](arr: var TArray[T], first, last: Natural) {.inline.} =
+proc delete*[T](arr: var TArray[T], first, last: Natural) {.inline.} =
   arr.deleteInternal(first, last - first + 1)
 
-proc del[T](arr: var TArray[T], i: Natural) {.inline.} =
+proc del*[T](arr: var TArray[T], i: Natural) {.inline.} =
   arr.delInternal(i)
 
-proc del[T](arr: var TArray[T], first, last: Natural) {.inline.} =
+proc del*[T](arr: var TArray[T], first, last: Natural) {.inline.} =
   arr.delInternal(first, last - first + 1)
 
 proc initArrayInternal[T](arr: var TArray[T], val: T, size: int32) {.importcpp: "#.Init(@)", nodecl.}

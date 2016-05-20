@@ -74,9 +74,18 @@ proc numToWord*(num: Natural): string {.compileTime.} =
 
   return nums[num]
 
+template parseError*(node: NimNode, msg: string) =
+  ## Shortcut to raise ParseError for specified `node` with specified message
+  raise newException(ParseError, lineinfo(node) & ": " & msg)
+
+template macroCheck*(node: NimNode, pred: bool, msg: string) =
+  if not pred: parseError(node, msg)
+
 template expandObjReference*(r: string): expr =
-  ## Changes "this.something" into "this->something".
+  ## Changes "this.something" to "this->something".
   ## Useful when interfacing with methods accepting method pointers
+
+  # TODO: needs to be made more robust
 
   const parts = r.split('.')
   const first = '`' & parts[0] & '`'
@@ -98,7 +107,7 @@ proc fromStr*[Enum](val: string): Enum {.compileTime.} =
       return item
   raise newException(ValueError, "Unknown enum value: " & val)
 
-proc toCppType*(typeNode: NimNode; isUeSignature, isPrefixed: bool = false): Rope =
+proc toCppType*(typeNode: NimNode; isUeSignature, dontGenReferences: bool = false): Rope =
   ## Returns string representing C++ type corresponding to the specified Nim type
   ## Wraps non-primitive types in backtricks (`) for further use with .emit pragma
 
@@ -121,27 +130,27 @@ proc toCppType*(typeNode: NimNode; isUeSignature, isPrefixed: bool = false): Rop
     of "float64", "cdouble":
       result = rope("double")
     of "float", "uint", "int":
-      raise newException(ParseError, lineinfo(typeNode) &
-        ": avoid using types of undefined size - use size-defined alternative instead (e.g. float32, int32)")
+      parseError(typeNode,
+        "avoid using types of undefined size - use size-specific alternative instead (e.g. float32, int32)")
     of "bool", "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64":
       result = rope($(typeNode.ident))
     else:
       let typeName = $(typeNode.ident)
-      if isUeSignature and not isPrefixed and
+      if isUeSignature and not dontGenReferences and
          typeName.len > 1 and typeName[0] == 'F' and typeName[1].isUpper:
         # sometimes UHT forcefully converts structure values to const references in signatures
         result = rope("const `") & typeName & "`&"
       else:
         result = rope("`") & $(typeNode.ident) & "`"
+  of nnkCommand:
+    if typeNode[0].kind != nnkIdent or typeNode[0].ident != !"bycopy":
+      parseError(typeNode, "unknown type modifier: " & repr(typeNode[0]))
+    result = toCppType(typeNode[1], isUeSignature, true)
   else:
-    raise newException(ParseError, lineinfo(typeNode) & ": type expected")
+    parseError(typeNode, "type expected")
 
 proc makeStrPragma*(name, val: string): NimNode {.compileTime.} =
   result = newNimNode(nnkExprColonExpr).add(ident(name), newStrLitNode(val))
-
-template parseError*(node: NimNode, msg: string) =
-  ## Shortcut to raise ParseError for specified `node` with specified message
-  raise newException(ParseError, lineinfo(node) & ": " & msg)
 
 proc extractIdent*(node: NimNode): NimNode =
   ## returns ident node
@@ -152,3 +161,20 @@ proc extractIdent*(node: NimNode): NimNode =
     result = extractIdent(node[1])
   else:
     result = extractIdent(node[0])
+
+macro toCppSubstitution*(n: typed): expr =
+  const literals = {nnkCharLit..nnkTripleStrLit}
+  case n.kind:
+  of nnkNilLit:
+    result = newStrLitNode("0")
+  of literals:
+    result = newCall("$", n)
+  of nnkIdent:
+    result = newStrLitNode("`" & $n.ident & "`")
+  else:
+    result = newCall("expandObjReference", newCall("astToStr", n))
+
+var identIdx {.compileTime.} = 0
+proc genIdent*(): NimNode {.compileTime.} =
+  result = ident("genident_" & $identIdx)
+  inc identIdx # not very good approach, needs to be more stable

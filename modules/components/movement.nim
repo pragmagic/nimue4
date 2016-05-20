@@ -9,7 +9,7 @@ type EPlaneConstraintAxisSetting {.size:sizeof(uint8),
   Z, ## Lock movement in the Z axis.
   UseGlobalPhysicsSetting ## Use the global physics project setting.
 
-class(UMovementComponent of UActorComponent, header: "GameFramework/MovementComponent.h", notypedef):
+wclass(UMovementComponent of UActorComponent, header: "GameFramework/MovementComponent.h", notypedef):
   ## UCLASS(ClassGroup=Movement, abstract, BlueprintType)
   ## MovementComponent is an abstract component class that defines functionality for moving a PrimitiveComponent (our UpdatedComponent) each tick.
   ## Base functionality includes:
@@ -128,7 +128,7 @@ class(UMovementComponent of UActorComponent, header: "GameFramework/MovementComp
     ## Update tick registration state, determined by bAutoUpdateTickRegistration. Called by SetUpdatedComponent.
 
   method handleImpact(hit: FHitResult; timeSlice: cfloat = 0.0;
-                    moveDelta: FVector = ZeroVector)
+                    moveDelta: FVector = zeroVector)
     ## Called for Blocking impact
     ## @param Hit: Describes the collision.
     ## @param TimeSlice: Time period for the simulation that produced this hit.  Useful for
@@ -140,12 +140,12 @@ class(UMovementComponent of UActorComponent, header: "GameFramework/MovementComp
     ## Update ComponentVelocity of UpdatedComponent. This needs to be called by derived classes at the end of an update whenever Velocity has changed.
 
   method initCollisionParams(outParams: var FCollisionQueryParams;
-                           outResponseParam: var FCollisionResponseParams) {.noSideEffect.}
+                             outResponseParam: var FCollisionResponseParams) {.noSideEffect.}
     ## Initialize collision params appropriately based on our collision settings. Use this before any Line, Overlap, or Sweep tests.
 
   method overlapTest(location: FVector; rotationQuat: FQuat;
-                   collisionChannel: ECollisionChannel;
-                   collisionShape: FCollisionShape; ignoreActor: ptr AActor): bool {.noSideEffect.}
+                     collisionChannel: ECollisionChannel;
+                     collisionShape: FCollisionShape; ignoreActor: ptr AActor): bool {.noSideEffect.}
     ## Return true if the given collision shape overlaps other geometry at the given location and rotation. The collision params are set by InitCollisionParams().
 
   proc moveUpdatedComponent(delta: FVector; newRotation: FQuat; bSweep: bool;
@@ -162,8 +162,8 @@ class(UMovementComponent of UActorComponent, header: "GameFramework/MovementComp
                             teleport: ETeleportType = ETeleportType.None): bool
 
   method moveUpdatedComponentImpl(delta: FVector; newRotation: FQuat; bSweep: bool;
-                                outHit: ptr FHitResult = nil;
-                                teleport: ETeleportType = ETeleportType.None): bool
+                                  outHit: ptr FHitResult = nil;
+                                  teleport: ETeleportType = ETeleportType.None): bool
 
   proc K2_MoveUpdatedComponent(delta: FVector; newRotation: FRotator;
                                outHit: var FHitResult; bSweep: bool = true;

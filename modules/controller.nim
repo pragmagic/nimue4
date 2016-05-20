@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class (AController of AActor, header: "GameFramework/Controller.h", notypedef):
+wclass(AController of AActor, header: "GameFramework/Controller.h", notypedef):
   var playerState: ptr APlayerState
     ## PlayerState containing replicated information about the player
     ## using this controller (only exists for players, not NPCs).
@@ -13,11 +13,11 @@ class (AController of AActor, header: "GameFramework/Controller.h", notypedef):
     ## UFUNCTION(BlueprintCallable, Category="Pawn")
 
   method setControlRotation(newRotation: FRotator)
-    ## Set the control rotation. The RootComponent's rotation will also be updated to match it if RootComponent->bAbsoluteRotation is true. 
+    ## Set the control rotation. The RootComponent's rotation will also be updated to match it if RootComponent->bAbsoluteRotation is true.
     ## UFUNCTION(BlueprintCallable, Category="Pawn", meta=(Tooltip="Set the control rotation."))
 
   method setInitialLocationAndRotation(newLocation: FVector; newRotation: FRotator)
-    ## Set the initial location and rotation of the controller, as well as the control rotation. Typically used when the controller is first created. 
+    ## Set the initial location and rotation of the controller, as well as the control rotation. Typically used when the controller is first created.
     ## UFUNCTION(BlueprintCallable, Category="Pawn")
 
   var controlRotation: FRotator

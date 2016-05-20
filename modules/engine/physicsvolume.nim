@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(APhysicsVolume of AVolume, header: "GameFramework/PhysicsVolume.h"):
+wclass(APhysicsVolume of AVolume, header: "GameFramework/PhysicsVolume.h"):
   ## PhysicsVolume: A bounding volume which affects actor physics.
   ## Each AActor is affected at any time by one PhysicsVolume.
 
@@ -47,3 +47,8 @@ class(APhysicsVolume of AVolume, header: "GameFramework/PhysicsVolume.h"):
 
   method isOverlapInVolume(testComponent: USceneComponent): bool {.noSideEffect.}
     ## Given a known overlap with the given component, validate that it meets the rules imposed by bPhysicsOnContact.
+
+type
+  ADefaultPhysicsVolume {.importcpp, header: "GameFramework/DefaultPhysicsVolume.h".} = object of APhysicsVolume
+    ## DefaultPhysicsVolume determines the physical effects an actor will experience
+    ## if they are not inside any user specified PhysicsVolume

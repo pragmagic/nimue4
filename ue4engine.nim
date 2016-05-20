@@ -14,7 +14,8 @@ converter intToInt32*(i: int): int32 =
   ## to avoid casting all the time when working with Nim arrays/seqs
   result = int32(i)
 
-proc cnew*[T](): ptr T {.importcpp: "(new '*0#@)", nodecl.}
+proc cnew*[T](): ptr T {.importcpp: "(new '*0(@))", nodecl, varargs.}
+  # need to make this compile-time checked
 
 include "modules/containers/array"
 include "modules/containers/map"
@@ -22,6 +23,8 @@ include "modules/containers/set"
 include modules/containers/enumasbyte
 include modules/containers/weakptr
 include modules/containers/sharedptr
+include modules/containers/refcountptr
+include modules/containers/optional
 
 include modules/strings
 include modules/math
@@ -31,7 +34,8 @@ type
   FOutputDevice* {.header: "Misc/OutputDevice.h", importcpp, inheritable.} = object
   FOutputDeviceRedirector {.header: "HAL/OutputDevices.h", importcpp.} = object of FOutputDevice
   FExec* {.header: "Misc/OutputDevice.h", importcpp, inheritable.} = object
-  FAudioDevice* {.header: "AudoDevice.h", importcpp.} = object of FExec
+  FAudioDevice* {.header: "AudioDevice.h", importcpp.} = object of FExec
+    transientMasterVolume* {.importcpp: "TransientMasterVolume".}: float32
 
   FArchive* {.header: "Serialization/ArchiveBase.h", importcpp.} = object
   FSceneInterface* {.header: "SceneInterface.h", importcpp.} = object
@@ -40,7 +44,9 @@ type
 # Have to declare many types here, because Nim doesn't support forward declaration
 # and UE types have lots of inter-dependencies
 type
-  UObject* {.header: "UObject/UObject.h", importcpp, inheritable.} = object
+  UObjectBase* {.header: "UObject/UObjectBase.h", importcpp, inheritable.} = object
+  UObjectBaseUtility* {.header: "UObject/UObjectBaseUtility.h", importcpp, inheritable.} = object of UObjectBase
+  UObject* {.header: "UObject/UObject.h", importcpp.} = object of UObjectBaseUtility
   UPackage* {.header: "UObject/CoreObject.h", importcpp.} = object of UObject
 
   UProperty* {.header: "UObject/UnrealTypes.h", importcpp.} = object of UObject
@@ -64,6 +70,7 @@ type
 
   UGameplayTagsManager* {.header: "GameplayTagsManager.h", importcpp.} = object of UObject
 
+  UReporterGraph* {.header: "Debug/ReporterGraph.h", importcpp.} = object of UObject
   UCanvas* {.header: "Engine/Canvas.h", importcpp.} = object of UObject
   UWorld* {.header: "Engine/World.h", importcpp.} = object of UObject
     bWorldWasLoadedThisTick*: bool
@@ -115,8 +122,41 @@ type
   UNetDriver* {.header: "Engine/NetDriver.h", importcpp.} = object of UObject
   UDemoNetDriver* {.header: "Engine/DemoNetDriver.h", importcpp.} = object of UNetDriver
 
+  FRenderResource* {.header: "RenderResource.h", importcpp, inheritable, bycopy.} = object
+  FTexture* {.header: "RenderResource.h", importcpp.} = object of FRenderResource
+  FTextureResource* {.header: "TextureResource.h", importcpp.} = object of FTexture
+  FMaterialRenderProxy* {.header: "MaterialShared.h", importcpp.} = object of FRenderResource
+  EMaterialValueType* {.header: "MaterialShared.h", importcpp.} = enum
+    ## The types which can be used by materials.
+    MCT_Float1 = 1,
+      ## A scalar float type.
+      ## Note that MCT_Float1 will not auto promote to any other float types,
+      ## So use MCT_Float instead for scalar expression return types.
+    MCT_Float2 = 2,
+    MCT_Float3 = 4,
+    MCT_Float4 = 8,
+    MCT_Float = 8 or 4 or 2 or 1,
+      ## Any size float type by definition, but this is treated as a scalar which can auto convert (by replication) to any other size float vector.
+      ## Use this as the type for any scalar expressions.
+    MCT_Texture2D = 16,
+    MCT_TextureCube = 32,
+    MCT_Texture = 16 or 32,
+    MCT_StaticBool = 64,
+    MCT_Unknown = 128,
+    MCT_MaterialAttributes = 256
+
   UTexture* {.header: "Engine/Texture.h", importcpp.} = object of UObject
+    resource* {.importcpp: "Resource".}: ptr FTextureResource
+
   UTexture2D* {.header: "Engine/Texture2D.h", importcpp.} = object of UTexture
+  UFont* {.header: "Engine/Font.h", importcpp.} = object of UObject
+  FSlateFontInfo* {.header: "Fonts/SlateFontInfo.h", importcpp.} = object
+  EFontCacheType {.header: "Engine/Font.h", importcpp, pure, size: sizeof(cint).} = enum
+    ## Enumerates supported font caching types.
+    Offline,
+      ## The font is using offline caching (this is how UFont traditionally worked).
+    Runtime
+      ## The font is using runtime caching (this is how Slate fonts work).
 
   UInterpGroup* {.header: "Matinee/InterpGroup.h", importcpp.} = object of UObject
   UInterpTrackInst* {.header: "Matinee/InterpTrackInst.h", importcpp.} = object of UObject
@@ -133,6 +173,7 @@ type
   UBlueprintCore* {.header: "Engine/BlueprintCore.h", importcpp.} = object of UObject
   UBlueprint* {.header: "Engine/Blueprint.h", importcpp.} = object of UBlueprintCore
   ULevelScriptBlueprint* {.header: "Engine/LevelScriptBlueprint.h", importcpp.} = object of UBlueprint
+  UBlueprintFunctionLibrary* {.header: "Kismet/BlueprintFunctionLibrary.h", importcpp.} = object of UObject
 
   FPostProcessSettings* {.header: "Scene.h", importcpp.} = object
 
@@ -143,6 +184,7 @@ type
     blendWeight* {.importcpp: "BlendWeight".}: cfloat
     rootMotionTransform* {.importcpp: "RootMotionTransform".}: FTransform
 
+  UAnimInstance* {.header: "Animation/AnimInstance.h", importcpp.} = object of UObject
   UAnimationAsset* {.header: "Animation/AnimationAsset.h", importcpp.} = object of UObject
   UAnimSequenceBase* {.header: "Animation/AnimSequenceBase.h", importcpp.} = object of UAnimationAsset
   UAnimCompositeBase* {.header: "Animation/AnimCompositeBase.h", importcpp.} = object of UAnimSequenceBase
@@ -152,12 +194,13 @@ type
 include modules/misc
 include modules/paths
 
-include modules/components/componentdecls
 include modules/engine/texture
+include modules/components/componentdecls
 
 type
+  UInputComponent* {.header: "Components/InputComponent.h", importcpp.} = object of UActorComponent
   AActor* {.header: "GameFramework/Actor.h", importcpp.} = object of UObject
-    inputComponent {.importcpp: "InputComponent".}: ptr UInputComponent
+    inputComponent* {.importcpp: "InputComponent".}: ptr UInputComponent
       ## Component that handles input for this actor, if input is enabled.
 
   APawn* {.header: "GameFramework/Pawn.h", importcpp.} = object of AActor
@@ -193,7 +236,6 @@ type
 
   ANavigationObjectBase* {.header: "NavigationObjectBase.h", importcpp.} = object of AActor
 
-  # TODO: move out
   EViewTargetBlendFunction* {.header: "Camera/PlayerCameraManager.h", importcpp, size: sizeof(cint).} = enum
     ## Options that define how to blend when changing view targets.
     ## @see FViewTargetTransitionParams, SetViewTarget
@@ -210,6 +252,22 @@ type
     VTBlend_MAX,
 
   FViewTargetTransitionParams* {.header: "Camera/PlayerCameraManager.h", importcpp.} = object
+    ## A set of parameters to describe how to transition between view targets.
+    blendTime {.importcpp: "BlendTime".}: cfloat
+      ## Total duration of blend to pending view target. 0 means no blending.
+      ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=ViewTargetTransitionParams)
+
+    blendFunction {.importcpp: "BlendFunction".}: EViewTargetBlendFunction
+      ## Function to apply to the blend parameter.
+      ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=ViewTargetTransitionParams)
+    blendExp {.importcpp: "BlendExp".}: cfloat
+      ## Exponent, used by certain blend functions to control the shape of the curve.
+      ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=ViewTargetTransitionParams)
+    bLockOutgoing: bool
+      ## If true, lock outgoing viewtarget to last frame's camera POV for the remainder of the blend.
+      ## This is useful if you plan to teleport the old viewtarget, but don't want to affect the blend.
+      ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=ViewTargetTransitionParams)
+
   APlayerCameraManager* {.header: "Camera/PlayerCameraManager.h", importcpp.} = object of AActor
     PCOwner*: ptr APlayerController
   ACameraActor* {.header: "Camera/CameraActor.h", importcpp.} = object of AActor
@@ -220,15 +278,17 @@ type
 
   AInstancedFoliageActor* {.header: "InstancedFoliageActor.h", importcpp.} = object of AActor
 
-include modules/core/globals
+  ANavigationData* {.header: "AI/Navigation/NavigationData.h", importcpp.} = object of AActor
 
-include modules/engine/engine
+include modules/core/globals
 
 include modules/containers/subclassof
 
 include modules/enginetypes
 include modules/physics/types
 include modules/input/inputcoretypes
+
+include modules/ai/navigationtypes
 
 include modules/components/actor
 include modules/components/input
@@ -242,16 +302,31 @@ include modules/components/billboard
 
 include modules/components/pathfollowing
 
-include modules/ai/navigationtypes
+include modules/components/skeletalmesh
 
 include modules/engine/brush
 include modules/engine/volume
 include modules/engine/physicsvolume
 
+include modules/components/charactermovement
+
 type
+  FSlateSound* {.header: "Sound/SlateSound.h", importcpp.} = object
+
   AAudioVolume* {.header: "Sound/AudioVolume.h", importcpp.} = object of AVolume
     priority {.importcpp: "Priority".}: cfloat
     bEnabled: bool
+
+  FAttenuationSettings* {.header: "Sound/SoundAttenuation.h", importcpp.} = object
+
+  USoundClass* {.header: "Sound/SoundClass.h", importcpp.} = object of UObject
+  USoundMix* {.header: "Sound/SoundMix.h", importcpp.} = object of UObject
+  USoundBase* {.header: "Sound/SoundBase.h", importcpp.} = object of UObject
+  USoundCue* {.header: "Sound/SoundCue.h", importcpp.} = object of USoundBase
+  USoundWave* {.header: "Sound/SoundWave.h", importcpp.} = object of USoundBase
+  USoundAttenuation* {.header: "Sound/SoundAttenuation.h", importcpp.} = object of UObject
+    ## Defines how a sound changes volume with distance to the listener
+  USoundConcurrency* {.header: "Sound/SoundConcurrency.h", importcpp.} = object of UObject
 
   UReverbEffect* {.header: "Sound/ReverbEffect.h", importcpp.} = object of UObject
     density* {.importcpp: "Density".}: cfloat
@@ -321,6 +396,11 @@ type
     interiorLPFTime* {.importcpp: "InteriorLPFTime".}: cfloat
       ## The time over which to interpolate from the current LPF to the desired LPF of sounds inside the volume when the player enters the volume
 
+type
+  SWidget* {.header: "Widgets/SWidget.h", importcpp, inheritable.} = object
+  SCompoundWidget* {.header: "Widgets/SCompoundWidget.h", importcpp.} = object of SWidget
+  SGameMenuPageWidget* {.header: "SGameMenuPageWidget.h", importcpp.} = object of SCompoundWidget
+
 include modules/components/scene
 include modules/components/springarm
 
@@ -330,9 +410,13 @@ include modules/components/pawnmovement
 
 include modules/components/pawnnoiseemitter
 
+include modules/components/audio
+
 include "modules/core/object"
 
 include modules/playerinput
+
+include modules/canvas
 
 include modules/camera/types
 include modules/camera/anim
@@ -345,8 +429,6 @@ include modules/net/connection
 include modules/net/nettypes
 
 include modules/touchinterface
-
-# include modules/core/canvas
 
 include modules/core/player
 include modules/core/timermanager
@@ -361,6 +443,8 @@ include modules/spectatorpawn
 include modules/character
 # include modules/matineeactor
 
+include modules/animation
+
 include modules/info
 include modules/gamemode
 include modules/playerstate
@@ -368,12 +452,26 @@ include modules/gamestate
 
 include modules/controller
 include modules/playercontroller
+include modules/playercameramanager
 
 include modules/level
 include modules/world
+include modules/worldsettings
+include modules/gameusersettings
 
 include modules/engine/hud
 
 include modules/umg/widgets
+
+include modules/gameplayutils
+
+include modules/slate/slateapplication
+include modules/slate/gamemenubuilder
+include modules/slate/gamemenupage
+include modules/slate/gamemenupagewidget
+
+include modules/engine/engine
+
+include modules/consolemanager
 
 proc simpleMoveToLocation*(navSys: ptr UNavigationSystem, controller: ptr APlayerController, goal: FVector) {.header: "AI/Navigation/NavigationSystem.h", importcpp: "#.SimpleMoveToLocation(@)", nodecl.}

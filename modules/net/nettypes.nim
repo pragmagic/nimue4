@@ -21,10 +21,10 @@ type
     REPNOTIFY_OnChanged = 0, ## Only call the property's RepNotify function if it changes from the local value
     REPNOTIFY_Always = 1, ## Always Call the property's RepNotify function when it is received from the server
 
-class(IRepChangedPropertyTracker, header: "UObject/CoreNet.h"):
+wclass(IRepChangedPropertyTracker, header: "UObject/CoreNet.h"):
   method setCustomIsActiveOverride(repIndex: uint16, bIsActive: bool)
 
-class(FLifetimeProperty, header: "UObject/CoreNet.h"):
+wclass(FLifetimeProperty, header: "UObject/CoreNet.h"):
   ##  This class is used to track a property that is marked to be replicated for the lifetime of the actor channel.
   ##  This doesn't mean the property will necessarily always be replicated, it just means:
   ##  "check this property for replication for the life of the actor, and I don't want to think about it anymore"
@@ -41,7 +41,7 @@ class(FLifetimeProperty, header: "UObject/CoreNet.h"):
 
   proc `==`(other: var FLifetimeProperty) {.noSideEffect.}
 
-class(IOnlinePlatformData, header: "OnlineSubsystemTypes.h"):
+wclass(IOnlinePlatformData, header: "OnlineSubsystemTypes.h"):
   proc `==`(other: var IOnlinePlatformData): bool {.noSideEffect.}
   proc `!=`(other: var IOnlinePlatformData): bool {.noSideEffect.}
 
@@ -72,10 +72,10 @@ class(IOnlinePlatformData, header: "OnlineSubsystemTypes.h"):
     ##
     ## @return data in string form
 
-class(FUniqueNetId of IOnlinePlatformData, header: "OnlineSubsystemTypes.h"):
+wclass(FUniqueNetId of IOnlinePlatformData, header: "OnlineSubsystemTypes.h"):
   proc getHexEncodedString(): FString {.noSideEffect.}
 
-class(FUniqueNetIdRepl, header: "GameFramework/OnlineReplStructs.h"):
+wclass(FUniqueNetIdRepl, header: "GameFramework/OnlineReplStructs.h"):
   discard
 
 # TODO: a lot more types

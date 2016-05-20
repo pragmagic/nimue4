@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(UCapsuleComponent of UShapeComponent, header: "Components/CapsuleComponent.h", notypedef):
+wclass(UCapsuleComponent of UShapeComponent, header: "Components/CapsuleComponent.h", notypedef):
   ## A capsule generally used for simple collision. Bounds are rendered as lines in the editor.
   proc setCapsuleSize(inRadius: cfloat; inHalfHeight: cfloat;
                       bUpdateOverlaps: bool = true)

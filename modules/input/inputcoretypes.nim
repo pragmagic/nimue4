@@ -8,7 +8,7 @@ type ETouchType {.header: "InputCoreTypes.h", importcpp, size: sizeof(cint), pur
 
   NumTypes
 
-class (FKey, header: "InputCoreTypes.h"):
+wclass(FKey, header: "InputCoreTypes.h"):
   proc make(): FKey {.constructor.}
   proc makeFromName(inName: FName): FKey {.constructor.}
   proc makeFromUniString(inName: wstring): FKey {.constructor.}
@@ -38,7 +38,7 @@ class (FKey, header: "InputCoreTypes.h"):
 
 proc hash(key: FKey): uint32 {.noSideEffect, importc: "GetTypeHash", header: "InputCoreTypes.h".}
 
-class(EKeys, header: "InputCoreTypes.h"):
+wclass(EKeys, header: "InputCoreTypes.h"):
   var AnyKey {.isStatic.}: FKey
 
   var MouseX {.isStatic.}: FKey

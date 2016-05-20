@@ -64,7 +64,7 @@ proc makeProcedure(className, ns: string, statement: NimNode, classNameNode: Nim
             .add(newIdentNode("importcpp"))
             .add(newStrLitNode(className & "(@)"))
     else:
-        var importCppPattern = "#." & cppName & "(@)"
+        var importCppPattern = cppName
         if isOperator and userSuppliedName == nil:
           importCppPattern = case procName:
             of "[]": "(#[#])"
@@ -89,14 +89,18 @@ proc makeProcedure(className, ns: string, statement: NimNode, classNameNode: Nim
       result = newNimNode(nnkProcDef)
       statement.copyChildrenTo(result)
 
-proc buildProceduresFromVar(className: NimNode; ns, header: string; varIdent, varType: NimNode): seq[NimNode] =
+proc buildProceduresFromVar(className: NimNode; ns, header: string; varNameNode, varType: NimNode): seq[NimNode] =
+  let varIdent = if varNameNode.kind == nnkPragmaExpr: varNameNode[0] else: varNameNode
   let setterName = postfix(newNimNode(nnkAccQuoted).add(varIdent, ident("=")), "*")
   let getter = newProc(postfix(varIdent, "*"), [newNimNode(nnkVarTy).add(varType), newIdentDefs(ident("this"), className.copyNimTree())], newEmptyNode())
   let setter = newProc(setterName, [newEmptyNode(),
                                   newIdentDefs(ident("this"), className.copyNimTree()), # newNimNode(nnkVarTy).add(ident(classname))),
                                   newIdentDefs(ident("val"), varType)], newEmptyNode())
 
-  let cppIdent = if varType.toStrLit.strVal == "bool": $varIdent else: ($varIdent).capitalize
+  let userSuppliedName = removeStrPragma(varNameNode, "cppname")
+  let cppIdent = if userSuppliedName != nil: userSuppliedName
+                 elif varType.toStrLit.strVal == "bool": $varIdent
+                 else: ($varIdent).capitalize
   let getterImportCPragma = newNimNode(nnkExprColonExpr).add(
         ident("importcpp"), newStrLitNode("#." & cppIdent))
   let setterImportCPragma = newNimNode(nnkExprColonExpr).add(
@@ -128,7 +132,7 @@ proc parse_opts(className: NimNode; opts: seq[NimNode]): TMacroOptions =
                 case ($ opt[0].ident).toLower
                 of "header":
                     result.header = opt[1]
-                of "importc":
+                of "cppname":
                     result.importc = opt[1]
                 of "namespace", "ns":
                     result.ns = $opt[1] & "::"
@@ -146,7 +150,7 @@ proc parse_opts(className: NimNode; opts: seq[NimNode]): TMacroOptions =
                 handled = false
 
             if not handled:
-                echo "Warning, unhandled argument: ", repr(opt)
+                warning("unhandled argument: " & repr(opt))
 
     if not isNil(result.importc) or isNil(result.ns):
         result.ns = ""
@@ -203,7 +207,7 @@ proc flattenBracketExpr(node: NimNode): NimNode =
   for c in children(node):
     result.add(extractLeftIdent(c))
 
-macro class*(className, opts: expr, body: stmt): stmt {.immediate.} =
+macro wclass*(className, opts: expr, body: stmt): stmt {.immediate.} =
     ## Defines a C++ class
     result = newStmtList()
 
@@ -297,8 +301,7 @@ macro class*(className, opts: expr, body: stmt): stmt {.immediate.} =
 
                     if not isStatic:
                       if opts.isNoDef:
-                        let varNameNode = if this_ident.kind == nnkPragmaExpr: this_ident[0] else: this_ident
-                        let members = buildProceduresFromVar(classNameNode, opts.ns, $(opts.header), varNameNode, ty)
+                        let members = buildProceduresFromVar(classNameNode, opts.ns, $(opts.header), this_ident, ty)
                         result.add(members)
                       else:
                         fields.add((this_ident, ty))

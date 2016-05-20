@@ -11,6 +11,7 @@ export strutils.format, strutils.split, strutils.join, strutils.capitalize
 export sequtils.map
 export typetraits.name
 export expandObjReference
+export macroutils.toCppSubstitution
 
 {.hints: off.}
 

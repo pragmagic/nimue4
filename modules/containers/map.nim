@@ -1,13 +1,13 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(TPair[K, V], header: "Containers/Map.h", bycopy):
+wclass(TPair[K, V], header: "Containers/Map.h", bycopy):
   var key: K
   var value: V
 
   proc `==`(other: TPair[K, V]): bool {.noSideEffect.}
   proc `!=`(other: TPair[K, V]): bool {.noSideEffect.}
 
-class(TMap[K, V], header: "Containers/Map.h", bycopy):
+wclass(TMap[K, V], header: "Containers/Map.h", bycopy):
   proc append(other: TMap[K, V])
 
   proc `[]`(key: K): var V

@@ -8,7 +8,7 @@ type
 declareBuiltinDelegate(FOnVolumeShapeChanged, dkMulticast, "GameFramework/Volume.h", volume: var AVolume)
 #endif
 
-class(AVolume of ABrush, header: "GameFramework/Volume.h", notypedef):
+wclass(AVolume of ABrush, header: "GameFramework/Volume.h", notypedef):
   ## An editable 3D volume placed in a level. Different types of volumes perform different functions
   ## @see https://docs.unrealengine.com/latest/INT/Engine/Actors/Volumes
   ## UCLASS(showcategories=Collision, hidecategories=(Brush, Physics), abstract, ConversionRoot)

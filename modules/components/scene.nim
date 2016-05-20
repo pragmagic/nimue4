@@ -39,7 +39,7 @@ type
     eTestTransform,
     eIgnoreTransform
 
-class(FScopedMovementUpdate, header: "Components/SceneComponent.h", bycopy):
+wclass(FScopedMovementUpdate, header: "Components/SceneComponent.h", bycopy):
   proc getOuterDeferredScope(): ptr FScopedMovementUpdate {.noSideEffect.}
     ## Get the scope containing this scope. A scope only has an outer scope if they both defer updates.
 
@@ -91,7 +91,7 @@ proc `&=`(arg1: var EMoveComponentFlags, arg2: EMoveComponentFlags) {.header: co
 
 declareBuiltinDelegate(FPhysicsVolumeChanged, dkDynamicMulticast, "Components/SceneComponent.h", newVolume: ptr APhysicsVolume)
 
-class(USceneComponent of UActorComponent, header: "Components/SceneComponent.h", notypedef):
+wclass(USceneComponent of UActorComponent, header: "Components/SceneComponent.h", notypedef):
   ## A SceneComponent has a transform and supports attachment, but has no rendering or collision capabilities.
   ## Useful as a 'dummy' component in the hierarchy to offset others.
   ## @see [Scene Components](https://docs.unrealengine.com/latest/INT/Programming/UnrealArchitecture/Actors/Components/index.html#scenecomponents)

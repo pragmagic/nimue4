@@ -454,6 +454,42 @@ type
     LMIT_Texture = 2,
     LMIT_NumBits = 3
 
+  ESimpleElementBlendMode* {.header: "SceneTypes.h", importcpp, size: sizeof(cint).} = enum
+    ## Blend modes supported for simple element rendering
+    SE_BLEND_Opaque = 0,
+    SE_BLEND_Masked,
+    SE_BLEND_Translucent,
+    SE_BLEND_Additive,
+    SE_BLEND_Modulate,
+    SE_BLEND_MaskedDistanceField,
+    SE_BLEND_MaskedDistanceFieldShadowed,
+    SE_BLEND_TranslucentDistanceField,
+    SE_BLEND_TranslucentDistanceFieldShadowed,
+    SE_BLEND_AlphaComposite,
+    SE_BLEND_AlphaBlend,
+      ## Like SE_BLEND_Translucent, but modifies destination alpha
+    SE_BLEND_TranslucentAlphaOnly,
+      ## Like SE_BLEND_Translucent, but reads from an alpha-only texture
+    SE_BLEND_RGBA_MASK_START,
+    SE_BLEND_RGBA_MASK_END = ord(SE_BLEND_RGBA_MASK_START) + 31,
+      ## Using 5bit bit-field for red, green, blue, alpha and desaturation
+    SE_BLEND_MAX
+
+  EBlendMode* {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(cint).} = enum
+    BLEND_Opaque,
+    BLEND_Masked,
+    BLEND_Translucent,
+    BLEND_Additive,
+    BLEND_Modulate,
+    BLEND_MAX
+
+  ENetworkSmoothingMode {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(uint8), pure.} = enum
+    ## Smoothing approach used by network interpolation for Characters.
+    Disabled,
+      ## No smoothing, only change position as network position updates are received.
+    Linear, ## Linear interpolation from source to target.
+    Exponential ## Exponential. Faster as you are further from target.
+
   FRigidBodyState* {.header: "Engine/EngineTypes.h", importcpp.} = object
     ## TODO
 
@@ -502,7 +538,51 @@ type
       ## Use Simplygon's automatic texture sizing
     TextureSizingType_MAX
 
-class(FMaterialProxySettings, header: "Engine/EngineTypes.h", bycopy):
+  FCanvasUVTri* {.importcpp, header: "Engine/EngineTypes.h".} = object
+    ## Simple 2d triangle with UVs
+    v0Pos* {.importcpp: "V0_Pos".}: FVector2D
+      ## Position of first vertex
+      ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CanvasUVTri)
+    v0UV* {.importcpp: "V0_UV".}: FVector2D
+      ## UV of first vertex
+      ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CanvasUVTri)
+    v0Color* {.importcpp: "V0_Color".}: FLinearColor
+      ## Color of first vertex
+      ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CanvasUVTri)
+    v1Pos* {.importcpp: "V1_Pos".}: FVector2D
+      ## Position of second vertex
+      ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CanvasUVTri)
+    v1UV* {.importcpp: "V1_UV".}: FVector2D
+      ## UV of second vertex
+      ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CanvasUVTri)
+    v1Color* {.importcpp: "V1_Color".}: FLinearColor
+      ## Color of second vertex
+      ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CanvasUVTri)
+    v2Pos* {.importcpp: "V2_Pos".}: FVector2D
+      ## Position of third vertex
+      ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CanvasUVTri)
+    v2UV* {.importcpp: "V2_UV".}: FVector2D
+      ## UV of third vertex
+      ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CanvasUVTri)
+    v2Color* {.importcpp: "V2_Color".}: FLinearColor
+      ## Color of third vertex
+      ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CanvasUVTri)
+
+  ELightingBuildQuality* {.importcpp, header: "Engine/EngineTypes.h", size: sizeof(cint).} = enum
+    ## Lighting build quality enumeration
+    Quality_Preview,
+    Quality_Medium,
+    Quality_High,
+    Quality_Production,
+    Quality_MAX,
+
+  ENamedThreads {.importcpp: "ENamedThreads::Type", header: "Async/TaskGraphInterfaces.h", pure, size: sizeof(cint).} = enum
+    ## This is not properly interfaced as it depends on preprocessor macros
+    UnusedAnchor = -1,
+  FGraphEvent {.importcpp, header: "Async/TaskGraphInterfaces.h".} = object
+  FGraphEventRef = TRefCountPtr[FGraphEvent]
+
+wclass(FMaterialProxySettings, header: "Engine/EngineTypes.h", bycopy):
   var textureSize: FIntPoint
     ## Size of generated BaseColor map
   var textureSizingType: ETextureSizingType
@@ -540,35 +620,125 @@ class(FMaterialProxySettings, header: "Engine/EngineTypes.h", bycopy):
   var opacityTextureSize: FIntPoint
     ## Override opacity map size)
 
-class(FHitResult, header: "Engine/EngineTypes.h", bycopy):
-    var bBlockingHit: bool
-    var bStartPenetrating: bool
+wclass(FMeshProxySettings, header: "Engine/EngineTypes.h", bycopy):
+  var screenSize: int32
+    ## Screen size of the resulting proxy mesh in pixel size
+    ## UPROPERTY(EditAnywhere, Category=ProxySettings)
 
-    var time: cfloat
-    var location: FVector
-    var impactPoint: FVector
-    var normal: FVector
-    var impactNormal: FVector
-    var traceStart: FVector
-    var traceEnd: FVector
-    var distance: cfloat
-    var penetrationDepth: cfloat
-    var item: int32
-    var boneName: FName
-    var faceIndex: int32
+  var materialSettings: FMaterialProxySettings
+    ## Material simplification
+    ## UPROPERTY(EditAnywhere, Category = ProxySettings)
 
-    var actor: TWeakObjectPtr[AActor]
-    var component: TWeakObjectPtr[UPrimitiveComponent]
-    # var physMaterial: TWeakObjectPtr[UPhysicalMaterial]
+  var mergeDistance: cfloat
+    ## Distance at which meshes should be merged together
+    ## UPROPERTY(EditAnywhere, Category = ProxySettings)
 
-    proc makeFHitResult(): FHitResult {.constructor.}
+  var hardAngleThreshold: cfloat
+    ## Angle at which a hard edge is introduced between faces
+    ## UPROPERTY(EditAnywhere, Category = ProxySettings, meta = (DisplayName = "Hard Edge Angle"))
 
-    proc getActor(): ptr AActor {.noSideEffect.}
-    proc getComponent(): ptr UPrimitiveComponent {.noSideEffect.}
-    proc isValidBlockingHit(): bool {.noSideEffect.}
+  var lightMapResolution: int32
+    ## Lightmap resolution
+    ## UPROPERTY(EditAnywhere, Category=ProxySettings)
+
+  var bRecalculateNormals: bool
+    ## Whether Simplygon should recalculate normals, otherwise the normals channel will be sampled from the original mesh
+    ## UPROPERTY(EditAnywhere, Category=ProxySettings)
+
+  var bUseClippingPlane: bool
+    ## Set to true to cap the mesh with a ground plane
+    ## UPROPERTY(EditAnywhere, Category=ProxySettings)
+
+  var clippingLevel: cfloat
+    ## Ground plane level
+    ## UPROPERTY(EditAnywhere, Category=ProxySettings)
+
+  var axisIndex: int32
+    ## Set the axis index for the ground plane (0:X-Axis, 1:Y-Axis, 2:Z-Axis)
+    ## UPROPERTY(EditAnywhere, Category=ProxySettings)
+
+  var bPlaneNegativeHalfspace: bool
+    ## Set to true to use negative halfspace for model, and reject the positive halfspace
+    ## UPROPERTY(EditAnywhere, Category=ProxySettings)
+
+  proc initFMeshProxySettings(): FMeshProxySettings {.constructor.}
+    ## Default settings.
+
+wclass(FMeshMergingSettings, header: "Engine/EngineTypes.h", bycopy):
+  var bGenerateLightMapUV: bool
+    ## Whether to generate lightmap UVs for a merged mesh
+    ## UPROPERTY(EditAnywhere, Category=FMeshMergingSettings)
+
+  var targetLightMapUVChannel: int32
+    ## Target UV channel in a merged mesh for a lightmap
+    ## UPROPERTY(EditAnywhere, Category=FMeshMergingSettings)
+
+  var targetLightMapResolution: int32
+    ## Target lightmap resolution
+    ## UPROPERTY(EditAnywhere, Category=FMeshMergingSettings)
+
+  var bPivotPointAtZero: bool
+    ## Whether merged mesh should have pivot at world origin, or at first merged component otherwise
+    ## UPROPERTY(EditAnywhere, Category=FMeshMergingSettings)
+
+  var bMergePhysicsData: bool
+    ## Whether to merge physics data (collision primitives)
+    ## UPROPERTY(EditAnywhere, Category=FMeshMergingSettings)
+
+  var bMergeMaterials: bool
+    ## Whether to merge source materials into one flat material
+    ## UPROPERTY(EditAnywhere, Category=MeshMerge)
+
+  var materialSettings: FMaterialProxySettings
+    ## Material simplification
+    ## UPROPERTY(EditAnywhere, Category = MeshMerge, meta = (editcondition = "bMergeMaterials"))
+
+  var bBakeVertexData: bool
+    ## UPROPERTY(EditAnywhere, Category = MeshMerge)
+
+  proc initFMeshMergingSettings(): FMeshMergingSettings {.constructor.}
+    ## Default settings.
+
+wclass(UBookMark of UObject, header: "Engine/BookMark.h"):
+  ## A camera position the current level.
+  var location: FVector
+    ## Camera position
+  var rotation: FRotator
+    ## Camera rotation
+  var hiddenLevels: TArray[FString]
+    ## Array of levels that are hidden
+
+declareBuiltinDelegate(FTimerDynamicDelegate, dkDynamic, "Engine/EngineTypes.h")
+
+wclass(FHitResult, header: "Engine/EngineTypes.h", bycopy):
+  var bBlockingHit: bool
+  var bStartPenetrating: bool
+
+  var time: cfloat
+  var location: FVector
+  var impactPoint: FVector
+  var normal: FVector
+  var impactNormal: FVector
+  var traceStart: FVector
+  var traceEnd: FVector
+  var distance: cfloat
+  var penetrationDepth: cfloat
+  var item: int32
+  var boneName: FName
+  var faceIndex: int32
+
+  var actor: TWeakObjectPtr[AActor]
+  var component: TWeakObjectPtr[UPrimitiveComponent]
+  # var physMaterial: TWeakObjectPtr[UPhysicalMaterial]
+
+  proc makeFHitResult(): FHitResult {.constructor.}
+
+  proc getActor(): ptr AActor {.noSideEffect.}
+  proc getComponent(): ptr UPrimitiveComponent {.noSideEffect.}
+  proc isValidBlockingHit(): bool {.noSideEffect.}
 
 # depends on AActor, cannot put it in enginetypes module
-class(FBasedPosition, header: "Engine/EngineTypes.h"):
+wclass(FBasedPosition, header: "Engine/EngineTypes.h"):
   ## Struct for handling positions relative to a base actor, which is potentially moving
   var base: ptr AActor
     ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=BasedPosition)
@@ -589,7 +759,17 @@ class(FBasedPosition, header: "Engine/EngineTypes.h"):
   proc set(inBase: ptr AActor; inPosition: var FVector)
   proc clear()
 
-class(FRigidBodyContactInfo, header: "Engine/EngineTypes.h", bycopy):
+wclass(FSubtitleCue, header: "Engine/EngineTypes.h", bycopy):
+  ## A line of subtitle text and the time at which it should be displayed.
+  var text: FText
+    ## The text to appear in the subtitle.
+
+  var time: float32
+    ## The time at which the subtitle is to be displayed, in seconds relative to the beginning of the line.
+
+  proc initFSubtitleCue(): FSubtitleCue {.constructor.}
+
+wclass(FRigidBodyContactInfo, header: "Engine/EngineTypes.h", bycopy):
   var contactPosition: FVector
   var contactNormal: FVector
   var contactPenetration: cfloat
@@ -600,7 +780,7 @@ class(FRigidBodyContactInfo, header: "Engine/EngineTypes.h", bycopy):
 
   proc swapOrder()
 
-class(FCollisionResponseContainer, header: "Engine/EngineTypes.h", bycopy):
+wclass(FCollisionResponseContainer, header: "Engine/EngineTypes.h", bycopy):
   var worldStatic: ECollisionResponse ## 0
     ## UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=CollisionResponseContainer, meta=(DisplayName="WorldStatic"))
 
@@ -716,7 +896,7 @@ class(FCollisionResponseContainer, header: "Engine/EngineTypes.h", bycopy):
 
   proc getDefaultResponseContainer(): FCollisionResponseContainer {.isStatic.}
 
-class(FCollisionImpactData, header: "Engine/EngineTypes.h", bycopy):
+wclass(FCollisionImpactData, header: "Engine/EngineTypes.h", bycopy):
   var contactInfos: TArray[FRigidBodyContactInfo]
     ## all the contact points in the collision
   var totalNormalImpulse: FVector
@@ -729,7 +909,7 @@ class(FCollisionImpactData, header: "Engine/EngineTypes.h", bycopy):
   proc swapContactOrders()
     ## Iterate over ContactInfos array and swap order of information
 
-class(FTimerHandle, header: "Engine/EngineTypes.h", bycopy):
+wclass(FTimerHandle, header: "Engine/EngineTypes.h", bycopy):
   proc make(): FTimerHandle {.constructor.}
   proc isValid(): bool {.noSideEffect.}
   proc invalidate()
@@ -739,7 +919,7 @@ class(FTimerHandle, header: "Engine/EngineTypes.h", bycopy):
   proc `==`(other: FTimerHandle): bool {.noSideEffect.}
   proc `!=`(other: FTimerHandle): bool {.noSideEffect.}
 
-class(FPrimitiveComponentId, header: "SceneTypes.h", bycopy):
+wclass(FPrimitiveComponentId, header: "SceneTypes.h", bycopy):
   var primIDValue: uint32
   proc isValid(): bool {.noSideEffect.}
   proc `==`(other: var FPrimitiveComponentId): bool {.noSideEffect.}
@@ -759,7 +939,7 @@ type FForceFeedbackChannelType {.size: sizeof(cint),
   RIGHT_LARGE,
   RIGHT_SMALL
 
-class(FForceFeedbackValues, header: "GenericPlatform/IInputInterface.h", bycopy):
+wclass(FForceFeedbackValues, header: "GenericPlatform/IInputInterface.h", bycopy):
   var leftLarge: cfloat
   var leftSmall: cfloat
   var rightLarge: cfloat
@@ -767,7 +947,7 @@ class(FForceFeedbackValues, header: "GenericPlatform/IInputInterface.h", bycopy)
 
   proc makeFForceFeedbackValues(): FForceFeedbackValues {.constructor.}
 
-class(FHapticFeedbackValues, header: "GenericPlatform/IInputInterface.h", bycopy):
+wclass(FHapticFeedbackValues, header: "GenericPlatform/IInputInterface.h", bycopy):
   var frequency: cfloat
   var amplitude: cfloat
 
@@ -775,7 +955,7 @@ class(FHapticFeedbackValues, header: "GenericPlatform/IInputInterface.h", bycopy
 
   proc makeFHapticFeedbackValues(inFrequency, inAmplitude: cfloat): FHapticFeedbackValues {.constructor.}
 
-class(IInputInterface, header: "GenericPlatform/IInputInterface.h"):
+wclass(IInputInterface, header: "GenericPlatform/IInputInterface.h"):
   method setHapticFeedbackValues(controllerId: int32; hand: int32; values: var FHapticFeedbackValues)
     ## Sets the frequency and amplitude of haptic feedback channels for a given controller id.
     ## Some devices / platforms may support just haptics, or just force feedback.
@@ -787,7 +967,7 @@ class(IInputInterface, header: "GenericPlatform/IInputInterface.h"):
   method setLightColor(controllerId: int32; color: FColor)
     ## Sets the controller for the given controller.  Ignored if controller does not support a color.
 
-class(FClientReceiveData, header: "GameFramework/LocalMessage.h", bycopy):
+wclass(FClientReceiveData, header: "GameFramework/LocalMessage.h", bycopy):
   var localPC: ptr APlayerController
   var messageType: FName
   var messageIndex: int32
@@ -797,10 +977,43 @@ class(FClientReceiveData, header: "GameFramework/LocalMessage.h", bycopy):
   var optionalObject: ptr UObject
   proc makeFClientReceiveData(): FClientReceiveData {.constructor.}
 
-class(ULocalMessage of UObject, header: "GameFramework/LocalMessage.h"):
+wclass(ULocalMessage of UObject, header: "GameFramework/LocalMessage.h"):
   method clientReceive(clientData: var FClientReceiveData) {.noSideEffect.}
     ## Send message to client
 
+wclass(FDepthFieldGlowInfo, header: "Engine/EngineTypes.h", bycopy):
+  ## info for glow when using depth field rendering
+  var bEnableGlow: bool
+    ## whether to turn on the outline glow (depth field fonts only)
+    ## UPROPERTY(BlueprintReadWrite, Category="Glow")
+  var glowColor: FLinearColor
+    ## base color to use for the glow
+    ## UPROPERTY(BlueprintReadWrite, Category="Glow")
+  var glowOuterRadius: FVector2D
+    ## if bEnableGlow, outline glow outer radius (0 to 1, 0.5 is edge of character silhouette)
+    ## glow influence will be 0 at GlowOuterRadius.X and 1 at GlowOuterRadius.Y
+    ## UPROPERTY(BlueprintReadWrite, Category="Glow")
+  var glowInnerRadius: FVector2D
+    ## if bEnableGlow, outline glow inner radius (0 to 1, 0.5 is edge of character silhouette)
+    ## glow influence will be 1 at GlowInnerRadius.X and 0 at GlowInnerRadius.Y
+    ## UPROPERTY(BlueprintReadWrite, Category="Glow")
+
+  proc initFDepthFieldGlowInfo(): FDepthFieldGlowInfo {.constructor.}
+  proc `==`(other: FDepthFieldGlowInfo): bool {.noSideEffect.}
+  proc `!=`(other: FDepthFieldGlowInfo): bool {.noSideEffect.}
+
+type
+  FFontRenderInfo* {.importcpp, header: "Engine/EngineTypes.h".} = object
+    ## information used in font rendering
+    bClipText*: bool
+      ## whether to clip text
+      ## UPROPERTY(BlueprintReadWrite, Category="FontInfo")
+    bEnableShadow*: bool
+      ## whether to turn on shadowing
+      ## UPROPERTY(BlueprintReadWrite, Category="FontInfo")
+    glowInfo* {.importcpp: "GlowInfo".}: FDepthFieldGlowInfo
+      ## depth field glow parameters (only usable if font was imported with a depth field)
+      ## UPROPERTY(BlueprintReadWrite, Category="FontInfo")
 
 ## static methods from class UEngineTypes
 proc convertToCollisionChannel*(traceType: ETraceTypeQuery): ECollisionChannel {.

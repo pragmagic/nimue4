@@ -35,17 +35,14 @@ const nimModuleFileTemplate = """
 
   extern "C" {void NimMain(void);}
 
-  // struct NimInitializer {
-  //   NimInitializer() {
-  //     NimMain();
-  //   }
-  // };
-  // static NimInitializer nimInitializer;
-
-  class $1GameModule: public FDefaultGameModuleImpl {
-    virtual void StartupModule() {
+  struct NimInitializer {
+    NimInitializer() {
       NimMain();
     }
+  };
+  static NimInitializer nimInitializer;
+
+  class $1GameModule: public FDefaultGameModuleImpl {
   };
 """
 
@@ -157,10 +154,13 @@ proc processFile(file, moduleName: string; outDir: string) =
   if contents.contains(beginTypeMarker):
     let (_, filename, _) = splitFile(file)
 
+    let isUHTAffected = contents.contains(peg"s <- ('UCLASS' / 'UINTERFACE' / 'USTRUCT' / 'UENUM')")
     let includes = extractIncludes(contents, filename)
     let typeDefs = extractTypeDefinitions(contents)
 
-    var headerFileContents = $("#pragma once\n" & intBitsDef & includes & "#include \"" & filename & ".generated.h\"\n" & typeDefs)
+    let generatedInclude = if isUHTAffected: "#include \"" & filename & ".generated.h\"\n" else: ""
+
+    var headerFileContents = $("#pragma once\n" & intBitsDef & includes & generatedInclude & typeDefs)
     var outHeaderDir = outCppDir
     if headerFileContents.contains(exportMarker):
       outHeaderDir = outDir / "Public"
@@ -280,10 +280,11 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string) =
         rootFileContent = rootFileContent & "import \"" & importArg & "\"\n"
         expectedFilenames.incl(file.changeFileExt("h").extractFilename())
 
-    rootFileContent.add("GC_disable()\n")
-
     let isPrimaryModule = (moduleName == projectName)
     let isNimModule = (rootFileContent.len != 0)
+
+    rootFileContent.add("GC_disable()\n")
+
     createModuleFilesIfNeeded(targetDir, moduleName, isNimModule, isPrimaryModule)
     expectedFilenames.incl(moduleName & ".h")
 

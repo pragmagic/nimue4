@@ -8,7 +8,7 @@ uclass(UNimGameEngine of UGameEngine, Config=Engine):
   var defaultRequiredFps {.config.}: cfloat = 60.0
   var maxFrameTime: cfloat = 0.016
 
-  method init(loop: ptr IEngineLoop) {.override, callSuperAfter.} =
+  method init*(loop: ptr IEngineLoop) {.override, callSuperAfter.} =
     var stackTop {.volatile.}: pointer
     {.emit: "setStackBottom((void*)(&`stackTop`));".}
 
@@ -19,7 +19,7 @@ uclass(UNimGameEngine of UGameEngine, Config=Engine):
       requiredFps = this.fixedFrameRate
     this.maxFrameTime = 1.0 / requiredFps
 
-  method tick(delta: float32, isIdleMode: bool) {.override.} =
+  method tick*(delta: float32, isIdleMode: bool) {.override.} =
     var actualFrameTime = epochTime()
     # nimue4 currently doesn't allow calling super in the middle
     {.emit: "`this`->UGameEngine::Tick(`delta`, `isIdleMode`);".}

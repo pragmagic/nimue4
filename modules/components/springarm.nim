@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(USpringArmComponent of USceneComponent, header: "GameFramework/SpringArmComponent.h", notypedef):
+wclass(USpringArmComponent of USceneComponent, header: "GameFramework/SpringArmComponent.h", notypedef):
   ## This component tries to maintain its children at a fixed distance from the parent,
   ## but will retract the children if there is a collision, and spring back when there is no collision.
   ##

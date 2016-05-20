@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(UPawnNoiseEmitterComponent of UActorComponent, header: "Components/PawnNoiseEmitterComponent.h", notypedef):
+wclass(UPawnNoiseEmitterComponent of UActorComponent, header: "Components/PawnNoiseEmitterComponent.h", notypedef):
   ## PawnNoiseEmitterComponent tracks noise event data used by SensingComponents to hear a Pawn.
   ## This component is intended to exist on either a Pawn or its Controller. It does nothing on network clients.
   ## UCLASS(ClassGroup=AI, meta=(BlueprintSpawnableComponent))

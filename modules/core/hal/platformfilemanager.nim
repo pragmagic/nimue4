@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(FPlatformFileManager, header: "HAL/PlatformFilemanager.h"):
+wclass(FPlatformFileManager, header: "HAL/PlatformFilemanager.h"):
   proc initFPlatformFileManager(): FPlatformFileManager {.constructor.}
     ## Constructor
 

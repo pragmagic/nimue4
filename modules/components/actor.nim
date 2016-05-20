@@ -24,7 +24,7 @@ type
     PostSimpleConstructionScript, ## After the simple construction script has been run
     PostUserConstructionScript, ## After the user construction script has been run
 
-class(FActorComponentInstanceData, header: "ComponentInstanceDataCache.h", bycopy):
+wclass(FActorComponentInstanceData, header: "ComponentInstanceDataCache.h", bycopy):
   proc matchesComponent(component: ptr UActorComponent; ComponentTemplate: ptr UObject): bool {.noSideEffect.}
     ## Determines whether this component instance data matches the component
 
@@ -52,7 +52,7 @@ class(FActorComponentInstanceData, header: "ComponentInstanceDataCache.h", bycop
 
   var savedProperties: TArray[uint8]
 
-class(FComponentInstanceDataCache, header: "ComponentInstanceDataCache.h", bycopy):
+wclass(FComponentInstanceDataCache, header: "ComponentInstanceDataCache.h", bycopy):
   ## Cache for component instance data.
   ## Note, does not collect references for GC, so is not safe to GC if the cache is only reference to a UObject.
 
@@ -66,7 +66,7 @@ class(FComponentInstanceDataCache, header: "ComponentInstanceDataCache.h", bycop
 
   proc addReferencedObjects(collector: FReferenceCollector)
 
-class(UActorComponent of UObject, header: "Components/ActorComponent.h", notypedef):
+wclass(UActorComponent of UObject, header: "Components/ActorComponent.h", notypedef):
 # public:
   var primaryComponentTick: FActorComponentTickFunction
     ## Main tick function for the Actor

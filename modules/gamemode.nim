@@ -45,7 +45,7 @@ type
     gameClassName: FString
       ## The class name to use when the alias is specified in a URL
 
-class(AGameMode of AInfo, header: "GameFramework/GameMode.h", notypedef):
+wclass(AGameMode of AInfo, header: "GameFramework/GameMode.h", notypedef):
   ## The GameMode defines the game being played. It governs the game rules, scoring, what actors
   ## are allowed to exist in this game type, and who may enter the game.
   ##

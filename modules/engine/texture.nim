@@ -82,11 +82,17 @@ type
 proc initFUpdateTextureRegion2D*(destX, destY: int32; srcX, srcY: int32; width, height: uint32): FUpdateTextureRegion2D {.
   importcpp: "FUpdateTextureRegion2D(uint32(#), uint32(#), @)", constructor, nodecl.}
 
-class(UTexture of UObject, header: "Engine/Texture.h", notypedef):
+wclass(UTexture of UObject, header: "Engine/Texture.h", notypedef):
   method updateResource()
+  method getSurfaceWidth(): cfloat {.noSideEffect.}
+  method getSurfaceHeight(): cfloat {.noSideEffect.}
+  method createResource(): ptr FTextureResource
+  method getMaterialType(): EMaterialValueType
+  method getAverageBrightness(bIgnoreTrueBlack, bUseGrayscale: bool): cfloat
 
-class(UTexture2D of UTexture, header: "Engine/Texture2D.h", notypedef):
+wclass(UTexture2D of UTexture, header: "Engine/Texture2D.h", notypedef):
   proc updateTextureRegions(mipIndex: int32, numRegions: uint32, regions: ptr FUpdateTextureRegion2D, srcPitch: uint32, srcBpp: uint32, srcData: ptr uint8)
+
 
 proc updateTextureRegions*(texture: ptr UTexture2D, numRegions: uint32, regions: ptr FUpdateTextureRegion2D, srcPitch, srcBpp: uint32, srcData: ptr uint8, regionsMayChange: bool = false) =
   if not regionsMayChange:

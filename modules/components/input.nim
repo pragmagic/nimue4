@@ -33,7 +33,7 @@ type
     keyDelegate* {.importcpp: "KeyDelegate".}: FInputActionUnifiedDelegate
       ## The delegate bound to the key chord
 
-class(UInputComponent of UActorComponent, header: "Components/InputComponent.h", notypedef):
+wclass(UInputComponent of UActorComponent, header: "Components/InputComponent.h", notypedef):
   proc getAxisValue(axisName: FName): cfloat {.noSideEffect.}
     ## Gets the current value of the axis with the specified name.
     ##

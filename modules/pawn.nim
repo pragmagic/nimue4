@@ -1,4 +1,4 @@
-class(APawn of AActor, header: "GameFramework/Pawn.h", notypedef):
+wclass(APawn of AActor, header: "GameFramework/Pawn.h", notypedef):
   ##  Pawn is the base class of all actors that can be possessed by players or AI.
   ##  They are the physical representations of players and creatures in a level.
   ##
@@ -37,7 +37,7 @@ class(APawn of AActor, header: "GameFramework/Pawn.h", notypedef):
     ## Base eye height above collision center.
     ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Camera)
 
-  var autoPossessPlayer: TEnumAsByte[EAutoReceiveInput]
+  var autoPossessPlayer: EAutoReceiveInput
     ## Determines which PlayerController, if any, should automatically possess the pawn when the level starts or when the pawn is spawned.
     ## @see AutoPossessAI
     ##

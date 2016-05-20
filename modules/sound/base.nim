@@ -12,7 +12,7 @@ type EMaxConcurrentResolutionRule {.size: sizeof(cint),
     StopFarthestThenOldest,
       ## When Max Concurrent sounds are active stop the furthest sound.  If all sounds are the same distance then stop the oldest.
 
-class(USoundBase of UObject, header: "Sound/SoundBase.h"):
+wclass(USoundBase of UObject, header: "Sound/SoundBase.h", notypedef):
   var bDebug: bool
     ## When "stat sounds -debug" has been specified, draw this sound's attenuation shape when the sound is audible.
     ## For debugging purpose only.

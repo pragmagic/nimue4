@@ -1,9 +1,11 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(UPawnMovementComponent of UNavMovementComponent, header: "GameFramework/PawnMovementComponent.h", notypedef):
+wclass(UPawnMovementComponent of UNavMovementComponent, header: "GameFramework/PawnMovementComponent.h", notypedef):
   ## PawnMovementComponent can be used to update movement for an associated Pawn.
   ## It also provides ways to accumulate and read directional input in a generic way (with AddInputVector(), ConsumeInputVector(), etc).
   ## @see APawn
+
+  var pawnOwner: ptr APawn
 
   method addInputVector(worldVector: FVector; bForce: bool = false)
     ## Adds the given vector to the accumulated input in world space. Input vectors are usually between 0 and 1 in magnitude.

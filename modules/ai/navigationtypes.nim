@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(FMovementProperties, header: "AI/Navigation/NavigationTypes.h", bycopy):
+wclass(FMovementProperties, header: "AI/Navigation/NavigationTypes.h", bycopy):
   var bCanCrouch: bool
     ## If true, this Pawn is capable of crouching.
     ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=MovementProperties)
@@ -23,7 +23,7 @@ class(FMovementProperties, header: "AI/Navigation/NavigationTypes.h", bycopy):
 
   proc makeFMovementProperties(): FMovementProperties {.constructor.}
 
-class(FNavAgentProperties of FMovementProperties, header: "AI/Navigation/NavigationTypes.h", bycopy):
+wclass(FNavAgentProperties of FMovementProperties, header: "AI/Navigation/NavigationTypes.h", bycopy):
   ## Properties of representation of an 'agent' (or Pawn) used by AI navigation/pathfinding.
 
   var agentRadius: cfloat
@@ -42,17 +42,33 @@ class(FNavAgentProperties of FMovementProperties, header: "AI/Navigation/Navigat
     ## Scale factor to apply to height of bounds when searching for navmesh to project to when nav walking
     ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=MovementProperties)
 
-  proc makeFNavAgentProperties(radius: cfloat = -1'f, height: cfloat = -1'f): FNavAgentProperties {.constructor.}
+  proc makeFNavAgentProperties(radius: cfloat = -1'f32, height: cfloat = -1'f32): FNavAgentProperties {.constructor.}
 
   proc updateWithCollisionComponent(collisionComponent: ptr UShapeComponent)
 
   proc isValid(): bool {.noSideEffect.}
   proc hasStepHeightOverride(): bool {.noSideEffect.}
 
-  proc isEquivalent(other: var FNavAgentProperties, precision: cfloat = 5'f): bool {.noSideEffect.}
+  proc isEquivalent(other: var FNavAgentProperties, precision: cfloat = 5'f32): bool {.noSideEffect.}
 
   proc `==`(other: var FNavAgentProperties) {.noSideEffect.}
 
   proc getExtent(): FVector {.noSideEffect.}
 
   var defaultProperties {.isStatic.}: FNavAgentProperties
+
+type NavNodeRef = uint64
+  ## uniform identifier type for navigation data elements may it be a polygon or graph node
+
+wclass(FNavLocation, header: "AI/Navigation/NavigationTypes.h", bycopy):
+  ## Describes a point in navigation data
+  var location: FVector
+    ## location relative to path's base
+  var nodeRef: NavNodeRef
+    ## node reference in navigation data
+
+  proc initFNavLocation(): FNavLocation {.constructor.}
+  proc hasNodeRef(): bool {.noSideEffect.}
+    ## checks if location has associated navigation node ref
+
+# TODO: the rest

@@ -19,6 +19,9 @@ type
     FromStart,
     FromEnd
 
+converter towchar*(c: char): wchar {.importc: "wchar_t", nodecl.}
+
+# intentionally private:
 proc toUtf8(s: wstring): cstring {.importc: "TCHAR_TO_UTF8", nodecl.}
 proc toUtf8(s: ptr wchar): cstring {.importc: "TCHAR_TO_UTF8", nodecl.}
 
@@ -31,6 +34,7 @@ proc u16*(s: cstring{lit}): wstring {.noSideEffect, importc: "TEXT", nodecl.}
 # proc u16*(s: string{lit}): wstring {.noSideEffect, importc: "TEXT", nodecl.}
 proc u16*(s: string{sym|ident|call|lvalue|param}): FString {.noSideEffect, importcpp: "FString(UTF8_TO_TCHAR(@))", nodecl.}
 
+proc initFString*(): FString {.importcpp: "'0(@)", nodecl, constructor.}
 proc charArray*(s: FString): var TArray[wchar] {.importcpp: "#.GetCharArray(@)", nodecl.}
 proc mid*(s: FString,
          start: Natural,
@@ -63,6 +67,8 @@ proc `&`*(s: FString, c: wchar): FString {.noSideEffect, importcpp: "(# + #)", n
 proc `&`*(s: FString, s2: wstring): FString {.noSideEffect, importcpp: "(# + #)", nodecl.}
 
 proc `&=`*(s: var FString, c: FString or wstring or wchar) {.importcpp: "# += #", nodecl.}
+proc add*(s: var FString, c: FString or wstring) {.importcpp: "# += #", nodecl.}
+proc add*(s: FString, chr: wchar) {.noSideEffect, importcpp: "#.AppendChar(@)", nodecl.}
 
 proc `&`*(x, y: FString): FString {.noSideEffect, importcpp: "(# + #)", nodecl.}
 
@@ -76,7 +82,7 @@ proc toLower*(s: FString): FString {.noSideEffect, importcpp: "#.ToLower(@)", no
 proc isNumeric*(s: FString): bool {.noSideEffect, importcpp: "#.IsNumeric(@)", nodecl.}
 proc align*(s: FString, count: Natural): FString {.noSideEffect, importcpp: "#.LeftPad(@)", nodecl.}
 proc leftAlign*(s: FString, count: Natural): FString {.noSideEffect, importcpp: "#.RightPad(@)", nodecl.}
-proc hash*(s: FString): uint32 {.noSideEffect, importcpp: "#.GetTypeHash(@)".}
+proc hash*(s: FString): uint32 {.noSideEffect, importcpp: "#.GetTypeHash(@)", nodecl.}
 
 proc `[]`*(s: FString, r: Slice[Natural]): FString {.noSideEffect.} =
   result = s.mid(r.a, ord(r.b) - ord(r.a) + 1)
@@ -126,13 +132,17 @@ proc wideString*(s: FString): wstring {.header: "Containers/UnrealString.h", imp
 converter toFString*(s: wstring): FString {.
   header: "Containers/UnrealString.h", importcpp: "'0(@)", nodecl.}
 
-proc toFString*(s: cstring{lit}): FString {.importcpp: "'0(TEXT(@))", nodecl.}
-proc toFString*(s: cstring): FString {.importcpp: "'0(UTF8_TO_TCHAR(@))", nodecl.}
-proc toFString*(s: string{sym|ident|call|lvalue|param}): FString =
+proc toFString*(s: cstring{lit}): FString {.importcpp: "'0(TEXT(@))", nodecl, noSideEffect.}
+proc toFString*(s: cstring): FString {.importcpp: "'0(UTF8_TO_TCHAR(@))", nodecl, noSideEffect.}
+proc toFString*(s: string{sym|ident|call|lvalue|param}): FString {.noSideEffect.} =
   result = toFString(cstring(s))
 proc toFString*(n: int8 or int16 or int32 or int64 or uint8 or uint16 or uint32 or uint64): FString {.
-  importcpp: "'0::FromInt(@)", nodecl.}
-proc toFString*(f: float32): FString {.importcpp: "'0::SanitizeFloat(@)", nodecl.}
+  importcpp: "'0::FromInt(@)", nodecl, noSideEffect.}
+proc toFString*(f: float32): FString {.importcpp: "'0::SanitizeFloat(@)", nodecl, noSideEffect.}
+proc toFString*(c: char): FString {.importcpp: "'0::Chr(@)", nodecl, noSideEffect.}
+
+proc printfToFString*(formatString: wstring): FString {.
+  noSideEffect, header: "Containers/UnrealString.h", importcpp: "'0::Printf(@)", varargs.}
 
 proc hackToImportCstrToNimStr(s: cstring): string {.exportc.} =
   ## a hack to make compiler import "cstrToNimStr"
@@ -146,7 +156,7 @@ proc `$`*(s: FString): string =
 
 # TODO: format, parseInt, parseBool, join, repeat for FString
 
-class(FText, header: "Internationalization/Text.h", bycopy):
+wclass(FText, header: "Internationalization/Text.h", bycopy):
   proc initFText(): FText {.constructor.}
   proc isEmpty(): bool {.noSideEffect.}
   proc isEmptyOrWhitespace(): bool {.noSideEffect.}
@@ -182,7 +192,7 @@ proc `&`*(x, y: FText): FText =
 
 # TODO: currency, date transformation to FText
 
-type EName {.header: "UObject/UnrealNames.h" importcpp: "EName".} = enum
+type EName* {.header: "UObject/UnrealNames.h" importcpp: "EName".} = enum
   NAME_None = 0
 
   # Class property types (name indices are significant for serialization).
@@ -359,19 +369,27 @@ type EName {.header: "UObject/UnrealNames.h" importcpp: "EName".} = enum
   NAME_EditorLayout = 600
   NAME_EditorKeyBindings = 601
 
-class(FName, header: "UObject/NameTypes.h", bycopy):
+wclass(FName, header: "UObject/NameTypes.h", bycopy):
   proc initFName(): FName {.constructor, noSideEffect.}
   proc initFName(s: cstring): FName {.constructor, noSideEffect.}
   proc initFName(s: wstring): FName {.constructor, noSideEffect.}
-  proc fromEName(name: EName): FName {.constructor.}
+  proc initFName(s: wstring or cstring, number: int32): FName {.constructor, noSideEffect.}
+  proc fromEName(name: EName): FName {.constructor, noSideEffect.}
+
   proc cmp(other: FName): int32 {.noSideEffect.}
   proc toString(): FString {.noSideEffect.}
   proc isNone(): bool {.noSideEffect.}
   proc isValid(): bool {.noSideEffect.}
+  proc getNumber(): int32 {.noSideEffect.}
+  proc getPlainNameString(): FString {.noSideEffect.}
+    ## Returns the pure name string without any trailing numbers
 
-proc `<`*[T: FString|FName](x, y: T): bool {.noSideEffect, importcpp: "# < #", nodecl.}
-proc `<=`*[T: FString|FName](x, y: T): bool {.noSideEffect, importcpp: "# <= #", nodecl.}
-proc `==`*[T: FString|FName](x, y: T): bool {.noSideEffect, importcpp: "# == #", nodecl.}
+proc `<`*[T: FString|FName](x, y: T): bool {.noSideEffect, importcpp: "(# < #)", nodecl.}
+proc `<=`*[T: FString|FName](x, y: T): bool {.noSideEffect, importcpp: "(# <= #)", nodecl.}
+proc `==`*[T: FString|FName](x, y: T): bool {.noSideEffect, importcpp: "(# == #)", nodecl.}
+
+proc `==`*(x: FName, y: cstring or wstring): bool {.noSideEffect, importcpp: "(# == #)", nodecl.}
+proc `==`*(x: FName, y: string): bool {.noSideEffect, importcpp: "(# == #->data)", nodecl.}
 
 converter toFName*(s: wstring): FName {.
   header: "UObject/NameTypes.h", importcpp: "'0(@)", nodecl.}
@@ -386,5 +404,17 @@ proc toText*(s: FString): FText {.
 proc toText*(s: FName): FText {.
   noSideEffect, header: "Internationalization/Text.h", importcpp: "'0::FromName(@)".}
 
+proc toText*(s: string): FText {.inline.} =
+  result = s.toFString().toText()
+
+proc toText*(s: wstring): FText {.inline.} =
+  result = s.toFString().toText()
+
 converter toFName*(num: EName): FName =
   result = fromEName(num)
+
+proc `==`*(x: FString, y: string): bool {.noSideEffect, inline.} =
+  result = x == y.toFString()
+proc `==`*(x: string, y: FString): bool {.noSideEffect, inline.} =
+  result = x.toFString() == y
+

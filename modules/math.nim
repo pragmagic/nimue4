@@ -65,12 +65,13 @@ type
 
 proc initFIntPoint*(x,y: int32): FIntPoint {.header: "Math/IntPoint.h", importcpp: "FIntPoint(@)", constructor.}
 
-class(FVector, header: "Math/Vector.h", bycopy):
+wclass(FVector, header: "Math/Vector.h", bycopy):
   var x*: cfloat
   var y*: cfloat
   var z*: cfloat
 
   proc initFVector(x, y, z: cfloat): FVector {.constructor.}
+  proc vec(x, y, z: cfloat): FVector {.constructor.}
 
   proc set(x, y, z: cfloat)
 
@@ -114,6 +115,9 @@ class(FVector, header: "Math/Vector.h", bycopy):
   proc toCompactText(): FText {.noSideEffect.}
     ## Get a short locale aware textural representation of this vector, for compact readable logging.
 
+  proc getSafeNormal(): FVector {.noSideEffect.}
+  proc getUnsafeNormal(): FVector {.noSideEffect.}
+
   proc `+`(other: FVector): FVector {.noSideEffect.}
   proc `+=`(other: FVector)
   proc `-`(other: FVector): FVector {.noSideEffect.}
@@ -138,7 +142,7 @@ class(FVector, header: "Math/Vector.h", bycopy):
 
   proc `^`(other: FVector): FVector {.noSideEffect.}
     ## Cross product
-  proc `|`(other: FVector): FVector {.noSideEffect.}
+  proc `|`(other: FVector): cfloat {.noSideEffect.}
     ## Dot product
 
   proc size(): cfloat
@@ -150,13 +154,13 @@ class(FVector, header: "Math/Vector.h", bycopy):
 proc `*`*(scale: cfloat, vec: FVector): FVector {.importcpp: "(# * #)", nodecl, noSideEffect.}
   ## Gets the result of scaling the vector (multiplying each component by a value).
 
-var ZeroVector* {.importc: "FVector::ZeroVector", header: "Math/Vector.h".}: FVector
+var zeroVector* {.importc: "FVector::ZeroVector", header: "Math/Vector.h".}: FVector
   ## A zero vector (0,0,0)
-var UpVector* {.importc: "FVector::UpVector", header: "Math/Vector.h".}: FVector
+var upVector* {.importc: "FVector::UpVector", header: "Math/Vector.h".}: FVector
   ## World up vector (0,0,1)
-var ForwardVector* {.importc: "FVector::ForwardVector", header: "Math/Vector.h".}: FVector
+var forwardVector* {.importc: "FVector::ForwardVector", header: "Math/Vector.h".}: FVector
   ## World forward vector (1,0,0)
-var RightVector* {.importc: "FVector::RightVector", header: "Math/Vector.h".}: FVector
+var rightVector* {.importc: "FVector::RightVector", header: "Math/Vector.h".}: FVector
   ## World right vector (0,1,0)
 
 proc dist*(v1, v2: FVector): cfloat {.header: "Math/Vector.h", importcpp: "'1::Dist(@)", noSideEffect.}
@@ -189,21 +193,128 @@ type
     center* {.importcpp: "Center".}: FVector
     w* {.importcpp: "W".}: cfloat
 
-  FBoxSphereBounds* {.header: "Math/BoxSphereBounds.h", importcpp.} = object
-    ## Structure for a combined axis aligned bounding box and bounding sphere with the same origin. (28 bytes).
-    origin* {.importcpp: "Origin".}: FVector
-      ## Holds the origin of the bounding box and sphere.
-    boxExtent* {.importcpp: "BoxExtent".}: FVector
-      ## Holds the extent of the bounding box.
-    sphereRadius* {.importcpp: "SphereRadius".}: float
-      ## Holds the radius of the bounding sphere.
+wclass(FBoxSphereBounds, header: "Math/BoxSphereBounds.h", bycopy):
+  ## Structure for a combined axis aligned bounding box and bounding sphere with the same origin. (28 bytes).
+  var origin: FVector
+    ## Holds the origin of the bounding box and sphere.
+  var boxExtent: FVector
+    ## Holds the extent of the bounding box.
+  var sphereRadius: float
+    ## Holds the radius of the bounding sphere.
 
-class(FVector2D, header: "Math/Vector2D.h", bycopy):
+  proc initFBoxSphereBounds(): FBoxSphereBounds {.constructor.}
+    ##* Default constructor.
+
+  proc initFBoxSphereBounds(init: EForceInit): FBoxSphereBounds {.constructor.}
+    ## Creates and initializes a new instance.
+    ##
+    ## @param EForceInit Force Init Enum.
+
+  proc initFBoxSphereBounds(inOrigin: FVector; inBoxExtent: FVector; inSphereRadius: cfloat): FBoxSphereBounds
+    ## Creates and initializes a new instance from the specified parameters.
+    ##
+    ## @param InOrigin origin of the bounding box and sphere.
+    ## @param InBoxExtent half size of box.
+    ## @param InSphereRadius radius of the sphere.
+
+  proc initFBoxSphereBounds(box: FBox; sphere: FSphere): FBoxSphereBounds
+    ## Creates and initializes a new instance from the given Box and Sphere.
+    ##
+    ## @param Box The bounding box.
+    ## @param Sphere The bounding sphere.
+
+  proc initFBoxSphereBounds(box: FBox): FBoxSphereBounds
+    ## Creates and initializes a new instance the given Box.
+    ##
+    ## The sphere radius is taken from the extent of the box.
+    ##
+    ## @param Box The bounding box.
+
+  proc initFBoxSphereBounds(sphere: FSphere): FBoxSphereBounds
+    ## Creates and initializes a new instance for the given sphere.
+
+  proc initFBoxSphereBounds(points: ptr FVector; numPoints: uint32): FBoxSphereBounds
+    ## Creates and initializes a new instance from the given set of points.
+    ##
+    ## The sphere radius is taken from the extent of the box.
+    ##
+    ## @param Points The points to be considered for the bounding box.
+    ## @param NumPoints Number of points in the Points array.
+
+  proc `+`(other: FBoxSphereBounds): FBoxSphereBounds {.noSideEffect.}
+    ## Constructs a bounding volume containing both this and B.
+    ##
+    ## @param Other The other bounding volume.
+    ## @return The combined bounding volume.
+
+  proc computeSquaredDistanceFromBoxToPoint(point: FVector): cfloat {.noSideEffect.}
+    ## Calculates the squared distance from a point to a bounding box
+    ##
+    ## @param Point The point.
+    ## @return The distance.
+
+  proc spheresIntersect(a: FBoxSphereBounds; b: FBoxSphereBounds;
+                        tolerance: cfloat = kindaSmallNumber): bool
+    ## Test whether the spheres from two BoxSphereBounds intersect/overlap.
+    ##
+    ## @param  A First BoxSphereBounds to test.
+    ## @param  B Second BoxSphereBounds to test.
+    ## @param  Tolerance Error tolerance added to test distance.
+    ## @return true if spheres intersect, false otherwise.
+
+  proc boxesIntersect(a: FBoxSphereBounds; b: FBoxSphereBounds): bool
+    ## Test whether the boxes from two BoxSphereBounds intersect/overlap.
+    ##
+    ## @param  A First BoxSphereBounds to test.
+    ## @param  B Second BoxSphereBounds to test.
+    ## @return true if boxes intersect, false otherwise.
+
+  proc getBox(): FBox {.noSideEffect.}
+    ## Gets the bounding box.
+    ##
+    ## @return The bounding box.
+
+  proc getBoxExtrema(extrema: uint32): FVector {.noSideEffect.}
+    ## Gets the extrema for the bounding box.
+    ##
+    ## @param Extrema 1 for positive extrema from the origin, else negative
+    ## @return The boxes extrema
+
+  proc getSphere(): FSphere {.noSideEffect.}
+    ## Gets the bounding sphere.
+    ##
+    ## @return The bounding sphere.
+
+  proc expandBy(expandAmount: cfloat): FBoxSphereBounds {.noSideEffect.}
+    ## Increase the size of the box and sphere by a given size.
+    ##
+    ## @param ExpandAmount The size to increase by.
+    ## @return A new box with the expanded size.
+
+  proc transformBy(m: FMatrix): FBoxSphereBounds {.noSideEffect.}
+    ## Gets a bounding volume transformed by a matrix.
+    ##
+    ## @param M The matrix.
+    ## @return The transformed volume.
+
+  proc transformBy(m: FTransform): FBoxSphereBounds {.noSideEffect.}
+    ## Gets a bounding volume transformed by a FTransform object.
+    ##
+    ## @param M The FTransform object.
+    ## @return The transformed volume.
+
+  proc toString(): FString {.noSideEffect.}
+    ## Get a textual representation of this bounding box.
+    ##
+    ## @return Text describing the bounding box.
+
+wclass(FVector2D, header: "Math/Vector2D.h", bycopy):
   var x: cfloat
   var y: cfloat
 
   proc initFVector2D(x, y: cfloat): FVector2D {.constructor.}
   proc initFVector2D(vec3d: FVector): FVector2D {.constructor.}
+  proc vec2D(x, y: cfloat): FVector2D {.constructor.}
 
   proc set(x,y: cfloat)
 
@@ -269,19 +380,22 @@ class(FVector2D, header: "Math/Vector2D.h", bycopy):
 
   proc `^`(other: FVector2D): FVector2D {.noSideEffect.}
     ## Cross product
-  proc `|`(other: FVector2D): FVector2D {.noSideEffect.}
+  proc `|`(other: FVector2D): cfloat {.noSideEffect.}
     ## Dot product
 
 proc to2D*(v: FVector): FVector2D {.header: "Math/Vector2D.h", importcpp: "'0(@)", constructor.}
-var ZeroVector2D* {.importc: "FVector2D::ZeroVector", header: "Math/Vector2D.h".}: FVector2D
+var zeroVector2D* {.importc: "FVector2D::ZeroVector", header: "Math/Vector2D.h".}: FVector2D
   ## A zero vector (0,0)
-var UnitVector2D* {.importc: "FVector2D::UnitVector", header: "Math/Vector2D.h".}: FVector2D
+var unitVector2D* {.importc: "FVector2D::UnitVector", header: "Math/Vector2D.h".}: FVector2D
   ## A unit vector (1,1)
 
-class(FQuat, header: "Math/Quat.h", notypedef):
+wclass(FQuat, header: "Math/Quat.h", notypedef):
   proc initFQuat(inX, inY, inZ, inW: cfloat): FQuat {.constructor.}
   proc initFQuat(m: FMatrix): FQuat {.constructor.}
   proc initFQuat(r: FRotator): FQuat {.constructor.}
+  proc quat(inX, inY, inZ, inW: cfloat): FQuat {.constructor.}
+  proc quat(m: FMatrix): FQuat {.constructor.}
+  proc quat(r: FRotator): FQuat {.constructor.}
 
   proc `+`(other: FQuat): FQuat {.noSideEffect.}
   proc `+=`(other: FQuat)
@@ -362,10 +476,13 @@ proc quatSquad(quat1, tang1, quat2, tang2: FQuat; alpha: cfloat): FQuat {.
 proc quatCalcTangents(prevP, p, nextP: FQuat; tension: cfloat; outTan: var FQuat) {.
   header: "Math/Quat.h", importcpp: "FQuat::CalcTangents(@)".}
 
-class(FRotator, header: "Math/Rotator.h", notypedef):
+wclass(FRotator, header: "Math/Rotator.h", notypedef):
   proc initFRotator(f: cfloat): FRotator {.constructor.}
   proc initFRotator(pitch, yaw, roll: cfloat): FRotator {.constructor.}
   proc initFRotator(quat: FQuat): FRotator {.constructor.}
+  proc rot(f: cfloat): FRotator {.constructor.}
+  proc rot(pitch, yaw, roll: cfloat): FRotator {.constructor.}
+  proc rot(quat: FQuat): FRotator {.constructor.}
 
   proc `+`(other: FRotator): FRotator {.noSideEffect.}
   proc `+=`(other: FRotator)
@@ -422,9 +539,9 @@ class(FRotator, header: "Math/Rotator.h", notypedef):
 
   proc containsNaN(): bool {.noSideEffect.}
 
-var ZeroRotator* {.importc: "FRotator::ZeroRotator", header: "Math/Rotator.h".}: FRotator
+var zeroRotator* {.importc: "FRotator::ZeroRotator", header: "Math/Rotator.h".}: FRotator
 
-class(FPlane, header: "Math/Plane.h", notypedef):
+wclass(FPlane, header: "Math/Plane.h", notypedef):
   proc initFPlane(): FPlane {.constructor.}
 
   proc initFPlane(x, y, z, w: cfloat) {.constructor.}
@@ -458,10 +575,10 @@ class(FPlane, header: "Math/Plane.h", notypedef):
     ## Gets the result of dividing each component of the vector by a value.
   proc `/=`(scale: cfloat)
 
-  proc `|`(other: FPlane): FPlane {.noSideEffect.}
+  proc `|`(other: FPlane): cfloat {.noSideEffect.}
     ## Dot product
 
-class(FMatrix, header: "Math/Matrix.h", notypedef):
+wclass(FMatrix, header: "Math/Matrix.h", notypedef):
   proc initFMatrix(x,y,z,w: FPlane): FMatrix {.constructor.}
   proc initFMatrix(x,y,z,w: FVector): FMatrix {.constructor.}
 
@@ -534,12 +651,22 @@ class(FMatrix, header: "Math/Matrix.h", notypedef):
   proc toString(): FString {.noSideEffect.}
   proc debugPrint() {.noSideEffect.}
 
-class(TRange[T], header: "Math/Range.h"):
+wclass(TRange[T], header: "Math/Range.h"):
   proc initRange(lowerBound: T, upperBound: T): TRange[T] {.constructor.}
   proc hasUpperBound(): bool
   proc hasLowerBound(): bool
   proc getLowerBoundValue(): T
   proc getUpperBoundValue(): T
+
+wclass(FIntRect, header: "Math/IntRect.h"):
+  var min: FIntPoint
+    ## Holds the first pixel line/row (like in Win32 RECT).
+  var max: FIntPoint
+    ## Holds the last pixel line/row (like in Win32 RECT).
+  proc initFIntRect(): FIntRect {.constructor.}
+  proc initFIntRect(x0, y0, x1, y1: int32): FIntRect {.constructor.}
+  proc initFIntRect(inMin, inMax: FIntPoint): FIntRect {.constructor.}
+  # TODO: interface fully
 
 type
   FFloatRange {.importcpp, header: "Math/Range.h".} = TRange[cfloat]
@@ -554,20 +681,96 @@ proc colorFromHex(hexString: FString): FColor {.
 
 proc initFColor*(r,g,b,a: uint8): FColor {.importcpp: "FColor(@)", nodecl, constructor.}
 
-class(FTransform, header: "Math/ScalarRegister.h", notypedef):
+wclass(FLinearColor, header: "Math/Color.h", notypedef):
+  proc toFColor(bSRGB: bool): FColor
+    ## Quantizes the linear color and returns the result as a FColor with optional sRGB conversion and quality as goal.
+
+wclass(FTransform, header: "Math/ScalarRegister.h", notypedef):
   proc getTranslation(): FVector {.noSideEffect.}
   proc getRotation(): FQuat {.noSideEffect.}
   proc getScale3D(): FVector {.noSideEffect.}
 
 var whiteColor* {.importc: "FColor::White", header: "Math/Color.h".}: FColor
-var identityTransform* {.importc: "FTransform::Identity", header: "Math/ScalarRegister.h".}: FTransform
+var blackColor* {.importc: "FColor::Black", header: "Math/Color.h".}: FColor
+var transparentColor* {.importc: "FColor::Transparent", header: "Math/Color.h".}: FColor
+var redColor* {.importc: "FColor::Red", header: "Math/Color.h".}: FColor
+var greenColor* {.importc: "FColor::Green", header: "Math/Color.h".}: FColor
+var blueColor* {.importc: "FColor::Blue", header: "Math/Color.h".}: FColor
+var yellowColor* {.importc: "FColor::Yellow", header: "Math/Color.h".}: FColor
 
-converter vectorFromForceInit(f: EForceInit): FVector {.importcpp, constructor, header: "Math/Vector.h".}
-converter colorFromForceInit(f: EForceInit): FColor {.importcpp, constructor, header: "Math/Color.h".}
-converter vector2DFromForceInit(f: EForceInit): FVector2D {.importcpp, constructor, header: "Math/Vector2D.h".}
+var whiteLinearColor* {.importc: "FLinearColor::White", header: "Math/Color.h".}: FLinearColor
+var blackLinearColor* {.importc: "FLinearColor::Black", header: "Math/Color.h".}: FLinearColor
+var transparentLinearColor* {.importc: "FLinearColor::Transparent", header: "Math/Color.h".}: FLinearColor
+var redLinearColor* {.importc: "FLinearColor::Red", header: "Math/Color.h".}: FLinearColor
+var greenLinearColor* {.importc: "FLinearColor::Green", header: "Math/Color.h".}: FLinearColor
+var blueLinearColor* {.importc: "FLinearColor::Blue", header: "Math/Color.h".}: FLinearColor
+var yellowLinearColor* {.importc: "FLinearColor::Yellow", header: "Math/Color.h".}: FLinearColor
+
+var identityTransform* {.importc: "FTransform::Identity", header: "Math/ScalarRegister.h".}: FTransform
+var identityQuat* {.importc: "FQuat::Identity", header: "Math/Quat.h".}: FQuat
+
+converter vectorFromForceInit(f: EForceInit): FVector {.importcpp: "FVector(@)", constructor, header: "Math/Vector.h".}
+converter colorFromForceInit(f: EForceInit): FColor {.importcpp: "FColor(@)", constructor, header: "Math/Color.h".}
+converter vector2DFromForceInit(f: EForceInit): FVector2D {.importcpp: "FVector2D(@)", constructor, header: "Math/Vector2D.h".}
 
 type
   FVector_NetQuantize* {.header: "Engine/NetSerialization.h", importcpp, bycopy.} = object of FVector
   FVector_NetQuantize10* {.header: "Engine/NetSerialization.h", importcpp, bycopy.} = object of FVector
   FVector_NetQuantize100* {.header: "Engine/NetSerialization.h", importcpp, bycopy.} = object of FVector
   FVector_NetQuantizeNormal* {.header: "Engine/NetSerialization.h", importcpp, bycopy.} = object of FVector
+
+
+proc sqr*(f: float32): float32 {.
+  importc: "FMath::Square", header: "Math/UnrealMathUtility.h".}
+# Special-case interpolation
+
+proc vInterpNormalRotationTo*(current: FVector; target: FVector; deltaTime: cfloat;
+                             rotationSpeedDegrees: cfloat): FVector {.
+  importc: "FMath::VInterpNormalRotationTo", header: "Math/UnrealMathUtility.h".}
+  ## Interpolate a normal vector Current to Target, by interpolating the angle between those vectors with constant step.
+
+
+proc vInterpConstantTo*(current: FVector; target: FVector; deltaTime: cfloat;
+                       interpSpeed: cfloat): FVector {.
+  importc: "FMath::VInterpConstantTo", header: "Math/UnrealMathUtility.h".}
+  ## Interpolate vector from Current to Target with constant step
+
+proc vInterpTo*(current: FVector; target: FVector; deltaTime: cfloat;
+               interpSpeed: cfloat): FVector {.
+  importc: "FMath::VInterpTo", header: "Math/UnrealMathUtility.h".}
+  ## Interpolate vector from Current to Target. Scaled by distance to Target, so it has a strong start speed and ease out.
+
+proc vector2DInterpConstantTo*(current: FVector2D; target: FVector2D;
+                              deltaTime: cfloat; interpSpeed: cfloat): FVector2D {.
+  importc: "FMath::Vector2DInterpConstantTo", header: "Math/UnrealMathUtility.h".}
+  ## Interpolate vector2D from Current to Target with constant step
+
+
+proc vector2DInterpTo*(current: FVector2D; target: FVector2D; deltaTime: cfloat;
+                      interpSpeed: cfloat): FVector2D {.
+  importc: "FMath::Vector2DInterpTo", header: "Math/UnrealMathUtility.h".}
+  ## Interpolate vector2D from Current to Target. Scaled by distance to Target, so it has a strong start speed and ease out.
+
+proc rInterpConstantTo*(current: FRotator; target: FRotator; deltaTime: cfloat;
+                       interpSpeed: cfloat): FRotator {.
+  importc: "FMath::RInterpConstantTo", header: "Math/UnrealMathUtility.h".}
+  ## Interpolate rotator from Current to Target with constant step
+
+proc rInterpTo*(current: FRotator; target: FRotator; deltaTime: cfloat;
+               interpSpeed: cfloat): FRotator {.
+  importc: "FMath::RInterpTo", header: "Math/UnrealMathUtility.h".}
+  ## Interpolate rotator from Current to Target. Scaled by distance to Target, so it has a strong start speed and ease out.
+
+proc fInterpConstantTo*(current: cfloat; target: cfloat; deltaTime: cfloat;
+                       interpSpeed: cfloat): cfloat {.
+  importc: "FMath::FInterpConstantTo", header: "Math/UnrealMathUtility.h".}
+  ## Interpolate float from Current to Target with constant step
+
+proc fInterpTo*(current: cfloat; target: cfloat; deltaTime: cfloat; interpSpeed: cfloat): cfloat {.
+  importc: "FMath::FInterpTo", header: "Math/UnrealMathUtility.h".}
+  ## Interpolate float from Current to Target. Scaled by distance to Target, so it has a strong start speed and ease out.
+
+proc fInterpTo*(current: FLinearColor; target: FLinearColor; deltaTime: cfloat;
+               interpSpeed: cfloat): FLinearColor {.
+  importc: "FMath::FInterpTo", header: "Math/UnrealMathUtility.h".}
+  ## Interpolate Linear Color from Current to Target. Scaled by distance to Target, so it has a strong start speed and ease out.

@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(AGameState of AInfo, header: "GameFramework/GameState.h", notypedef):
+wclass(AGameState of AInfo, header: "GameFramework/GameState.h", notypedef):
   var gameModeClass: TSubclassOf[AGameMode]
     ## Class of the server's game mode, assigned by GameMode.
     ## UPROPERTY(replicatedUsing=OnRep_GameModeClass)

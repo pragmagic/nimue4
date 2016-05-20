@@ -16,7 +16,8 @@ type
     tkClass,
     tkStruct,
     tkInterface,
-    tkEnum
+    tkEnum,
+    tkPlainClass
 
   VarDeclaration = ref object
     name: Rope
@@ -40,6 +41,8 @@ type
     isUFunction: bool
     isStatic: bool
     isBpExtendable: bool
+    isConst: bool
+    isObjInitializer: bool
     extendableName: Rope
     args: seq[VarDeclaration]
     uFunctionParamStr: Rope
@@ -85,6 +88,17 @@ proc isBlueprintImplementable(meth: TypeMethod): bool =
 proc isImplementationNeeded(meth: TypeMethod): bool =
   result = not (meth.isAbstract or meth.isBlueprintNative() or meth.isBlueprintImplementable())
 
+proc isNimOnly(meth: TypeMethod): bool =
+  result = meth.isObjInitializer
+
+template findIt[T](s: seq[T], pred: expr): T =
+  var result {.gensym.}: T
+  for it {.inject.} in s:
+    if pred:
+      result = it
+      break
+  result
+
 proc cppReturnType(n: NimNode): Rope =
   assert(RoutineNodes.contains(n.kind))
 
@@ -129,6 +143,7 @@ proc toCppSignature(meth: TypeMethod, methodName: Rope): Rope {.compileTime.} =
   result.add(if meth.isStatic: "static " else: nil)
   result.add(if not meth.isConstructor: meth.node.cppReturnType() else: nil)
   result.add(" " & methodName & "(" & toCppArgList(meth.args, true, false) & ")")
+  result.add(if meth.isConst: " const" else: nil)
   result.add(if meth.isOverride: " override" else: nil)
 
 proc toCppFieldName(name: string, valueType: string): Rope {.compileTime.} =
@@ -285,12 +300,17 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
 
   let name = $(node[0].basename.ident)
 
+  # TODO: move into the loop below for better performance
   let isOverride = removePragma(node, "override")
   let isConstructor = removePragma(node, "constructor")
   let isAbstract = removePragma(node, "abstract")
   let isVirtual = removePragma(node, "virtual") or (node.kind == nnkMethodDef) or isOverride or isAbstract
   let isCallSuper = removePragma(node, "callSuper")
   let isCallSuperAfter = removePragma(node, "callSuperAfter")
+  let isConst = removePragma(node, "thisConst")
+  let isStatic = removePragma(node, "isStatic")
+  let isObjInitializer = removePragma(node, "objInitializer")
+  # TODO: more checks for objInitializer
 
   var isUFunction = removePragma(node, "ue")
   var uFunctionParamStr: Rope
@@ -342,10 +362,14 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
   if isOverride and isAbstract:
     parseError(node, "cannot override and be abstract at the same time")
 
-  var procNode = node
-  if node.kind == nnkMethodDef:
-    procNode = newNimNode(nnkProcDef)
-    node.copyChildrenTo(procNode)
+  var procNode = newNimNode(nnkProcDef)
+  node.copyChildrenTo(procNode)
+
+  # remove "type modifiers" such as "bycopy"
+  for i in 1 .. <procNode[3].len:
+    var identDefs = procNode[3][i]
+    if identDefs[1].kind == nnkCommand:
+      identDefs[1] = identDefs[1][1]
 
   let methName = rope(if isConstructor: className else: name)
   result = TypeMethod(
@@ -357,8 +381,11 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
     isConstructor: isConstructor,
     isCallSuper: isCallSuper,
     isCallSuperAfter: isCallSuperAfter,
+    isConst: isConst,
     isExported: true, # TODO
     isUFunction: isUFunction,
+    isObjInitializer: isObjInitializer,
+    isStatic: isStatic,
     uFunctionParamStr: uFunctionParamStr,
     isBpExtendable: isBpExtendable,
     extendableName: extendableName,
@@ -366,20 +393,21 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
     node: procNode
   )
 
-proc parseUFunction(className: string, node: NimNode): TypeMethod =
+proc parseUFunction(className: string, node: NimNode): seq[TypeMethod] =
   assert(node.kind == nnkCall and node[0].ident == !"UFunction")
-
   const supportedRoutines = {nnkProcDef, nnkMethodDef}
-  if node[^1].kind != nnkStmtList or not supportedRoutines.contains(node[^1][0].kind):
-    parseError(node, "expected proc or mehtod declaration after `UFunction`")
 
-  result = parseMethod(className, node[^1][0])
+  let paramString = extractParamString(node)
+  result = newSeq[TypeMethod](node[^1].len)
+  for i in 0..<node[^1].len:
+    if not supportedRoutines.contains(node[^1][i].kind):
+      parseError(node[^1][0], "expected proc or mehtod declaration after `UFunction`")
+    result[i] = parseMethod(className, node[^1][i])
+    if result[i].isUFunction:
+      parseError(node, "shortcut pragmas are not allowed for fully-specified UFunction")
 
-  if result.isUFunction:
-    parseError(node, "shortcut pragmas are not allowed for fully-specified UFunction")
-
-  result.isUFunction = true
-  result.uFunctionParamStr = extractParamString(node)
+    result[i].isUFunction = true
+    result[i].uFunctionParamStr = paramString
 
 proc extractNames(kind: TypeKind, definition: NimNode): tuple[name: string, parentNames: seq[string]] =
   var name: string = nil
@@ -400,17 +428,23 @@ proc extractNames(kind: TypeKind, definition: NimNode): tuple[name: string, pare
         parseError(definition[2], "parent type(s) expected")
 
   # Verify UE type naming conventions
-  assert(name.len > 2 and name[0].isUpper() and name[1].isUpper())
+  macroCheck(definition, name.len > 2 and name[0].isUpper() and name[1].isUpper(),
+             "The name must follow UE4 naming conventions (have a proper prefix letter)")
   case kind:
     of tkClass:
-      assert(name.startsWith("F") or name.startsWith("A") or name.startsWith("U"))
-    of tkStruct:
-      assert(name.startsWith("F"))
+      macroCheck(definition, name.startsWith("F") or name.startsWith("A") or name.startsWith("U"),
+                 "Class name must start with A, U or F letter, depending on parent class") # TODO: check parent class
+    of tkStruct, tkPlainClass:
+      macroCheck(definition, name.startsWith("F"),
+                 "Struct name must start with an F")
     of tkInterface:
-      assert(name.startsWith("I"))
-      assert(parentNames.allIt(it.startsWith("I")))
+      macroCheck(definition, name.startsWith("I"),
+                 "Interface name must start with an I")
+      macroCheck(definition, parentNames.allIt(it.startsWith("I")),
+                 "Interface must only inherit from other interfaces")
     of tkEnum:
-      assert(name.startsWith("E"))
+      macroCheck(definition, name.startsWith("E"),
+                 "Enum must start with an E")
 
   result = (name, parentNames)
 
@@ -447,6 +481,7 @@ proc genCppMethod(typeDef: TypeDefinition, meth: TypeMethod): Rope {.compileTime
     # friend declaration is needed so that Nim procs have access to
     # private/protected fields
     result.add(friendSignature)
+
   let doc = meth.node.doc()
   if doc != nil:
     result.add("/** \n")
@@ -464,6 +499,7 @@ proc genCppMethod(typeDef: TypeDefinition, meth: TypeMethod): Rope {.compileTime
 
 proc genCppMethods(typeDef: TypeDefinition): Rope {.compileTime.} =
   for meth in typeDef.methods:
+    if meth.isNimOnly(): continue
     result.add(genCppMethod(typeDef, meth))
     if meth.isBpExtendable:
       var bpMeth = TypeMethod(
@@ -482,6 +518,7 @@ proc genCppMethods(typeDef: TypeDefinition): Rope {.compileTime.} =
 proc genCppImplementationCode(typeDef: TypeDefinition): string {.compileTime.} =
   var code: Rope
   for meth in typeDef.methods:
+    if meth.isNimOnly(): continue
     let methNameCapitalized = ($meth.name).capitalize()
     if meth.isBlueprintNative:
       code.add(meth.node.cppReturnType())
@@ -495,13 +532,29 @@ proc genCppImplementationCode(typeDef: TypeDefinition): string {.compileTime.} =
       code.add(typeDef.name & "::" & methNameCapitalized)
       code.add("(" & toCppArgList(meth.args, true, false) & ")")
 
+      let invocationArgs = meth.args.mapIt($(it.name)).join(", ")
+      var superInvocation = if meth.isConstructor: rope("Super") & "(" & invocationArgs & ")"
+                            else: rope("Super::") & methNameCapitalized & "(" & invocationArgs & ");\n"
+      let objInitializer = if meth.isConstructor: typeDef.methods.findIt(it.isObjInitializer) else: nil
+
+      if meth.isConstructor:
+        if objInitializer != nil:
+          if invocationArgs.len > 0:
+            parseError(meth.node, "objInitializer is only allowed for default (no arg) constructor")
+          superInvocation = rope("Super") & "(*`" & objInitializer.genName & "`(FObjectInitializer::Get()))"
+        if typeDef.parentNames.len > 0:
+          code.add(":")
+          code.add(superInvocation)
+
+      if meth.isConst:
+        code.add(" const")
+
       code.add(" {\n ")
 
-      let invocationArgs = meth.args.mapIt($(it.name)).join(", ")
-      let superInvocation = rope("Super::") & methNameCapitalized &
-          "(" & invocationArgs & ");\n"
-      if meth.isCallSuper:
+      if meth.isCallSuper and not meth.isConstructor:
         code.add(superInvocation)
+      elif meth.isConstructor and typeDef.parentNames.len == 0 and objInitializer != nil:
+        code.add("`" & objInitializer.genName & "`(FObjectInitializer::Get());\n")
 
       if meth.node.body.kind != nnkEmpty:
         var invocationCode: Rope
@@ -511,7 +564,7 @@ proc genCppImplementationCode(typeDef: TypeDefinition): string {.compileTime.} =
           invocationCode.add(arg.name)
         let needReturn = not(meth.isBpExtendable or meth.isCallSuperAfter or meth.isConstructor or $(meth.node.cppReturnType()) == "void")
         let returnOrNothing = rope(if needReturn: "return" else: "")
-        var thisOrNothing = rope(if not meth.isStatic: "this" else: "")
+        var thisOrNothing = rope(if meth.isStatic: "" elif meth.isConst: "const_cast<" & $typeDef.name & "*>(this)" else: "this")
         if thisOrNothing.len != 0 and invocationCode.len != 0:
           invocationCode = ", " & invocationCode
         invocationCode = thisOrNothing & invocationCode
@@ -539,18 +592,20 @@ proc genCppDeclarationCode(typeDef: TypeDefinition): string {.compileTime.} =
     of tkClass: "UCLASS($#)\n" % $typeDef.paramStr
     of tkStruct: "USTRUCT($#)\n" % $typeDef.paramStr
     of tkEnum: "UENUM($#)\n" % $typeDef.paramStr
-    of tkInterface: ""
+    of tkInterface, tkPlainClass: ""
 
   let generatedBodyMacro = case typeDef.kind:
     of tkClass: "GENERATED_BODY()\n"
     of tkStruct: "GENERATED_USTRUCT_BODY()\n"
     of tkInterface: "GENERATED_IINTERFACE_BODY()\n"
-    of tkEnum: ""
+    of tkEnum, tkPlainClass: ""
 
   let typeKindStr = case typeDef.kind:
-    of tkClass, tkInterface: "class"
+    of tkClass, tkInterface, tkPlainClass: "class"
     of tkStruct: "struct"
     of tkEnum: "enum class"
+
+  let isAbstractClass = typeDef.methods.anyIt(it.isAbstract)
 
   var inheritanceExpr = if typeDef.parentNames.len == 0: nil
     else: rope(" : ") & typeDef.parentNames.mapIt("public `" & it & "`").join(", ") & " "
@@ -584,6 +639,7 @@ $2::$2(const `FObjectInitializer`& ObjectInitializer): Super(ObjectInitializer)
   code.add(inheritanceExpr)
   code.add("{\n")
 
+  # if not isAbstractClass:
   code.add(generatedBodyMacro)
 
   if typeDef.kind != tkEnum:
@@ -601,7 +657,7 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
   var methDefs: seq[NimNode] = @[]
   for meth in typeDef.methods:
     var nodeCopy = meth.node.copyNimTree()
-    if not typeDef.isUtilityType:
+    if not (typeDef.isUtilityType or meth.isStatic or meth.isObjInitializer):
       let thisDef = newNimNode(nnkIdentDefs).add(
         ident("this"), newNimNode(nnkPtrTy).add(ident($typeDef.name)), newEmptyNode())
       nodeCopy[3].insert(1, thisDef)
@@ -647,7 +703,7 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
     "\n  " & typeDef.fields.mapIt($it.name).join(",")
     else: ""
 
-  var typeDecl = parseStmt("""type $1* {.header: "$2", importcpp: "$1"$3.} = $4$5$6""".format(
+  var typeDecl = parseStmt("""type $1* {.header: "$2", importcpp: "$1"$3, bycopy, inheritable.} = $4$5$6""".format(
     typeDef.name, typeDef.headerName, additionalPragmas, nimTypeKind, ofPostfix, enumFields))
 
   if typeDef.kind != tkEnum:
@@ -716,11 +772,12 @@ proc parseType(kind: TypeKind, definition: NimNode, callSite: NimNode): TypeDefi
           assert(kind != tkInterface)
           fields.add(parseUProperty(kind, statement))
         elif statement[0].ident == !"UFunction":
-          var meth = parseUFunction(name, statement)
-          if kind == tkInterface:
-            meth.isVirtual = true
-            meth.isAbstract = true
-          methods.add(meth)
+          var ufunctions = parseUFunction(name, statement)
+          for meth in ufunctions:
+            if kind == tkInterface:
+              meth.isVirtual = true
+              meth.isAbstract = true
+          methods.add(ufunctions)
         else:
           parseError(statement, "expected UProperty or UFunction")
       of nnkVarSection:
@@ -900,6 +957,10 @@ macro uinterface*(definition: expr, body: stmt): stmt {.immediate.} =
 
 macro uenum*(definition: expr, body: stmt): stmt {.immediate.} =
   let typeDef = parseType(tkEnum, definition, callsite())
+  result = genType(typeDef)
+
+macro class*(definition: expr, body: stmt): stmt {.immediate.} =
+  let typeDef = parseType(tkPlainClass, definition, callsite())
   result = genType(typeDef)
 
 macro blueprint*(function: stmt): stmt {.immediate.} =

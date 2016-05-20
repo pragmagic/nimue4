@@ -68,7 +68,7 @@ declareBuiltinDelegate(FOnSelectedLevelsChangedEvent, dkMulticast, "Engine/World
 declareBuiltinDelegate(FOnNetTickEvent, dkMulticast, "Engine/World.h")
 declareBuiltinDelegate(FOnTickFlushEvent, dkMulticast, "Engine/World.h")
 
-class(UWorld of UObject, header: "Engine/World.h", notypedef):
+wclass(UWorld of UObject, header: "Engine/World.h", notypedef):
 # when WITH_EDITORONLY_DATA:
   # ## List of all the layers referenced by the world's actors
   # ## UPROPERTY()
@@ -258,7 +258,7 @@ class(UWorld of UObject, header: "Engine/World.h", notypedef):
   var bDoDelayedUpdateCullDistanceVolumes: bool
     ## True we want to execute a call to UpdateCulledTriggerVolumes during Tick
 
-  var worldType: TEnumAsByte[EWorldType]
+  var worldType: EWorldType
     ## If true, this is a preview world used for editor tools, and not an actual loaded map world
 
   var bHack_Force_UsesGameHiddenFlags_True: bool
@@ -1483,13 +1483,13 @@ class(UWorld of UObject, header: "Engine/World.h", notypedef):
     ## to give caller an opportunity to set parameters beforehand.  Caller is responsible for invoking construction
     ## manually by calling UGameplayStatics::FinishSpawningActor (see AActor::OnConstruction).
 
-  proc getAuthGameMode[T](): ptr T {.noSideEffect.}
+  proc getAuthGameMode[T](): ptr T {.cppname: "#.GetAuthGameMode<'*0>()"noSideEffect.}
     ## Returns the current GameMode instance cast to the template type.
     ## This can only return a valid pointer on the server. Will always return null on a client
 
-  proc getAuthGameMode(): ptr AGameMode {.noSideEffect.}
-    ## Returns the current GameMode instance.
-    ## This can only return a valid pointer on the server. Will always return null on a client
+  # proc getAuthGameMode(): ptr AGameMode {.noSideEffect.}
+  #   ## Returns the current GameMode instance.
+  #   ## This can only return a valid pointer on the server. Will always return null on a client
 
   proc getGameState[t](): ptr t {.noSideEffect.}
     ## Returns the current GameState instance cast to the template type.
@@ -1799,12 +1799,12 @@ class(UWorld of UObject, header: "Engine/World.h", notypedef):
   ## 	/** If the specified package contains a redirector to a UWorld, that UWorld is returned. Otherwise, nil is returned. */
   ## 	static UWorld* FollowWorldRedirectorInPackage(UPackage* Package, UObjectRedirector** OptionalOutRedirector = nil);
 
-proc getNonDefaultPhysicsVolumeIterator(world: ptr UWorld): TArrayConstIterator[ptr APhysicsVolume] {.importcpp: "GetNonDefaultPhysicsVolumeIterator", nodecl, noSideEffect.}
-proc getLevelIterator(world: ptr UWorld): TArrayConstIterator[ptr ULevel] {.importcpp :"GetLevelIterator", nodecl, noSideEffect.}
-proc getAutoActivateCameraIterator(world: ptr UWorld): TArrayConstIterator[ptr ACameraActor] {.importcpp: "GetAutoActivateCameraIterator", nodecl, noSideEffect.}
-proc getPlayerControllerIterator(world: ptr UWorld): TArrayConstIterator[ptr APlayerController] {.importcpp: "GetPlayerControllerIterator", nodecl, noSideEffect.}
-proc getPawnIterator(world: ptr UWorld): TArrayConstIterator[ptr APawn] {.importcpp: "GetPawnIterator", nodecl, noSideEffect.}
-proc getControllerIterator(world: ptr UWorld): TArrayConstIterator[ptr AController] {.importcpp: "GetControllerIterator", nodecl, noSideEffect.}
+proc getNonDefaultPhysicsVolumeIterator(world: ptr UWorld): TArrayConstIterator[TAutoWeakObjectPtr[APhysicsVolume]] {.importcpp: "GetNonDefaultPhysicsVolumeIterator", nodecl, noSideEffect.}
+proc getLevelIterator(world: ptr UWorld): TArrayConstIterator[TAutoWeakObjectPtr[ULevel]] {.importcpp :"GetLevelIterator", nodecl, noSideEffect.}
+proc getAutoActivateCameraIterator(world: ptr UWorld): TArrayConstIterator[TAutoWeakObjectPtr[ACameraActor]] {.importcpp: "GetAutoActivateCameraIterator", nodecl, noSideEffect.}
+proc getPlayerControllerIterator(world: ptr UWorld): TArrayConstIterator[TAutoWeakObjectPtr[APlayerController]] {.importcpp: "GetPlayerControllerIterator", nodecl, noSideEffect.}
+proc getPawnIterator(world: ptr UWorld): TArrayConstIterator[TAutoWeakObjectPtr[APawn]] {.importcpp: "GetPawnIterator", nodecl, noSideEffect.}
+proc getControllerIterator(world: ptr UWorld): TArrayConstIterator[TAutoWeakObjectPtr[AController]] {.importcpp: "GetControllerIterator", nodecl, noSideEffect.}
 
 iterator levels*(world: ptr UWorld): ptr ULevel =
   var it = getLevelIterator(world)
@@ -1819,14 +1819,14 @@ iterator nonDefaultPhysicsVolumes*(world: ptr UWorld): ptr APhysicsVolume =
     yield it.value()
     it.next()
 
-iterator autoActivateCameraIterator*(world: ptr UWorld): ptr ACameraActor =
+iterator autoActivateCameras*(world: ptr UWorld): ptr ACameraActor =
   ## CameraActors that auto-activate for PlayerControllers.
   var it = getAutoActivateCameraIterator(world)
   while it.isValid:
     yield it.value()
     it.next()
 
-iterator playerControllerIterator*(world: ptr UWorld): ptr APlayerController =
+iterator playerControllers*(world: ptr UWorld): ptr APlayerController =
   ## Iterator for the player controller list
   var it = getPlayerControllerIterator(world)
   while it.isValid:

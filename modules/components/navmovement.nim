@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(UNavMovementComponent of UMovementComponent, header: "GameFramework/NavMovementComponent.h", notypedef):
+wclass(UNavMovementComponent of UMovementComponent, header: "GameFramework/NavMovementComponent.h", notypedef):
   ## NavMovementComponent defines base functionality for MovementComponents
   ## that move any 'agent' that may be involved in AI pathfinding.
 

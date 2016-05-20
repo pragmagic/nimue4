@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(UCameraAnim of UObject, header: "Camera/CameraAnim.h"):
+wclass(UCameraAnim of UObject, header: "Camera/CameraAnim.h"):
   ## A predefined animation to be played on a camera
   var cameraInterpGroup: ptr UInterpGroup
     ## The UInterpGroup that holds our actual interpolation data.

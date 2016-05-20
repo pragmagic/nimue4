@@ -1,6 +1,90 @@
 # Copyright 2016 Xored Software, Inc.
 
 type
+  ECollisionShape {.importcpp: "ECollisionShape::Type", pure, header: "WorldCollision.h", size: sizeof(cint).} = enum
+    ## Types of Collision Shapes that are used by Trace
+    Line,
+    Box,
+    Sphere,
+    Capsule
+
+  ShapeBox {.importcpp: "FCollisionShape::Box", nodecl.} = object
+    halfExtentX {.importcpp: "HalfExtentX".}: cfloat
+    halfExtentY {.importcpp: "HalfExtentY".}: cfloat
+    halfExtentZ {.importcpp: "HalfExtentZ".}: cfloat
+
+  ShapeSphere {.importcpp: "FCollisionShape::Sphere", nodecl.} = object
+    radius {.importcpp: "Radius".}: cfloat
+
+  ShapeCapsule {.importcpp: "FCollisionShape::Capsule", nodecl.} = object
+    radius {.importcpp: "Radius".}: cfloat
+    halfHeight {.importcpp: "HalfHeight".}: cfloat
+
+wclass(FCollisionShape, header: "WorldCollision.h", bycopy):
+  var shapeType: ECollisionShape
+  var box: ShapeBox
+  var sphere: ShapeSphere
+  var capusle: ShapeCapsule
+
+  proc initFCollisionShape(): FCollisionShape {.constructor.}
+
+  proc isLine(): bool {.noSideEffect.}
+    ## Is the shape currently a Line (Default)?
+
+  proc isBox(): bool {.noSideEffect.}
+    ## Is the shape currently a box?
+
+  proc isSphere(): bool {.noSideEffect.}
+    ## Is the shape currently a sphere?
+
+  proc isCapsule(): bool {.noSideEffect.}
+    ## Is the shape currently a capsule?
+
+  proc setBox(halfExtent: FVector)
+    ## Utility function to Set Box and dimension
+
+  proc setSphere(radius: cfloat)
+    ## Utility function to set Sphere with Radius
+
+  proc setCapsule(radius: cfloat; halfHeight: cfloat)
+    ## Utility function to set Capsule with Radius and Half Height
+
+  proc setCapsule(extent: FVector)
+    ## Utility function to set Capsule from Extent data
+
+  proc isNearlyZero(): bool {.noSideEffect.}
+    ## Return true if nearly zero. If so, it will back out and use line trace instead
+
+  proc getExtent(): FVector {.noSideEffect.}
+    ## Utility function to return Extent of the shape
+
+  proc getCapsuleAxisHalfLength(): cfloat {.noSideEffect.}
+    ## Get distance from center of capsule to center of sphere ends
+
+  proc getBox(): FVector {.noSideEffect.}
+    ## Utility function to get Box Extention
+
+  proc getSphereRadius(): cfloat {.noSideEffect.}
+    ## Utility function to get Sphere Radius
+
+  proc getCapsuleRadius(): cfloat {.noSideEffect.}
+    ## Utility function to get Capsule Radius
+
+  proc getCapsuleHalfHeight(): cfloat {.noSideEffect.}
+    ## Utility function to get Capsule Half Height
+
+var lineCollisionShape {.importcpp: "FCollisionShape::LineShape", header: "WorldCollision.h".}: FCollisionShape
+
+proc makeBoxCollisionShape*(boxHalfExtent: FVector): FCollisionShape {.
+  importc: "FCollisionShape::MakeBox", header: "WorldCollision.h".}
+proc makeSphereCollisionShape*(sphereRadius: cfloat): FCollisionShape {.
+  importc: "FCollisionShape::MakeSphere", header: "WorldCollision.h".}
+proc makeCapsuleCollisionShape*(capsuleRadius: cfloat, capsuleHalfHeight: cfloat): FCollisionShape {.
+  importc: "FCollisionShape::MakeCapsule", header: "WorldCollision.h".}
+proc makeCapsuleCollisionShape*(extent: FVector): FCollisionShape {.
+  importc: "FCollisionShape::MakeCapsule", header: "WorldCollision.h".}
+
+type
   FRigidBodyCollisionInfo* {.header: "PhysicsPublic.h", importcpp.} = object
   FCollisionQueryParams* {.header: "CollisionQueryParams.h", importcpp.} = object
   FCollisionResponseParams* {.header: "CollisionQueryParams.h", importcpp.} = object
@@ -24,7 +108,6 @@ type
     frameNumber {.importcpp: "FrameNumber".}: uint32
     index {.importcpp: "FrameNumber".}: uint32
 
-  FCollisionShape* {.header: "WorldCollision.h", importcpp.} = object
   FOverlapDatum* {.header: "WorldCollision.h", importcpp.} = object
     pos {.importcpp: "Pos".}: FVector
     rot {.importcpp: "Rot".}: FQuat
@@ -76,6 +159,9 @@ type
 
   UPhysicalMaterial* {.header: "PhysicalMaterials/PhysicalMaterials.h", importcpp.} = object of UObject
   FPhysScene* {.header: "PhysicsPublic.h", importcpp.} = object
+
+proc initFCollisionQueryParams*(inTraceTag: FName, bInTraceComplex: bool = false, inIgnoreActor: ptr AActor = nil): FCollisionQueryParams {.
+  importcpp: "'0(@)", header: "CollisionQueryParams.h".}
 
 var defaultComponentQueryParams {.importcpp: "FComponentQueryParams::DefaultComponentQueryParams", nodecl.}: FComponentQueryParams
 var defaultResponseParam {.importcpp: "FCollisionResponseParams::DefaultResponseParam", nodecl.}: FCollisionResponseParams

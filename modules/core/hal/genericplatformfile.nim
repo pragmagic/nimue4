@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(IFileHandle, header: "GenericPlatform/GenericPlatformFile.h"):
+wclass(IFileHandle, header: "GenericPlatform/GenericPlatformFile.h"):
 
   proc tell(): int64
     ## Return the current write or read position.
@@ -31,7 +31,7 @@ class(IFileHandle, header: "GenericPlatform/GenericPlatformFile.h"):
   proc size(): int64
     ## Return the total size of the file *
 
-class(FFileStatData, header: "GenericPlatform/GenericPlatformFile.h"):
+wclass(FFileStatData, header: "GenericPlatform/GenericPlatformFile.h"):
   ##Contains the information that's returned from stat'ing a file or directory
 
   var creationTime: FDateTime
@@ -53,7 +53,7 @@ class(FFileStatData, header: "GenericPlatform/GenericPlatformFile.h"):
                             inModificationTime: FDateTime; inFileSize: int64;
                             inIsDirectory: bool; inIsReadOnly: bool): FFileStatData {.constructor.}
 
-class(FDirectoryVisitor, header: "GenericPlatform/GenericPlatformFile.h"):
+wclass(FDirectoryVisitor, header: "GenericPlatform/GenericPlatformFile.h"):
   ## Base class for file and directory visitors that take only the name. *
 
   proc visit(filenameOrDirectory: wstring; bIsDirectory: bool): bool
@@ -62,7 +62,7 @@ class(FDirectoryVisitor, header: "GenericPlatform/GenericPlatformFile.h"):
     ## @param bIsDirectory	true if FilenameOrDirectory is a directory.
     ## @return	true if the iteration should continue.
 
-class(FDirectoryStatVisitor, header: "GenericPlatform/GenericPlatformFile.h"):
+wclass(FDirectoryStatVisitor, header: "GenericPlatform/GenericPlatformFile.h"):
   ## Base class for file and directory visitors that take all the stat data.
 
   proc visit(filenameOrDirectory: wstring; statData: FFileStatData): bool
@@ -83,7 +83,7 @@ class(FDirectoryStatVisitor, header: "GenericPlatform/GenericPlatformFile.h"):
     ## @param Visitor		Visitor to call for each element of the directory
     ## @return				false if the directory did not exist or if the visitor returned false.
 
-class(IPlatformFile, header: "GenericPlatform/GenericPlatformFile.h"):
+wclass(IPlatformFile, header: "GenericPlatform/GenericPlatformFile.h"):
   ## File I/O Interface
 
   proc getPlatformPhysical(): var IPlatformFile

@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(UBrushComponent of UPrimitiveComponent, header: "Components/BrushComponent.h", notypedef):
+wclass(UBrushComponent of UPrimitiveComponent, header: "Components/BrushComponent.h", notypedef):
   ## A brush component defines a shape that can be modified within the editor. They are used both as part of BSP building, and for volumes.
   ## @see https://docs.unrealengine.com/latest/INT/Engine/Actors/Volumes
   ## @see https://docs.unrealengine.com/latest/INT/Engine/Actors/Brushes

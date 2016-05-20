@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(UPlayer of UObject, header: "Engine/Player.h"):
+wclass(UPlayer of UObject, header: "Engine/Player.h"):
   var playerController: ptr APlayerController
     ## The actor this player controls.
   var currentNetSpeed: int32
@@ -13,13 +13,13 @@ class(UPlayer of UObject, header: "Engine/Player.h"):
     ## Dynamically assign Controller to Player and set viewport.
     ## `pc`: new player controller to assign to player
 
-  method consoleCommand(cmd: FString, bWriteToLog: bool = true): FString
+  method consoleCommand(cmd: FString, bWriteToLog: bool = true): FString {.discardable.}
     ## Executes the exec() command
     ##
     ## @param `cmd` command to execute (string of commands optionally separated by a | (pipe))
     ## @param `bWriteToLog` write out to the log
 
-class(ULocalPlayer of UPlayer, header: "Engine/LocalPlayer.h"):
+wclass(ULocalPlayer of UPlayer, header: "Engine/LocalPlayer.h"):
   discard
 
 # TODO

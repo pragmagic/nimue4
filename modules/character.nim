@@ -111,7 +111,7 @@ declareBuiltinDelegate(FCharacterReachedApexSignature, dkDynamicMulticast, "Game
 declareBuiltinDelegate(FLandedSignature, dkDynamicMulticast, "GameFramework/Character.h",
                        hit: FHitResult)
 
-class(ACharacter of APawn, header: "GameFramework/Character.h", notypedef):
+wclass(ACharacter of APawn, header: "GameFramework/Character.h", notypedef):
   ## Characters are Pawns that have a mesh, collision, and built-in movement logic.
   ## They are responsible for all physical interaction between the player or AI and the world, and also implement basic networking and input models.
   ## They are designed for a vertically-oriented player representation that can walk, jump, fly, and swim through the world using CharacterMovementComponent.
@@ -123,17 +123,17 @@ class(ACharacter of APawn, header: "GameFramework/Character.h", notypedef):
 
   proc getLifetimeReplicatedProps(outLifetimeProps: var TArray[FLifetimeProperty]) {.noSideEffect.}
 
-  var meshComponentName: FName
+  var meshComponentName {.isStatic.}: FName
     ## Name of the MeshComponent. Use this name if you want to prevent creation of the component (with ObjectInitializer.DoNotCreateDefaultSubobject).
 
-  var characterMovementComponentName: FName
+  var characterMovementComponentName {.isStatic.}: FName
     ## Name of the CharacterMovement component. Use this name if you want to use a different class (with ObjectInitializer.SetDefaultSubobjectClass).
 
-  var capsuleComponentName: FName
+  var capsuleComponentName {.isStatic.}: FName
     ## Name of the CapsuleComponent.
 
   method setBase(newBase: ptr UPrimitiveComponent; boneName: FName = NAME_None;
-              bNotifyActor: bool = true)
+                 bNotifyActor: bool = true) {.isStatic.}
     ## Sets the component the Character is walking on, used by CharacterMovement walking movement to be able to follow dynamic objects.
 
   method onRep_ReplicatedBasedMovement()
@@ -169,7 +169,7 @@ class(ACharacter of APawn, header: "GameFramework/Character.h", notypedef):
     ## Default crouched eye height
     ## UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Camera)
 
-  var bIsCrouched1: bool
+  var bIsCrouched: bool
     ## Set by character movement to specify that this Character is currently crouched.
     ## UPROPERTY(BlueprintReadOnly, replicatedUsing=OnRep_IsCrouched, Category=Character)
 
@@ -177,34 +177,34 @@ class(ACharacter of APawn, header: "GameFramework/Character.h", notypedef):
     ## Handle Crouching replicated from server
     ## UFUNCTION()
 
-  var bPressedJump1: bool
+  var bPressedJump: bool
     ## When true, player wants to jump
     ## UPROPERTY(BlueprintReadOnly, Category="Pawn|Character")
 
-  var bClientUpdating1: bool
+  var bClientUpdating: bool
     ## When true, applying updates to network client (replaying saved moves for a locally controlled character)
     ## UPROPERTY(Transient)
 
-  var bClientWasFalling1: bool
+  var bClientWasFalling: bool
     ## True if Pawn was initially falling when started to replay network moves.
     ## UPROPERTY(Transient)
 
-  var bClientResimulateRootMotion1: bool
+  var bClientResimulateRootMotion: bool
     ## If server disagrees with root motion track position, client has to resimulate root motion from last AckedMove.
     ## UPROPERTY(Transient)
 
-  var bClientResimulateRootMotionSources1: bool
+  var bClientResimulateRootMotionSources: bool
     ## If server disagrees with root motion state, client has to resimulate root motion from last AckedMove.
     ## UPROPERTY(Transient)
 
-  var bSimGravityDisabled1: bool
+  var bSimGravityDisabled: bool
     ## Disable simulated gravity (set when character encroaches geometry on client, to keep him from falling through floors)
     ## UPROPERTY()
 
-  var bClientCheckEncroachmentOnNetUpdate1: bool
+  var bClientCheckEncroachmentOnNetUpdate: bool
     ## UPROPERTY(Transient)
 
-  var bServerMoveIgnoreRootMotion1: bool
+  var bServerMoveIgnoreRootMotion: bool
     ## Disable root motion on the server. When receiving a DualServerMove, where the first move is not root motion and the second is.
     ## UPROPERTY(Transient)
 
@@ -260,7 +260,7 @@ class(ACharacter of APawn, header: "GameFramework/Character.h", notypedef):
     ## UFUNCTION(BlueprintCallable, Category="Pawn|Character")
 
   method playAnimMontage(animMontage: ptr UAnimMontage; inPlayRate: cfloat = 1.0;
-                       startSectionName: FName = NAME_None): cfloat
+                         startSectionName: FName = NAME_None): cfloat {.discardable.}
     ## Play Animation Montage on the character mesh *
     ## UFUNCTION(BlueprintCallable, Category=Animation)
 

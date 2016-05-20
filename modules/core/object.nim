@@ -10,8 +10,6 @@ type
     Exclusive, ## Only exclusive resource size
     Inclusive  ## Resource size of the object and all of its references
 
-  FObjectInitializer* {.header: "UObject/UObjectGlobals.h", importcpp: "FObjectInitializer", inheritable.} = object
-
   EObjectFlags* {.size: sizeof(cint), importcpp: "EObjectFlags", header: "UObject/ObjectBase.h".} = enum
     ## Flags describing an object instance
     RF_NoFlags = 0x00000000, ## No flags, used to avoid a cast
@@ -72,6 +70,8 @@ type
 
   ERenameFlags = uint32
 
+  FObjectInstancingGraph* {.header: "UObject/Class.h", importcpp.} = object
+
 converter toUInt32(flags: ELoadConfigPropagationFlags): uint32 =
   result = ord(flags)
 
@@ -91,18 +91,128 @@ const REN_ForceGlobalUnique = 0x0040
 const REN_SkipGeneratedClasses = 0x0080
   ## Prevent renaming of any child generated classes and CDO's in blueprints
 
-class(FDebugDisplayInfo, header: "FDebugDisplayInfo.h", bycopy):
-  proc make(inDisplayNames: var TArray[FName], inToggledCategories: var TArray[FName]): FDebugDisplayInfo {.constructor.}
+wclass(FObjectInitializer, header: "UObject/UObjectGlobals.h", bycopy):
+  proc initFObjectInitializer(): FObjectInitializer {.constructor.}
+    ## Default Constructor, used when you are using the C++ "new" syntax. UObject::UObject will set the object pointer
 
-  proc isDisplayOn(displayName: FName): bool {.noSideEffect.}
-  proc isCategoryToggledOn(category: FName; bDefaultsToOn: bool): bool {.noSideEffect.}
-  proc numDisplayNames(): int32 {.noSideEffect.}
+  proc initFObjectInitializer(inObj: ptr UObject; inObjectArchetype: ptr UObject;
+                              bInCopyTransientsFromClassDefaults: bool;
+                              bInShouldIntializeProps: bool;
+                              inInstanceGraph: ptr FObjectInstancingGraph = nil): FObjectInitializer {.constructor.}
+    ## Constructor
+    ## @param	InObj object to initialize, from static allocate object, after construction
+    ## @param	InObjectArchetype object to initialize properties from
+    ## @param	bInCopyTransientsFromClassDefaults - if true, copy transient from the class defaults instead of the pass in archetype ptr (often these are the same)
+    ## @param	bInShouldIntializeProps false is a special case for changing base classes in UCCMake
+    ## @param	InInstanceGraph passed instance graph
 
-class(UObject, header: "UObject/UObject.h", notypedef):
-  proc createDefaultSubobject*[T](subobjectName: FName; bTransient: bool = false): ptr T {.cppname:"CreateDefaultSubobject<'*0>".}
-  proc createOptionalDefaultSubobject*[T](subobjectName: FName; bTransient: bool = false): ptr T {.cppname:"createOptionalDefaultSubobject<'*0>".}
-  proc createAbstractDefaultSubobject*[T](subobjectName: FName; bTransient: bool = false): ptr T {.cppname:"createAbstractDefaultSubobject<'*0>".}
+  proc getArchetype(): ptr UObject {.noSideEffect.}
+    ## Return the archetype that this object will copy properties from later
 
+  proc getObj(): ptr UObject {.noSideEffect.}
+    ## Return the object that is being constructed
+
+  proc getClass(): ptr UClass {.noSideEffect.}
+    ## Return the class of the object that is being constructed
+
+  proc createDefaultSubobject[TReturnType](outer: ptr UObject; subobjectName: FName;
+                                           bTransient: bool = false): ptr TReturnType {.
+      noSideEffect.}
+    ## Create a component or subobject
+    ## @param	TReturnType					class of return type, all overrides must be of this type
+    ## @param	Outer						outer to construct the subobject in
+    ## @param	SubobjectName				name of the new component
+    ## @param bTransient		true if the component is being assigned to a transient property
+
+  proc createOptionalDefaultSubobject[TReturnType](outer: ptr UObject;
+      subobjectName: FName; bTransient: bool = false): ptr TReturnType {.noSideEffect.}
+    ## Create optional component or subobject. Optional subobjects may not get created
+    ## when a derived class specified DoNotCreateDefaultSubobject with the subobject's name.
+    ## @param	TReturnType					class of return type, all overrides must be of this type
+    ## @param	Outer						outer to construct the subobject in
+    ## @param	SubobjectName				name of the new component
+    ## @param bTransient		true if the component is being assigned to a transient property
+
+  proc createAbstractDefaultSubobject[TReturnType](outer: ptr UObject;
+      subobjectName: FName; bTransient: bool = false): ptr TReturnType {.noSideEffect.}
+    ## Create optional component or subobject. Optional subobjects may not get created
+    ## when a derived class specified DoNotCreateDefaultSubobject with the subobject's name.
+    ## @param	TReturnType					class of return type, all overrides must be of this type
+    ## @param	Outer						outer to construct the subobject in
+    ## @param	SubobjectName				name of the new component
+    ## @param bTransient		true if the component is being assigned to a transient property
+
+  proc createEditorOnlyDefaultSubobject[TReturnType](outer: ptr UObject;
+      subobjectName: FName; bTransient: bool = false): ptr TReturnType {.noSideEffect.}
+    ## Create a component or subobject only to be used with the editor.
+    ## @param	TReturnType					class of return type, all overrides must be of this type
+    ## @param	Outer						outer to construct the subobject in
+    ## @param	SubobjectName				name of the new component
+    ## @param	bTransient					true if the component is being assigned to a transient property
+
+  proc createEditorOnlyDefaultSubobject(outer: ptr UObject; subobjectName: FName;
+                                      returnType: ptr UClass;
+                                      bTransient: bool = false): ptr UObject {.
+      noSideEffect.}
+    ## Create a component or subobject only to be used with the editor.
+    ## @param	TReturnType					class of return type, all overrides must be of this type
+    ## @param	Outer						outer to construct the subobject in
+    ## @param	ReturnType					type of the new component
+    ## @param	SubobjectName				name of the new component
+    ## @param	bTransient					true if the component is being assigned to a transient property
+
+  proc createDefaultSubobject(outer: ptr UObject; subobjectFName: FName;
+                            returnType: ptr UClass;
+                            classToCreateByDefault: ptr UClass; bIsRequired: bool;
+                            bAbstract: bool; bIsTransient: bool): ptr UObject {.
+      noSideEffect.}
+    ## Create a component or subobject
+    ## @param	TReturnType					class of return type, all overrides must be of this type
+    ## @param	TClassToConstructByDefault	if the derived class has not overridden, create a component of this type (default is TReturnType)
+    ## @param	Outer						outer to construct the subobject in
+    ## @param	SubobjectName				name of the new component
+    ## @param bIsRequired			true if the component is required and will always be created even if DoNotCreateDefaultSubobject was sepcified.
+    ## @param bIsTransient		true if the component is being assigned to a transient property
+
+  proc doNotCreateDefaultSubobject(subobjectName: FName): var FObjectInitializer {.
+      noSideEffect.}
+    ## Indicates that a base class should not create a component
+    ## @param	SubobjectName	name of the new component or subobject to not create
+
+  proc doNotCreateDefaultSubobject(subobjectName: wstring): var FObjectInitializer {.
+      noSideEffect.}
+    ## Indicates that a base class should not create a component
+    ## @param	ComponentName	name of the new component or subobject to not create
+
+  proc isLegalOverride(inComponentName: FName; derivedComponentClass: ptr UClass;
+                       baseComponentClass: ptr UClass): bool {.noSideEffect.}
+    ## Internal use only, checks if the override is legal and if not deal with error messages
+
+  proc assertIfInConstructor(outer: ptr UObject; errorMessage: wstring)
+    ## Asserts with the specified message if code is executed inside UObject constructor
+  proc finalizeSubobjectClassInitialization()
+
+proc getObjectInitializer*(): var FObjectInitializer {.importcpp: "FObjectInitializer::Get", header: "UObject/UObjectGlobals.h".}
+  ## Gets ObjectInitializer for the currently constructed object. Can only be used inside of a constructor of UObject-derived class.
+
+wclass(UObjectBase, header: "UObject/UObjectBase.h", notypedef):
+  proc getUniqueID(): uint32 {.noSideEffect.}
+    ## Returns the unique ID of the object...these are reused so it is only unique while the object is alive.
+    ## Useful as a tag.
+  proc getClass(): ptr UClass {.noSideEffect.}
+  proc getOuter(): ptr UObject {.noSideEffect.}
+  proc getFName(): FName {.noSideEffect.}
+
+proc createDefaultSubobject*[T](obj: ptr UObject, subobjectName: FName; bTransient: bool = false): ptr T {.importcpp: "#.CreateDefaultSubobject<'*0>(@)", nodecl.}
+proc createDefaultSubobject*[T](obj: ptr UObject, subobjectName: wstring; bTransient: bool = false): ptr T {.importcpp: "#.CreateDefaultSubobject<'*0>(@)", nodecl.}
+
+proc createOptionalDefaultSubobject*[T](obj: ptr UObject, subobjectName: FName; bTransient: bool = false): ptr T {.importcpp: "#.CreateOptionalDefaultSubobject<'*0>(@)", nodecl.}
+proc createOptionalDefaultSubobject*[T](obj: ptr UObject, subobjectName: wstring; bTransient: bool = false): ptr T {.importcpp: "#.CreateOptionalDefaultSubobject<'*0>(@)", nodecl.}
+
+proc createAbstractDefaultSubobject*[T](obj: ptr UObject, subobjectName: FName; bTransient: bool = false): ptr T {.importcpp: "#.CreateAbstractDefaultSubobject<'*0>(@)", nodecl.}
+proc createAbstractDefaultSubobject*[T](obj: ptr UObject, subobjectName: wstring; bTransient: bool = false): ptr T {.importcpp: "#.CreateAbstractDefaultSubobject<'*0>(@)", nodecl.}
+
+wclass(UObject of UObjectBaseUtility, header: "UObject/UObject.h", notypedef):
   method postInitProperties()
     ## Called after the C++ constructor and after the properties have been initialized, including those loaded from config.
     ## mainly this is to emulate some behavior of when the constructor was called after the properties were intialized.
@@ -446,7 +556,7 @@ class(UObject, header: "UObject/UObject.h", notypedef):
   # Non virtual functions, not intended to be overridden
   # ******************************************************
 
-  proc шsSelected(): bool {.noSideEffect.}
+  proc isSelected(): bool {.noSideEffect.}
     ## Test the selection state of a UObject
 
   # AWARE
@@ -637,6 +747,31 @@ class(UObject, header: "UObject/UObject.h", notypedef):
   proc implements[T](): bool {.noSideEffect.}
     ## Returns true if this object implements the interface T, false otherwise.
 
+
+proc getNameSafe*(obj: ptr UObjectBaseUtility): FString {.
+  importc: "GetNameSafe", header: "UObject/UObjectBaseUtility.h".}
+  ## Returns the name of this object (with no path information)
+  ## @param Object object to retrieve the name for; NULL gives "None"
+  ## @return Name of the object.
+
+proc getPathNameSafe*(obj: ptr UObjectBaseUtility): FString {.
+  importc: "GetPathNameSafe", header: "UObject/UObjectBaseUtility.h".}
+  ## Returns the path name of this object
+  ## @param Object object to retrieve the path name for; NULL gives "None"
+  ## @return path name of the object.
+
+proc getFullNameSafe*(obj: ptr UObjectBaseUtility): FString {.
+  importc: "GetFullNameSafe", header: "UObject/UObjectBaseUtility.h".}
+  ## Returns the full name of this object
+  ## @param Object object to retrieve the full name for; NULL (or a null class!) gives "None"
+  ## @return full name of the object.
+
+template setDefaultSubobjectClass*(this: var FObjectInitializer, T: typedesc, subobjName: FName or wstring) =
+  ## Sets the class of a subobject for a base class
+  ## @param	subobjName	name of the new component or subobject
+  # TODO: cannot yet wrap this properly
+  {.emit: "`$#`.SetDefaultSubobjectClass<$#>(`$#`);".format(astToStr(this), T.name, astToStr(subobjName)).}
+
 proc loadObject*[T: UObject](path: wstring): ptr T {.
   header: "UObject/UObjectGlobals.h", importcpp: "(Cast<'*0>(StaticLoadObject('*0::StaticClass(), NULL, #)))".}
 proc loadObject*[T: UObject](path: FString): ptr T =
@@ -656,4 +791,14 @@ proc ctorLoadClass*(T: typedesc, path: static[string]): TSubclassOf[T] {.inline.
   ## Must only be used from constructors.
   var thePath: string
   shallowCopy(thePath, path)
-  {.emit: "static ConstructorHelpers::FClassFinder<" & T.name & "> rCont(UTF8_TO_TCHAR((`thePath`)->data));`result`=rCont.Object;".}
+  {.emit: "static ConstructorHelpers::FClassFinder<" & T.name & "> rCont(UTF8_TO_TCHAR((`thePath`)->data));`result`=rCont.Class;".}
+
+wclass(UClass of UObject, header: "UObject/Class.h", notypedef):
+  proc getDefaultObject[T](): ptr T {.cppname: "#.GetDefaultObject<'*0>(@)".}
+    ## Get the default object from the class
+    ## @param	bCreateIfNeeded if true (default) then the CDO is created if it is NULL.
+    ## @return		the CDO for this class
+
+  proc getDefaultObjectName(): FName
+    ## Get the name of the CDO for the this class
+    ## @return The name of the CDO

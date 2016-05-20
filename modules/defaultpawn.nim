@@ -4,7 +4,7 @@
 ## DefaultPawns are simple pawns that can fly around the world.
 ## =============================================================================
 
-class(ADefaultPawn of APawn, header: "GameFramework/DefaultPawn.h", notypedef):
+wclass(ADefaultPawn of APawn, header: "GameFramework/DefaultPawn.h", notypedef):
   ## DefaultPawn implements a simple Pawn with spherical collision and built-in flying movement.
   ## @see UFloatingPawnMovement
 

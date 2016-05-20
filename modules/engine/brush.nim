@@ -55,7 +55,7 @@ type
     selectionIndex: int32 ## The selection index of this item
 
   ABrush {.header: "Engine/Brush.h", importcpp.} = object of AActor
-    brushType: TEnumAsByte[EBrushType]
+    brushType: EBrushType
       ## Type of brush
       ## UPROPERTY(EditAnywhere, Category=Brush)
 
@@ -103,7 +103,7 @@ proc makeFBuilderPoly(): FBuilderPoly {.header: "Engine/BrushBuilder.h", importc
 
 declareBuiltinDelegate(FOnBrushRegistered, dkMulticast, "Engine/Brush.h", brush: ptr ABrush)
 
-class(ABrush of AActor, header: "Engine/Brush.h", notypedef):
+wclass(ABrush of AActor, header: "Engine/Brush.h", notypedef):
 #if WITH_EDITOR:
   proc getOnBrushRegisteredDelegate(): var FOnBrushRegistered
     ## Delegate used for notifications when PostRegisterAllComponents is called for a Brush
@@ -160,7 +160,7 @@ class(ABrush of AActor, header: "Engine/Brush.h", notypedef):
   proc getBrushComponent(): ptr UBrushComponent {.noSideEffect.}
     ## Returns BrushComponent subobject
 
-class(UBrushBuilder of UObject, header: "Engine/BrushBuilder.h", notypedef):
+wclass(UBrushBuilder of UObject, header: "Engine/BrushBuilder.h", notypedef):
   proc beginBrush(inMergeCoplanars: bool; inLayer: FName)
   proc endBrush(inWorld: ptr UWorld; inBrush: ptr ABrush): bool
   proc getVertexCount(): int32 {.noSideEffect.}

@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-class(APlayerState of AInfo, header: "GameFramework/PlayerState.h", notypedef):
+wclass(APlayerState of AInfo, header: "GameFramework/PlayerState.h", notypedef):
   ## A PlayerState is created for every player on a server (or in a standalone game).
   ## PlayerStates are replicated to all clients, and contain network game relevant information about the player, such as playername, score, etc.
   ##
