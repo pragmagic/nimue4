@@ -6,7 +6,7 @@ This repo contains Nim library and tools that allow to create Unreal Engine 4 ga
 The integration is in early development, so breaking changes are possible - backward compatibility is not guaranteed yet.
 
 
-This integration is being used by an indie development team to create a mobile strategy game.
+This integration is being used by an indie development team to create a mobile strategy game. That game runs on iOS, Android, Windows and Mac.
 
 ## Why Nim?
 
@@ -32,8 +32,9 @@ The integration lacks support for:
 
 See the [Getting Started](https://github.com/pragmagic/nimue4/wiki/Getting-Started) page on the wiki.
 
-
 If you are new to Nim, make sure to see the [Learn section](http://nim-lang.org/learn.html) of the Nim's website.
+
+See [NimPlatformerGame](https://github.com/pragmagic/NimPlatformerGame) repo for a sample of a game written on Nim.
 
 ## Documentation
 
@@ -41,13 +42,12 @@ See the repo's [wiki](https://github.com/pragmagic/nimue4/wiki/) for nimue4 docu
 
 See the Nim website's [documentation section](http://nim-lang.org/documentation.html) for the Nim language documentation.
 
-## Community [![nimue4 channel on Gitter](https://badges.gitter.im/gitterHQ/gitter.svg)](https://gitter.im/pragmagic/nimue4)
+## Community
 
-* Join the [Gitter channel](https://gitter.im/pragmagic/nimue4) for nimue4 conversations.
+If you have any questions or feedback for nimue4, feel free to submit an issue on GitHub.
+
 * The [Nim forum](http://forum.nim-lang.org/) - the best place to ask questions and to discuss Nim.
 * [IRC (Freenode#nim)](https://webchat.freenode.net/?channels=nim) - the best place to discuss Nim in real-time.
-
-If you have any questions or feedback, feel free to submit an issue on GitHub.
 
 ## License
 
