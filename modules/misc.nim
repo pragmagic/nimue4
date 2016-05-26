@@ -8,7 +8,7 @@ proc ueNew*[T](): ptr T {.importcpp: "(NewObject<'*0>())", nodecl.}
 macro invokeSuper*(parentType: typedesc, f: untyped, params: varargs[typed]): stmt =
   if f.kind != nnkIdent:
     error("method identifier expected")
-  let sym = genIdent()
+  let sym = genIdent(f)
   var callParams = ""
   for param in params:
     if callParams.len > 0:
@@ -21,7 +21,7 @@ macro invokeSuper*(parentType: typedesc, f: untyped, params: varargs[typed]): st
 macro invokeSuperWithResult*(resType: typedesc, parentType: typedesc, f: untyped, params: varargs[typed]): expr =
   if f.kind != nnkIdent:
     error("method identifier expected")
-  let sym = genIdent()
+  let sym = genIdent(f)
   var callParams = ""
   for param in params:
     if callParams.len > 0:

@@ -140,7 +140,7 @@ macro addMenuItem*[T](menu: ptr FGameMenuPage, inText: FText, objPtr: T, callbac
   ## @param	InObj		Menu page object
   ## @param	InMethod	Method to call when selection changes.
   ## @returns  SharedRef to the MenuItem that was created.
-  let sym = genIdent()
+  let sym = genIdent(callback)
   result = quote do:
     var `sym`: TSharedPtr[FGameMenuItem]
     {.emit: "`$#` = $#->AddMenuItem(`$#`, `$#`, & $#::$#);".format(
@@ -157,7 +157,7 @@ macro addMenuItemWithOptions*[T](menu: ptr FGameMenuPage, text: FText, optionsLi
   ## @param	InObj		Menu page object
   ## @param	InMethod	Method to call when selection changes.
   ## @returns  SharedRef to the MenuItem that was created.
-  let sym = genIdent()
+  let sym = genIdent(callback)
   result = quote do:
     var `sym`: TSharedPtr[FGameMenuItem]
     {.emit: "`$#` = $#->AddMenuItemWithOptions(`$#`, `$#`, `$#`, & $#::$#);".format(
@@ -173,7 +173,7 @@ macro addCustomMenuItem*[T](menu: ptr FGameMenuPage, text: FText, customWidget: 
   ## @param
   ## @param
   ## @returns  SharedRef to the MenuItem that was created.
-  let sym = genIdent()
+  let sym = genIdent(callback)
   result = quote do:
     var `sym`: TSharedPtr[FGameMenuItem]
     {.emit: "`$#` = $#->AddCustomMenuItem(`$#`, `$#`, `$#`, & $#::$#);".format(

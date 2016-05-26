@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-import macros, strutils, ropes
+import macros, strutils, ropes, tables
 
 type
   ParseError* = object of Exception
@@ -174,7 +174,9 @@ macro toCppSubstitution*(n: typed): expr =
   else:
     result = newCall("expandObjReference", newCall("astToStr", n))
 
-var identIdx {.compileTime.} = 0
-proc genIdent*(): NimNode {.compileTime.} =
+var identIdxPerFile {.compileTime.} = initTable[string, int]()
+proc genIdent*(ctx: NimNode): NimNode {.compileTime.} =
+  let filename = fileNameNoExt(ctx)
+  let identIdx = identIdxPerFile.mgetOrPut(filename, 0)
   result = ident("genident_" & $identIdx)
-  inc identIdx # not very good approach, needs to be more stable
+  inc identIdxPerFile[filename]
