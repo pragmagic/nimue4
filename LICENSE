@@ -19,7 +19,7 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMA
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
 THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-This software makes use of or includes portions of the following software:
+The Software makes use of or includes portions of:
 
 1. Nim programming language (https://github.com/nim-lang/Nim/). Licensed under the MIT License. Copyright (c) 2006-2016 Andreas Rumpf.
 2. clibpp library (https://github.com/onionhammer/clibpp). Licensed under the MIT License. Copyright (c) 2014 onionhammer.

@@ -49,6 +49,14 @@ If you have any questions or feedback for nimue4, feel free to submit an issue o
 * The [Nim forum](http://forum.nim-lang.org/) - the best place to ask questions and to discuss Nim.
 * [IRC (Freenode#nim)](https://webchat.freenode.net/?channels=nim) - the best place to discuss Nim in real-time.
 
+## Roadmap
+
+High priority roadmap items include:
+
+* Automated generation of wrappers for UE4 types
+* UE4 plug-in that improves editor experience when working with Nim projects
+* [Nimble](https://github.com/nim-lang/nimble) integration
+
 ## License
 
 This project is licensed under the MIT license. Read [LICENSE](https://github.com/pragmagic/nimue4/blob/master/LICENSE) file for details.
