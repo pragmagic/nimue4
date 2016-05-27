@@ -2,19 +2,21 @@
 
 import parseopt2, pegs, ropes, strutils, os, times, sets, osproc
 
-type OptType = enum
-  otTask
-  otProjectDir
-  otTarget
-  otMode
-  otPlatform
-  otEngineLocation
+type
+  OptType = enum
+    otTask
+    otProjectDir
+    otTarget
+    otMode
+    otPlatform
+    otEngineLocation
 
-type TaskType = enum
-  ttRecompile
-  ttDeploy
-  ttPreCook
-  ttClean
+  TaskType = enum
+    ttRecompile
+    ttDeploy
+    ttPreCook
+    ttClean
+    ttCompileNim
 
 const usage = slurp("usage.txt")
 
@@ -213,6 +215,7 @@ proc runUnrealBuildTool(engineDir: string; task: TaskType;
   of ttDeploy: "-deploy"
   of ttClean: "-clean"
   of ttPreCook: "-editorrecompile"
+  of ttCompileNim: nil
 
   let ubtPlatform = if task == ttPreCook: nimOSToUEPlatform(hostOS) else: platform
 
@@ -361,6 +364,10 @@ proc clean(engineDir, projectDir, projectName, target, mode, platform, extraOpti
 
   cleanModules(projectDir)
 
+proc compileNim(engineDir, projectDir, projectName, target, mode, platform, extraOptions: string) =
+  let (os, cpu) = uePlatformToNimOSCPU(platform)
+  buildNim(projectDir, projectName, os, cpu, platform)
+
 proc detectProjectName(projectDir: string): string =
   for file in walkDir(projectDir):
     if file.kind != pcFile: continue
@@ -394,6 +401,7 @@ when isMainModule:
           of "precook": task = ttPreCook
           of "clean": task = ttClean
           of "recompile": task = ttRecompile
+          of "compilenim": task = ttCompileNim
           else: raise newException(ValueError, "Unknown task: " & key)
           extraOptions = cmdLineRest(p)
           break
@@ -443,3 +451,4 @@ when isMainModule:
   case task:
     of ttPreCook, ttDeploy, ttRecompile: build(task, engineDir, projectDir, projectName, target, mode, platform, extraOptions)
     of ttClean: clean(engineDir, projectDir, projectName, target, mode, platform, extraOptions)
+    of ttCompileNim: compileNim(engineDir, projectDir, projectName, target, mode, platform, extraOptions)

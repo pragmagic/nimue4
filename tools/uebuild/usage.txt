@@ -7,6 +7,7 @@ Command:
   deploy                  build the project with hot redeploy
   precook                 build the editor for further cooking
   clean                   clean Nim and UE generated files
+  compilenim              compile Nim files only, without invoking UBT
 
 Options:
   -d, --projectDir        directory with .uproject file
