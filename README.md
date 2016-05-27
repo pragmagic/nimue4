@@ -1,4 +1,4 @@
-# Nim Integration for Unreal Engine 4
+# Nim Integration for Unreal Engine 4 [![Build Status](https://travis-ci.org/pragmagic/nimue4.svg?branch=master)](https://travis-ci.org/pragmagic/nimue4)
 
 This repo contains Nim library and tools that allow to create Unreal Engine 4 games on [Nim programming language](http://nim-lang.org/).
 
