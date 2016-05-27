@@ -7,10 +7,10 @@ install:
   - cd Nim
   - git checkout devel
   - sh bootstrap.sh
-  - cd ..
 
 before_script:
   - git clone https://github.com/pragmagic/NimPlatformerGame.git
+  - export PATH="`pwd`/Nim/bin":$PATH
   - export NIMUE4_HOME="`pwd`"
   - export NIM_HOME="`pwd`/Nim/"
   - export UE4_HOME=/Not/Used/Anyway
