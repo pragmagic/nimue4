@@ -47,7 +47,7 @@ const nimModuleFileTemplate = """
 #endif
 
   class $1GameModule: public FDefaultGameModuleImpl {
-#ifndef WITH_EDITOR
+#if !WITH_EDITOR
     virtual void StartupModule() override {
       NimMain();
     }
