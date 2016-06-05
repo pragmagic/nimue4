@@ -6,7 +6,7 @@
     "cwd": "${workspaceRoot}"
   },
   "osx": {
-    "command": "nim"
+    "command": "${workspaceRoot}/build.sh"
   },
   "isShellCommand": true,
   "tasks": [
