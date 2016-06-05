@@ -86,7 +86,7 @@ proc exec(command: string) =
 proc nimOSToUEPlatform(os: string): string {.noSideEffect.} =
   result = case os
     of "macosx": "Mac"
-    of "windows": "Win" & $(sizeof(int) * 8)
+    of "windows": "Win64" # Win32 is not supported for editor builds
     of "linux": "Linux"
     else: nil
 
@@ -342,6 +342,8 @@ proc build(task: TaskType, engineDir, projectDir, projectName, target, mode, pla
   var os, cpu: string = nil
   if task != ttPreCook:
     (os, cpu) = uePlatformToNimOSCPU(platform)
+  if task == ttPreCook and hostOS == "windows":
+    cpu = "amd64" # editor builds do not support Win32
 
   buildNim(projectDir, projectName, os, cpu, platform)
   runUnrealBuildTool(engineDir, task, target, platform, mode, projectDir / projectName & ".uproject", extraOptions)
