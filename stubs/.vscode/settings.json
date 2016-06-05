@@ -7,8 +7,7 @@
     "Content/Developers/**": true,
     "Content/Collections/**": true,
     "**/nimcache/**": true,
-    "**/.nimgen/**": true,
-    "Saved/**": true
+    "**/.nimgen/**": true
   },
   "search.exclude": {
     "**/*.uasset": true,
@@ -18,6 +17,7 @@
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
   "editor.rulers": [ 120 ],
+  "files.eol": "\n",
   "nim.buildOnSave": false,
   "nim.lintOnSave": true,
   "nim.buildCommand": "cpp",
