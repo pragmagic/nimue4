@@ -13,6 +13,8 @@ export typetraits.name
 export expandObjReference
 export macroutils.toCppSubstitution
 
+const withEditor* = defined(editor)
+
 {.hints: off.}
 
 # {.hint[XDeclaredButNotUsed]: off.} <- didn't work

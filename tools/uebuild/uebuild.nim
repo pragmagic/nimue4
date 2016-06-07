@@ -268,7 +268,7 @@ proc copyNimFilesAddingImports(dir: string, rootFileContent: var Rope) =
     copyFile(file, dir / filename)
     rootFileContent.addf("import \"$#\"\n", [rope(filename)])
 
-proc buildNim(projectDir, projectName, os, cpu, uePlatform: string) =
+proc buildNim(projectDir, projectName, os, cpu, uePlatform: string, isEditorBuild: bool) =
   let sourceDir = projectDir / "Source"
   let nimOutDir = getNimOutDir(projectDir)
 
@@ -323,7 +323,7 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string) =
       let exceptionFlags = if platform == "android" or platform == "ios": "--noCppExceptions -d:dontWrapNimExceptions"
                            else: ""
       exec "nim cpp -c --noMain " & exceptionFlags &
-           " --experimental " & osCpuFlags &
+           " --experimental " & osCpuFlags & (if isEditorBuild: " -d:editor" else: "") &
            " -p:\"" & getCurrentDir() & "\" -p:\"" & moduleDir & "\" --nimcache:\"" & nimcacheDir &
            "\" \"" & rootFile & '"'
       # export NimMain procedure so that it can be used from module initialization code
@@ -353,7 +353,7 @@ proc build(command: CommandType, engineDir, projectDir, projectName, target, mod
   if command == ctPreCook and hostOS == "windows":
     cpu = "amd64" # editor builds do not support Win32
 
-  buildNim(projectDir, projectName, os, cpu, platform)
+  buildNim(projectDir, projectName, os, cpu, platform, isEditorBuild = (command == ctPreCook or target.endsWith("Editor")))
   runUnrealBuildTool(engineDir, command, target, platform, mode, projectDir / projectName & ".uproject", extraOptions)
 
   if command == ctPreCook:
@@ -364,7 +364,7 @@ proc build(command: CommandType, engineDir, projectDir, projectName, target, mod
     cleanModules(projectDir)
 
     (os, cpu) = uePlatformToNimOSCPU(platform)
-    buildNim(projectDir, projectName, os, cpu, platform)
+    buildNim(projectDir, projectName, os, cpu, platform, isEditorBuild = false)
 
 proc clean(engineDir, projectDir, projectName, target, mode, platform, extraOptions: string) =
   let nimOutDir = getNimOutDir(projectDir)
@@ -376,7 +376,7 @@ proc clean(engineDir, projectDir, projectName, target, mode, platform, extraOpti
 
 proc compileNim(engineDir, projectDir, projectName, target, mode, platform, extraOptions: string) =
   let (os, cpu) = uePlatformToNimOSCPU(platform)
-  buildNim(projectDir, projectName, os, cpu, platform)
+  buildNim(projectDir, projectName, os, cpu, platform, isEditorBuild = target.endsWith("Editor"))
 
 proc detectProjectName(projectDir: string): string =
   for file in walkDir(projectDir):
