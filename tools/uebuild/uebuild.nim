@@ -4,19 +4,19 @@ import parseopt2, pegs, ropes, strutils, os, times, sets, osproc
 
 type
   OptType = enum
-    otTask
+    otCommand
     otProjectDir
     otTarget
     otMode
     otPlatform
     otEngineLocation
 
-  TaskType = enum
-    ttRecompile
-    ttDeploy
-    ttPreCook
-    ttClean
-    ttCompileNim
+  CommandType = enum
+    ctRecompile
+    ctDeploy
+    ctPreCook
+    ctClean
+    ctCompileNim
 
 const usage = slurp("usage.txt")
 
@@ -207,17 +207,17 @@ proc createModuleFilesIfNeeded(targetDir, moduleName: string; isNimModule, isPri
   writeFileIfNotSame(moduleFile, cppTemplate.format(moduleName))
   writeFileIfNotSame(moduleHeaderFile, moduleHeaderTemplate.format(moduleName))
 
-proc runUnrealBuildTool(engineDir: string; task: TaskType;
+proc runUnrealBuildTool(engineDir: string; command: CommandType;
                         target, platform, mode, uprojectFile: string;
                         extraOptions: string = "") =
-  let taskStr = case task:
-  of ttRecompile: "-editorrecompile"
-  of ttDeploy: "-deploy"
-  of ttClean: "-clean"
-  of ttPreCook: "-editorrecompile"
-  of ttCompileNim: nil
+  let commandStr = case command:
+  of ctRecompile: "-editorrecompile"
+  of ctDeploy: "-deploy"
+  of ctClean: "-clean"
+  of ctPreCook: "-editorrecompile"
+  of ctCompileNim: nil
 
-  let ubtPlatform = if task == ttPreCook: nimOSToUEPlatform(hostOS) else: platform
+  let ubtPlatform = if command == ctPreCook: nimOSToUEPlatform(hostOS) else: platform
 
   var buildTool: string
   let ubtPath = (engineDir / "Engine" / "Binaries" / "DotNET" / "UnrealBuildTool.exe")
@@ -232,7 +232,7 @@ proc runUnrealBuildTool(engineDir: string; task: TaskType;
 
   withDir engineDir:
     exec buildTool & " $# $# $# $# -project=\"$#\" -rocket -disableunity $#" %
-      [target, ubtPlatform, mode, taskStr, uprojectFile, extraOptions]
+      [target, ubtPlatform, mode, commandStr, uprojectFile, extraOptions]
 
 proc cleanModules(projectDir: string) =
   for moduleDir in walkDir(projectDir / "Source"):
@@ -247,13 +247,18 @@ proc getNimcacheDir(projectDir: string; moduleName: string): string =
   result = getNimOutDir(projectDir) / "nimcache" / moduleName
 
 proc createNimCfg(outDir: string, moduleDir: string) =
-  var contents = "--define:CPP\n"
+  var contents = ""
+  if existsFile(moduleDir / "nim.cfg"):
+    contents = readFile(moduleDir / "nim.cfg")
+    if not contents.endsWith("\n"):
+      contents.add("\n")
+  contents.add("--define:CPP\n")
   if hostOS == "windows":
     contents.add("cc=vcc\n")
   contents.add("--define:noSignalHandler\n")
   contents.add("--path:\"" & moduleDir.replace("\\", "/") & "\"\n")
   contents.add("--path:\"" & getCurrentDir().replace("\\", "/") & "\"\n")
-  contents.add("--define:useRealtimeGC")
+  contents.add("--define:useRealtimeGC\n")
   contents.add("--experimental\n")
   writeFile(outDir / "nim.cfg", contents)
 
@@ -274,6 +279,9 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string) =
       continue
     let moduleDir = sourceDirFile.path
     let moduleName = moduleDir.extractFilename()
+    if not existsFile(moduleDir / moduleName & ".Build.cs"):
+      # not UE4 module
+      continue
     let nimcacheDir = getNimcacheDir(projectDir, moduleName)
 
     let targetDir = moduleDir / nimModuleDirName
@@ -338,17 +346,17 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string) =
       elif file.endsWith(".cpp"):
         processFile(file, moduleName, targetDir)
 
-proc build(task: TaskType, engineDir, projectDir, projectName, target, mode, platform, extraOptions: string) =
+proc build(command: CommandType, engineDir, projectDir, projectName, target, mode, platform, extraOptions: string) =
   var os, cpu: string = nil
-  if task != ttPreCook:
+  if command != ctPreCook:
     (os, cpu) = uePlatformToNimOSCPU(platform)
-  if task == ttPreCook and hostOS == "windows":
+  if command == ctPreCook and hostOS == "windows":
     cpu = "amd64" # editor builds do not support Win32
 
   buildNim(projectDir, projectName, os, cpu, platform)
-  runUnrealBuildTool(engineDir, task, target, platform, mode, projectDir / projectName & ".uproject", extraOptions)
+  runUnrealBuildTool(engineDir, command, target, platform, mode, projectDir / projectName & ".uproject", extraOptions)
 
-  if task == ttPreCook:
+  if command == ctPreCook:
     # When precooking, we have to compile editor for the current platform first,
     # and then regenerate the .cpp files for the project target platform
     # Thankfully, this is only needed in CI builds, so local development cycle is undisturbed
@@ -362,7 +370,7 @@ proc clean(engineDir, projectDir, projectName, target, mode, platform, extraOpti
   let nimOutDir = getNimOutDir(projectDir)
   removeDir nimOutDir
 
-  runUnrealBuildTool(engineDir, ttClean, target, platform, mode, projectDir / projectName & ".uproject", extraOptions)
+  runUnrealBuildTool(engineDir, ctClean, target, platform, mode, projectDir / projectName & ".uproject", extraOptions)
 
   cleanModules(projectDir)
 
@@ -385,9 +393,9 @@ when isMainModule:
   var platform = nimOSToUEPlatform(hostOS)
   var extraOptions = ""
   var projectDir: string = nil
-  var task = ttRecompile
+  var command = ctRecompile
   var engineDir: string = nil
-  var expectedOptType = otTask
+  var expectedOptType = otCommand
 
   var p = initOptParser()
   while true:
@@ -397,14 +405,14 @@ when isMainModule:
     case kind:
       of cmdArgument:
         case expectedOptType:
-        of otTask:
+        of otCommand:
           case key:
-          of "deploy": task = ttDeploy
-          of "precook": task = ttPreCook
-          of "clean": task = ttClean
-          of "recompile": task = ttRecompile
-          of "compilenim": task = ttCompileNim
-          else: raise newException(ValueError, "Unknown task: " & key)
+          of "deploy": command = ctDeploy
+          of "precook": command = ctPreCook
+          of "clean": command = ctClean
+          of "recompile": command = ctRecompile
+          of "compilenim": command = ctCompileNim
+          else: raise newException(ValueError, "Unknown command: " & key)
           extraOptions = cmdLineRest(p)
           break
         of otProjectDir:
@@ -417,7 +425,7 @@ when isMainModule:
           platform = key
         of otEngineLocation:
           engineDir = key
-        expectedOptType = otTask
+        expectedOptType = otCommand
       of cmdShortOption:
         case key:
           of "d": expectedOptType = otProjectDir
@@ -450,7 +458,7 @@ when isMainModule:
   let projectName = detectProjectName(projectDir)
   if target == nil:
     target = projectName & "Editor"
-  case task:
-    of ttPreCook, ttDeploy, ttRecompile: build(task, engineDir, projectDir, projectName, target, mode, platform, extraOptions)
-    of ttClean: clean(engineDir, projectDir, projectName, target, mode, platform, extraOptions)
-    of ttCompileNim: compileNim(engineDir, projectDir, projectName, target, mode, platform, extraOptions)
+  case command:
+    of ctPreCook, ctDeploy, ctRecompile: build(command, engineDir, projectDir, projectName, target, mode, platform, extraOptions)
+    of ctClean: clean(engineDir, projectDir, projectName, target, mode, platform, extraOptions)
+    of ctCompileNim: compileNim(engineDir, projectDir, projectName, target, mode, platform, extraOptions)
