@@ -1450,39 +1450,6 @@ wclass(UWorld of UObject, header: "Engine/World.h", notypedef):
     ##
     ## @return	Actor that just spawned
 
-  proc spawnActor[T](spawnParameters = initFActorSpawnParameters()): ptr T
-    ## Templated version of SpawnActor that allows you to specify a class type via the template type
-
-  proc spawnActor[T](location: FVector; rotation: FRotator; spawnParameters = initFActorSpawnParameters()): ptr T
-    ## Templated version of SpawnActor that allows you to specify location and rotation in addition to class type via the template type
-
-  proc spawnActor[T](class: ptr UClass; spawnParameters = initFActorSpawnParameters()): ptr T
-    ## Templated version of SpawnActor that allows you to specify the class type via parameter while the return type is a parent class of that type
-
-  proc spawnActor[T](class: ptr UClass; location: FVector; rotation: FRotator;
-      spawnParameters = initFActorSpawnParameters()): ptr T
-    ## Templated version of SpawnActor that allows you to specify the rotation and location in addition
-    ## class type via parameter while the return type is a parent class of that type
-
-  proc spawnActor[T](class: ptr UClass; transform: FTransform; spawnParameters = initFActorSpawnParameters()): ptr T
-    ## Templated version of SpawnActor that allows you to specify whole Transform
-    ## class type via parameter while the return type is a parent class of that type
-
-  proc spawnActorAbsolute[T](absoluteLocation: FVector; absoluteRotation: FRotator;
-      spawnParameters = initFActorSpawnParameters()): ptr T
-    ## Templated version of SpawnActorAbsolute that allows you to specify absolute location and rotation in addition to class type via the template type
-
-  proc spawnActorAbsolute[T](class: ptr UClass; transform: FTransform; spawnParameters = initFActorSpawnParameters()): ptr T
-    ## Templated version of SpawnActorAbsolute that allows you to specify whole absolute Transform
-    ## class type via parameter while the return type is a parent class of that type
-
-  proc spawnActorDeferred[T](class: ptr UClass; transform: FTransform;
-                            owner: ptr AActor = nil;
-                            instigator: ptr APawn = nil; collisionHandlingOverride: ESpawnActorCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod.Undefined): ptr T
-    ## Spawns given class and returns class T pointer, forcibly sets world transform (note this allows scale as well). WILL NOT run Construction Script of Blueprints
-    ## to give caller an opportunity to set parameters beforehand.  Caller is responsible for invoking construction
-    ## manually by calling UGameplayStatics::FinishSpawningActor (see AActor::OnConstruction).
-
   proc getAuthGameMode[T](): ptr T {.cppname: "#.GetAuthGameMode<'*0>()"noSideEffect.}
     ## Returns the current GameMode instance cast to the template type.
     ## This can only return a valid pointer on the server. Will always return null on a client
@@ -1798,6 +1765,43 @@ wclass(UWorld of UObject, header: "Engine/World.h", notypedef):
   ## 	static UWorld* FindWorldInPackage(UPackage* Package);
   ## 	/** If the specified package contains a redirector to a UWorld, that UWorld is returned. Otherwise, nil is returned. */
   ## 	static UWorld* FollowWorldRedirectorInPackage(UPackage* Package, UObjectRedirector** OptionalOutRedirector = nil);
+
+proc spawnActor*[T](world: ptr UWorld, spawnParameters = initFActorSpawnParameters()): ptr T {.importcpp: "#.SpawnActor<'*0>(@)", nodecl.}
+  ## Templated version of SpawnActor that allows you to specify a class type via the template type
+
+
+proc spawnActor*[T](world: ptr UWorld, location: FVector; rotation: FRotator; spawnParameters = initFActorSpawnParameters()): ptr T {.importcpp: "#.SpawnActor<'*0>(@)", nodecl.}
+  ## Templated version of SpawnActor that allows you to specify location and rotation in addition to class type via the template type
+
+proc spawnActor*[T](world: ptr UWorld, class: ptr UClass; spawnParameters = initFActorSpawnParameters()): ptr T {.importcpp: "#.SpawnActor<'*0>(@)", nodecl.}
+  ## Templated version of SpawnActor that allows you to specify the class type via parameter while the return type is a parent class of that type
+
+proc spawnActor*[T](world: ptr UWorld, class: ptr UClass; location: FVector; rotation: FRotator;
+    spawnParameters = initFActorSpawnParameters()): ptr T {.importcpp: "#.SpawnActor<'*0>(@)", nodecl.}
+  ## Templated version of SpawnActor that allows you to specify the rotation and location in addition
+  ## class type via parameter while the return type is a parent class of that type
+
+proc spawnActor*[T](world: ptr UWorld, class: ptr UClass; transform: FTransform; spawnParameters = initFActorSpawnParameters()): ptr T {.importcpp: "#.SpawnActor<'*0>(@)", nodecl.}
+  ## Templated version of SpawnActor that allows you to specify whole Transform
+  ## class type via parameter while the return type is a parent class of that type
+
+proc spawnActorAbsolute*[T](world: ptr UWorld, absoluteLocation: FVector; absoluteRotation: FRotator;
+    spawnParameters = initFActorSpawnParameters()): ptr T {.importcpp: "#.SpawnActorAbsolute<'*0>(@)", nodecl.}
+  ## Templated version of SpawnActorAbsolute that allows you to specify absolute location and rotation in addition to class type via the template type
+
+proc spawnActorAbsolute*[T](world: ptr UWorld, class: ptr UClass; transform: FTransform; spawnParameters = initFActorSpawnParameters()): ptr T {.importcpp: "#.SpawnActorAbsolute<'*0>(@)", nodecl.}
+  ## Templated version of SpawnActorAbsolute that allows you to specify whole absolute Transform
+  ## class type via parameter while the return type is a parent class of that type
+
+proc spawnActorDeferred*[T](world: ptr UWorld;
+                           class: ptr UClass;
+                           transform: FTransform;
+                           owner: ptr AActor = nil;
+                           instigator: ptr APawn = nil;
+                           collisionHandlingOverride: ESpawnActorCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod.Undefined): ptr T  {.importcpp: "#.SpawnActorDeferred<'*0>(@)", nodecl.}
+  ## Spawns given class and returns class T pointer, forcibly sets world transform (note this allows scale as well). WILL NOT run Construction Script of Blueprints
+  ## to give caller an opportunity to set parameters beforehand.  Caller is responsible for invoking construction
+  ## manually by calling UGameplayStatics::FinishSpawningActor (see AActor::OnConstruction).
 
 proc getNonDefaultPhysicsVolumeIterator(world: ptr UWorld): TArrayConstIterator[TAutoWeakObjectPtr[APhysicsVolume]] {.importcpp: "GetNonDefaultPhysicsVolumeIterator", nodecl, noSideEffect.}
 proc getLevelIterator(world: ptr UWorld): TArrayConstIterator[TAutoWeakObjectPtr[ULevel]] {.importcpp :"GetLevelIterator", nodecl, noSideEffect.}
