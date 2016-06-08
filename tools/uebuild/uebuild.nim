@@ -66,6 +66,10 @@ const moduleAppendix = """
 const moduleHeaderTemplate = """
   #pragma once
   #include "Engine.h"
+
+  #if PLATFORM_WINDOWS
+  #include "Windows/AllowWindowsPlatformTypes.h"
+  #endif
 """
 
 template withDir(dir: string; body: untyped): untyped =
