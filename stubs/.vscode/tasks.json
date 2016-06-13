@@ -29,9 +29,7 @@
   "problemMatcher": {
     "fileLocation": [
       "relative",
-      "${workspaceRoot}",
-      "${workspaceRoot}/Source/KingdomClient/model/",
-      "${workspaceRoot}/Source/KingdomClient/"
+      "${workspaceRoot}"
     ],
     "severity": "error",
     "pattern": {
