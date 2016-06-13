@@ -55,7 +55,6 @@ High priority roadmap items include:
 
 * Automated generation of wrappers for UE4 types
 * UE4 plug-in that improves editor experience when working with Nim projects
-* [Nimble](https://github.com/nim-lang/nimble) integration
 
 ## License
 

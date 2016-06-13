@@ -35,7 +35,7 @@ const cppModuleFileTemplate = """
 const nimModuleFileTemplate = """
   #include "$1.h"
 
-  extern "C" {void NimMain(void);}
+  void NimMain(void);
 
 #if WITH_EDITOR
   struct NimInitializer {
@@ -143,11 +143,17 @@ proc writeFileIfNotSame(filename, contents: string) =
   if not fileExists(filename) or readFile(filename) != contents:
     writeFile(filename, contents)
 
-proc processFile(file, moduleName: string; outDir: string) =
+proc processFile(file, moduleName: string; outDir: string; nimblePackageName: string) =
   let moduleIncludeString = "#include \"$#.h\"\n" % moduleName
   let exportMacro = moduleName.toUpper() & "_API"
   let outCppDir = outDir / "Private"
-  let outFile = outCppDir / extractFilename(file)
+
+  var (_, outName, _) = splitFile(file)
+  # When .nimble is present, Nim prefixes .cpp files with Nimble package name.
+  # We need to get rid of that, because nimue4 macros rely on .cpp files being named after .nim files
+  if nimblePackageName != nil and outName.startsWith(nimblePackageName & "_"):
+    outName = outName[nimblePackageName.len+1..^1] # +1 to account for `_`
+  let outFile = outCppDir / outName & ".cpp"
 
   if outFile != file and fileExists(outFile) and file.getLastModificationTime() < outFile.getLastModificationTime():
     # no changes - no need to process
@@ -165,13 +171,11 @@ proc processFile(file, moduleName: string; outDir: string) =
   assert(intBitsDefBegin != -1)
   let intBitsDef = contents[intBitsDefBegin..intBitsDefEnd]
   if contents.contains(beginTypeMarker):
-    let (_, filename, _) = splitFile(file)
-
     let isUHTAffected = contents.contains(peg"s <- ('UCLASS' / 'UINTERFACE' / 'USTRUCT' / 'UENUM')")
-    let includes = extractIncludes(contents, filename)
+    let includes = extractIncludes(contents, outName)
     let typeDefs = extractTypeDefinitions(contents)
 
-    let generatedInclude = if isUHTAffected: "#include \"" & filename & ".generated.h\"\n" else: ""
+    let generatedInclude = if isUHTAffected: "#include \"" & outName & ".generated.h\"\n" else: ""
 
     var headerFileContents = $("#pragma once\n" & intBitsDef & includes & generatedInclude & typeDefs)
     var outHeaderDir = outCppDir
@@ -180,9 +184,9 @@ proc processFile(file, moduleName: string; outDir: string) =
       createDir(outHeaderDir)
       headerFileContents = headerFileContents.replace(exportMarker, exportMacro)
 
-    writeFile(outHeaderDir / outFile.extractFilename().changeFileExt("h"), headerFileContents)
+    writeFile(outHeaderDir / outName & ".h", headerFileContents)
 
-    let headerIncludeString = "#include \"$#.h\"\n" % filename
+    let headerIncludeString = "#include \"$#.h\"\n" % outName
     if not contents.contains(headerIncludeString):
       contents.insert(headerIncludeString, intBitsDefEnd + 1)
 
@@ -250,20 +254,35 @@ proc getNimOutDir(projectDir: string): string =
 proc getNimcacheDir(projectDir: string; moduleName: string): string =
   result = getNimOutDir(projectDir) / "nimcache" / moduleName
 
-proc createNimCfg(outDir: string, moduleDir: string) =
+proc createNimCfg(outDir: string; moduleDir, nimcacheDir, rootFile: string;
+                  isEditorBuild: bool; platform, os, cpu: string) =
   var contents = ""
   if existsFile(moduleDir / "nim.cfg"):
     contents = readFile(moduleDir / "nim.cfg")
     if not contents.endsWith("\n"):
       contents.add("\n")
-  contents.add("--define:CPP\n")
+  contents.add("-c\n")
+  contents.add("--define:CPP\n") # for nimsuggest
+  contents.add("--noMain\n")
+  contents.add("--experimental\n")
   if hostOS == "windows":
     contents.add("cc=vcc\n")
   contents.add("--define:noSignalHandler\n")
+  contents.add("--define:useRealtimeGC\n")
+  if os != nil:
+    contents.add("--os:" & os & "\n")
+  if cpu != nil:
+    contents.add("--cpu:" & cpu & "\n")
+  if platform == "android" or platform == "ios":
+    contents.add("--noCppExceptions\n")
+    contents.add("--define:dontWrapNimExceptions\n")
+  if isEditorBuild:
+    contents.add("--define:editor\n")
   contents.add("--path:\"" & moduleDir.replace("\\", "/") & "\"\n")
   contents.add("--path:\"" & getCurrentDir().replace("\\", "/") & "\"\n")
-  contents.add("--define:useRealtimeGC\n")
-  contents.add("--experimental\n")
+  contents.add("--nimcache:\"" & nimcacheDir.replace("\\", "/") & "\"\n")
+
+  # TODO: use -d:release --deadCodeElim:on for release builds
   writeFile(outDir / "nim.cfg", contents)
 
 proc copyNimFilesAddingImports(dir: string, rootFileContent: var Rope) =
@@ -293,6 +312,7 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string, isEditorBuil
     var expectedFilenames = initSet[string]()
 
     var rootFileContent = rope("")
+    var nimbleFile: string = nil
     for file in walkDirRec(moduleDir):
       if file.endsWith(".nim") and not file.endsWith(".inc.nim"):
         if file.extractFilename().cmpIgnoreCase(moduleName & ".nim") == 0:
@@ -301,6 +321,8 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string, isEditorBuil
         let importArg = makeRelative(file, moduleDir).replace("\\", "/")
         rootFileContent = rootFileContent & "import \"" & importArg & "\"\n"
         expectedFilenames.incl(file.changeFileExt("h").extractFilename())
+      if file.endsWith(".nimble") and sameFile(file.parentDir(), moduleDir):
+        nimbleFile = file
 
     let isPrimaryModule = (moduleName == projectName)
     let isNimModule = (rootFileContent.len != 0)
@@ -315,40 +337,35 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string, isEditorBuil
       createDir(nimOutDir)
       copyNimFilesAddingImports(nimOutDir, rootFileContent)
       writeFileIfNotSame(rootFile, $rootFileContent)
-      createNimCfg(nimOutDir, moduleDir)
 
-      # TODO: use -d:release --deadCodeElim:on for release builds
-      var osCpuFlags = ""
-      if os != nil:
-        osCpuFlags.add("--os:" & os)
-      if cpu != nil:
-        osCpuFlags.add(" --cpu:" & cpu)
+      var nimblePackageName: string = nil
+      if nimbleFile != nil:
+        copyFile(nimbleFile, nimOutDir / extractFilename(nimbleFile))
+        nimblePackageName = splitFile(nimbleFile).name
+
       let platform = uePlatform.toLower()
-      let exceptionFlags = if platform == "android" or platform == "ios": "--noCppExceptions -d:dontWrapNimExceptions"
-                           else: ""
-      exec "nim cpp -c --noMain " & exceptionFlags &
-           " --experimental " & osCpuFlags & (if isEditorBuild: " -d:editor" else: "") &
-           " -p:\"" & getCurrentDir() & "\" -p:\"" & moduleDir & "\" --nimcache:\"" & nimcacheDir &
-           "\" \"" & rootFile & '"'
-      # export NimMain procedure so that it can be used from module initialization code
-      replaceInFile(nimcacheDir / rootFile.extractFilename().changeFileExt(".cpp"),
-                    "N_CDECL(void, NimMain)",
-                    "NIM_EXTERNC N_CDECL(void, NimMain)")
+      createNimCfg(nimOutDir, moduleDir, nimcacheDir, rootFile, isEditorBuild, platform, os, cpu)
 
-    for file in walkDirRec(nimcacheDir, {pcFile}):
-      if file.endsWith(".h") and not expectedFilenames.contains(extractFilename(file)):
-        let cppFile = file.changeFileExt("cpp")
-        let filename = file.extractFilename()
-        let cppFilename = cppFile.extractFilename()
-        removeFile file
-        removeFile cppFile
-        removeFile targetDir / file.extractFilename()
-        removeFile targetDir / "Public" / file.extractFilename()
-        removeFile targetDir / "Private" / file.extractFilename()
-        removeFile targetDir / cppFilename
-        removeFile targetDir / "Private" / cppFilename
-      elif file.endsWith(".cpp"):
-        processFile(file, moduleName, targetDir)
+      if nimbleFile == nil:
+        exec "nim cpp \"" & rootFile & '"'
+      else:
+        withDir nimOutDir:
+          exec "nimble cpp \"" & rootFile & '"'
+
+      for file in walkDirRec(nimcacheDir, {pcFile}):
+        if file.endsWith(".h") and not expectedFilenames.contains(extractFilename(file)):
+          let cppFile = file.changeFileExt("cpp")
+          let filename = file.extractFilename()
+          let cppFilename = cppFile.extractFilename()
+          removeFile file
+          removeFile cppFile
+          removeFile targetDir / file.extractFilename()
+          removeFile targetDir / "Public" / file.extractFilename()
+          removeFile targetDir / "Private" / file.extractFilename()
+          removeFile targetDir / cppFilename
+          removeFile targetDir / "Private" / cppFilename
+        elif file.endsWith(".cpp"):
+          processFile(file, moduleName, targetDir, nimblePackageName)
 
 proc build(command: CommandType, engineDir, projectDir, projectName, target, mode, platform, extraOptions: string) =
   var os, cpu: string = nil
