@@ -1946,10 +1946,10 @@ wclass(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
     ##     Actor->GetComponents(PrimComponents);
     ## }
 
-  proc getComponents(): var TArray[ptr UActorComponent] {.noSideEffect.}
-    ## Get a direct reference to the Components array rather than a copy with the null pointers removed.
+  proc getComponents(): var TSet[ptr UActorComponent] {.noSideEffect.}
+    ## Get a direct reference to the Components set rather than a copy with the null pointers removed.
     ## WARNING: anything that could cause the component to change ownership or be destroyed will invalidate
-    ## this array, so use caution when iterating this list!
+    ## this array, so use caution when iterating this set!
 
   proc addOwnedComponent(component: ptr UActorComponent)
     ## Puts a component in to the OwnedComponents array of the Actor.
