@@ -276,6 +276,10 @@ proc createNimCfg(outDir: string; moduleDir, nimcacheDir, rootFile: string;
   if platform == "android" or platform == "ios":
     contents.add("--noCppExceptions\n")
     contents.add("--define:dontWrapNimExceptions\n")
+  if platform == "ios":
+    contents.add("--define:ios\n")
+  if platform == "android":
+    contents.add("--define:android\n")
   if isEditorBuild:
     contents.add("--define:editor\n")
   contents.add("--path:\"" & moduleDir.replace("\\", "/") & "\"\n")
