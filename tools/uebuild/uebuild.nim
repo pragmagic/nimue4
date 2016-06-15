@@ -385,7 +385,7 @@ proc build(command: CommandType, engineDir, projectDir, projectName, target, mod
     # When precooking, we have to compile editor for the current platform first,
     # and then regenerate the .cpp files for the project target platform
     # Thankfully, this is only needed in CI builds, so local development cycle is undisturbed
-    removeDir (projectDir / ".nimcache")
+    removeDir(getNimOutDir(projectDir) / "nimcache")
     cleanModules(projectDir)
 
     (os, cpu) = uePlatformToNimOSCPU(platform)
