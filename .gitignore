@@ -3,3 +3,6 @@ nimsuggest.log
 .DS_Store
 tools/uebuild/uebuild
 tools/uebuild/uebuild\.exe
+
+*.ilk
+*.pdb
