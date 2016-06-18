@@ -184,7 +184,7 @@ proc processFile(file, moduleName: string; outDir: string; nimblePackageName: st
       createDir(outHeaderDir)
       headerFileContents = headerFileContents.replace(exportMarker, exportMacro)
 
-    writeFile(outHeaderDir / outName & ".h", headerFileContents)
+    writeFileIfNotSame(outHeaderDir / outName & ".h", headerFileContents)
 
     let headerIncludeString = "#include \"$#.h\"\n" % outName
     if not contents.contains(headerIncludeString):
