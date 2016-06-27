@@ -320,6 +320,12 @@ type
 
     TraceTypeQuery_MAX
 
+  ETrailWidthMode* {.importcpp, header: "Engine/EngineTypes.h".} = enum
+    ## Controls the way that the width scale property affects animation trails.
+    ETrailWidthMode_FromCentre,
+    ETrailWidthMode_FromFirst,
+    ETrailWidthMode_FromSecond
+
   ERadialImpulseFalloff* {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(cint).} = enum
     ## Enum for controlling the falloff of strength of a radial impulse as a function of distance from Origin.
     RIF_Constant, ## Impulse is a constant strength, up to the limit of its range.

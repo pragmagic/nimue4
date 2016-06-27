@@ -72,6 +72,7 @@ wclass(FVector, header: "Math/Vector.h", bycopy):
 
   proc initFVector(x, y, z: cfloat): FVector {.constructor.}
   proc vec(x, y, z: cfloat): FVector {.constructor.}
+  proc vec(xyz: cfloat): FVector {.constructor.}
 
   proc set(x, y, z: cfloat)
 
@@ -150,6 +151,9 @@ wclass(FVector, header: "Math/Vector.h", bycopy):
 
   proc size2D(): cfloat
   proc sizeSquared2D(): cfloat
+
+  proc rotation(): FRotator {.noSideEffect.}
+  proc toOrientationRotator(): FRotator {.noSideEffect.}
 
 proc `*`*(scale: cfloat, vec: FVector): FVector {.importcpp: "(# * #)", nodecl, noSideEffect.}
   ## Gets the result of scaling the vector (multiplying each component by a value).
@@ -722,6 +726,10 @@ type
 
 proc sqr*(f: float32): float32 {.
   importc: "FMath::Square", header: "Math/UnrealMathUtility.h".}
+
+proc lerp*[T, U](a, b: T; alpha: U): T {.
+  importc: "FMath::Lerp", header: "Math/UnrealMathUtility.h".}
+
 # Special-case interpolation
 
 proc vInterpNormalRotationTo*(current: FVector; target: FVector; deltaTime: cfloat;

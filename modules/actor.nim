@@ -513,8 +513,8 @@ wclass(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
     ## Get the right (Y) vector (length 1.0) from this Actor, in world space.
     ## UFUNCTION(BlueprintCallable, Category = "Utilities|Transformation")
 
-  proc getActorBounds(bOnlyCollidingComponents: bool; Origin: var FVector;
-                      BoxExtent: var FVector) {.noSideEffect.}
+  proc getActorBounds(bOnlyCollidingComponents: bool; origin: var FVector;
+                      boxExtent: var FVector) {.noSideEffect.}
     ## Returns the bounding box of all components that make up this Actor.
     ## @param bOnlyCollidingComponents  If true, will only return the bounding box for components with collision enabled.
     ##

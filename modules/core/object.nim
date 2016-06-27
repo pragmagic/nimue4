@@ -203,6 +203,9 @@ wclass(UObjectBase, header: "UObject/UObjectBase.h", notypedef):
   proc getOuter(): ptr UObject {.noSideEffect.}
   proc getFName(): FName {.noSideEffect.}
 
+wclass(UObjectBaseUtility of UObjectBase, header: "UObject/UObjectBaseUtility.h", notypedef):
+  proc isPendingKill(): bool {.noSideEffect.}
+
 proc createDefaultSubobject*[T](obj: ptr UObject, subobjectName: FName; bTransient: bool = false): ptr T {.importcpp: "#.CreateDefaultSubobject<'*0>(@)", nodecl.}
 proc createDefaultSubobject*[T](obj: ptr UObject, subobjectName: wstring; bTransient: bool = false): ptr T {.importcpp: "#.CreateDefaultSubobject<'*0>(@)", nodecl.}
 
@@ -778,6 +781,13 @@ proc loadObject*[T: UObject](path: FString): ptr T =
   result = loadObject[T](wideString(path))
 proc loadObject*[T: UObject](path: string): ptr T =
   result = loadObject[T](toWideString(path))
+
+proc ueNew*[T](): ptr T {.importcpp: "(NewObject<'*0>())", nodecl.}
+proc ueNew*[T](outer: ptr UObject): ptr T {.importcpp: "(NewObject<'*0>(@))", nodecl.}
+proc ueNew*[T](outer: ptr UObject, class: ptr UClass): ptr T {.importcpp: "(NewObject<'*0>(@))", nodecl.}
+proc ueNew*[T](outer: ptr UObject, class: ptr UClass, name: FName = NAME_None,
+               flags = RF_NoFlags, objTemplate: ptr UObject = nil, bCopyTransientsFromClassDefaults = false,
+               inInstanceGraph: ptr FObjectInstancingGraph): ptr T {.importcpp: "(NewObject<'*0>(@))", nodecl.}
 
 proc ctorLoadObject*(T: typedesc, path: static[string]): ptr T {.inline.} =
   ## Loads object of the specified type from the specified path.

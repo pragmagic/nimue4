@@ -30,6 +30,8 @@ type
   UCapsuleComponent* {.header: "Components/CapsuleComponent.h", importcpp.} = object of UShapeComponent
   USphereComponent* {.header: "Components/SphereComponents.h", importcpp.} = object of UShapeComponent
 
+  UParticleSystemComponent* {.header: "Particles/ParticleSystemComponent.h", importcpp.} = object of UPrimitiveComponent
+
   UMeshComponent* {.header: "Components/MeshComponent.h", importcpp.} = object of UPrimitiveComponent
   UStaticMeshComponent* {.header: "Components/StaticMeshComponent.h", importcpp.} = object of UMeshComponent
     staticMesh* {.importcpp: "StaticMesh".}: ptr UStaticMesh

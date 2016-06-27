@@ -164,11 +164,16 @@ type
 
   UCheatManager* {.header: "GameFramework/CheatManager.h", importcpp.} = object of UObject
 
+  UParticleSystem* {.header: "Particles/ParticleSystem.h", importcpp.} = object of UObject
+  UParticleSystemReplay* {.header: "Particles/ParticleSystemReplay.h", importcpp.} = object of UObject
+
   UMaterialInterface* {.header: "Materials/MaterialInterface.h", importcpp.} = object of UObject
   UMaterialInstance* {.header: "Materials/MaterialInstance.h", importcpp.} = object of UMaterialInterface
   UMaterialInstanceDynamic* {.header: "Materials/MaterialInstanceDynamic.h", importcpp.} = object of UMaterialInstance
   UMaterialParameterCollectionInstance* {.header: "Materials/MaterialParameterCollectionInstance.h", importcpp.} = object of UObject
   UMaterialParameterCollection* {.header: "Materials/MaterialParameterCollection.h", importcpp.} = object of UObject
+
+  FMaterialRelevance* {.header: "Materials/MaterialInterface.h", importcpp.} = object
 
   UBlueprintCore* {.header: "Engine/BlueprintCore.h", importcpp.} = object of UObject
   UBlueprint* {.header: "Engine/Blueprint.h", importcpp.} = object of UBlueprintCore
@@ -303,6 +308,7 @@ include modules/components/billboard
 include modules/components/pathfollowing
 
 include modules/components/skeletalmesh
+include modules/components/particlesystem
 
 include modules/engine/brush
 include modules/engine/volume

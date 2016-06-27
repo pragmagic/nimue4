@@ -3,7 +3,6 @@
 ## Types that didn't fit into other interfaced modules for now
 
 proc ueCast*[T](v: ptr UObject): ptr T {.importcpp: "(Cast<'*0>(@))", nodecl.}
-proc ueNew*[T](): ptr T {.importcpp: "(NewObject<'*0>())", nodecl.}
 
 macro invokeSuper*(parentType: typedesc, f: untyped, params: varargs[typed]): stmt =
   if f.kind != nnkIdent:
