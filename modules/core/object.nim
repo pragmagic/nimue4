@@ -205,6 +205,9 @@ wclass(UObjectBase, header: "UObject/UObjectBase.h", notypedef):
 
 wclass(UObjectBaseUtility of UObjectBase, header: "UObject/UObjectBaseUtility.h", notypedef):
   proc isPendingKill(): bool {.noSideEffect.}
+  proc addToRoot()
+    ## Add an object to the root set. This prevents the object and all
+    ## its descendants from being deleted during garbage collection.
 
 proc createDefaultSubobject*[T](obj: ptr UObject, subobjectName: FName; bTransient: bool = false): ptr T {.importcpp: "#.CreateDefaultSubobject<'*0>(@)", nodecl.}
 proc createDefaultSubobject*[T](obj: ptr UObject, subobjectName: wstring; bTransient: bool = false): ptr T {.importcpp: "#.CreateDefaultSubobject<'*0>(@)", nodecl.}
