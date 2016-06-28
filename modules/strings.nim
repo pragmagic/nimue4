@@ -190,6 +190,9 @@ proc `&`*(x, y: FText): FText =
   # is there a more efficient way?
   textFormat(TEXT("{0}{1}"), x, y)
 
+proc `$`*(t: FText): string =
+  $t.toString()
+
 # TODO: currency, date transformation to FText
 
 type EName* {.header: "UObject/UnrealNames.h" importcpp: "EName".} = enum
