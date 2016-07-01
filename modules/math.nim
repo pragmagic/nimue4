@@ -690,6 +690,11 @@ wclass(FLinearColor, header: "Math/Color.h", notypedef):
     ## Quantizes the linear color and returns the result as a FColor with optional sRGB conversion and quality as goal.
 
 wclass(FTransform, header: "Math/ScalarRegister.h", notypedef):
+  proc initFTransform(): FTransform {.constructor.}
+
+  proc transformVector(v: FVector): FVector {.noSideEffect.}
+  proc transformVectorNoScale(v: FVector): FVector {.noSideEffect.}
+
   proc getTranslation(): FVector {.noSideEffect.}
   proc getRotation(): FQuat {.noSideEffect.}
   proc getScale3D(): FVector {.noSideEffect.}
