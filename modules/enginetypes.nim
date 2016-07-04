@@ -406,7 +406,23 @@ type
   FPointDamageEvent* {.header: "Engine/EngineTypes.h", importcpp.} = object of FDamageEvent
 
   FTickFunction* {.header: "Engine/EngineTypes.h", importcpp, inheritable.} = object
-    bCanEverTick* : bool
+    bCanEverTick*: bool
+      ## If false, this tick function will never be registered and will never tick. Only settable in defaults.
+    bTickEvenWhenPaused*: bool
+    bStartWithTickEnabled*: bool
+      ## If true, this tick function will start enabled, but can be disabled later on.
+    bAllowTickOnDedicatedServer*: bool
+      ## If we allow this tick to run on a dedicated server
+    bHighPriority*: bool
+      ## Run this tick first within the tick group, presumably to start async tasks that
+      ## must be completed with this tick group, hiding the latency.
+    bRunOnAnyThread*: bool
+      ## If false, this tick will run on the game thread, otherwise
+      ## it will run on any thread in parallel with the game thread and in parallel with other "async ticks"
+    tickInterval* {.importcpp: "TickInterval".}: cfloat
+      ## The frequency in seconds at which this tick function will be executed.
+      ## If less than or equal to 0 then it will tick every frame
+
   FActorComponentTickFunction* {.header: "Engine/EngineTypes.h", importcpp.} = object of FTickFunction
   FActorTickFunction* {.header: "Engine/EngineTypes.h", importcpp.} = object of FTickFunction
   FCharacterMovementComponentPreClothTickFunction* {.header: "Engine/EngineTypes.h", importcpp.} = object of FTickFunction
