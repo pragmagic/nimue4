@@ -203,7 +203,7 @@ wclass(FBoxSphereBounds, header: "Math/BoxSphereBounds.h", bycopy):
     ## Holds the origin of the bounding box and sphere.
   var boxExtent: FVector
     ## Holds the extent of the bounding box.
-  var sphereRadius: float
+  var sphereRadius: cfloat
     ## Holds the radius of the bounding sphere.
 
   proc initFBoxSphereBounds(): FBoxSphereBounds {.constructor.}

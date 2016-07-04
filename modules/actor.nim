@@ -1183,7 +1183,7 @@ wclass(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
   proc getRootComponent(): ptr USceneComponent {.noSideEffect, noSideEffect.}
     ## Returns this actor's root component.
 
-  proc setRootComponent(newRootComponent: ptr USceneComponent): bool
+  proc setRootComponent(newRootComponent: ptr USceneComponent): bool {.discardable.}
     ## Sets root component to be the specified component.  NewRootComponent's owner should be this actor.
     ## @return true if successful
 

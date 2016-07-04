@@ -1,6 +1,26 @@
 # Copyright 2016 Xored Software, Inc.
 
 type
+  EAttachmentRule* {.importcpp, header: "Engine/EngineTypes.h", pure, size: sizeof(uint8).} = enum
+      ## Rules for attaching components - needs to be kept synced to EDetachmentRule
+    KeepRelative,
+      ## Keeps current relative transform as the relative transform to the new parent.
+    KeepWorld,
+      ## Automatically calculates the relative transform such that the attached component maintains the same world transform.
+    SnapToTarget
+      ## Snaps transform to the attach point
+
+  FAttachmentTransformRules* {.importcpp, header: "Engine/EngineTypes.h".} = object
+    ## Rules for attaching components
+    locationRule* {.importcpp: "LocationRule".}: EAttachmentRule
+      ## The rule to apply to location when attaching
+    rotationRule* {.importcpp: "RotationRule".}: EAttachmentRule
+      ## The rule to apply to rotation when attaching
+    scaleRule* {.importcpp: "ScaleRule".}: EAttachmentRule
+      ## The rule to apply to scale when attaching
+    bWeldSimulatedBodies*: bool
+      ## Whether to weld simulated bodies together when attaching
+
   ECollisionChannel* {.header: "Engine/EngineTypes.h", importcpp, size: sizeof(cint).} = enum
     ECC_WorldStatic,
     ECC_WorldDynamic,
@@ -604,6 +624,26 @@ type
   FGraphEvent {.importcpp, header: "Async/TaskGraphInterfaces.h".} = object
   FGraphEventRef = TRefCountPtr[FGraphEvent]
 
+# Various preset attachment rules. Note that these default rules do NOT by default weld simulated bodies
+var keepRelativeTransform* {.
+  importcpp: "FAttachmentTransformRules::KeepRelativeTransform",
+  header: "Engine/EngineTypes.h".}: FAttachmentTransformRules
+var keepWorldTransform* {.
+  importcpp: "FAttachmentTransformRules::KeepWorldTransform",
+  header: "Engine/EngineTypes.h".}: FAttachmentTransformRules
+var snapToTargetNotIncludingScale* {.
+  importcpp: "FAttachmentTransformRules::SnapToTargetNotIncludingScale",
+  header: "Engine/EngineTypes.h".}: FAttachmentTransformRules
+var snapToTargetIncludingScale* {.
+  importcpp: "FAttachmentTransformRules::SnapToTargetIncludingScale",
+  header: "Engine/EngineTypes.h".}: FAttachmentTransformRules
+
+proc initFAttachmentTransformRules(inRule: EAttachmentRule, bInWeldSimulatedBodies: bool): FAttachmentTransformRules {.importcpp: "'0(@)", constructor.}
+proc initFAttachmentTransformRules(inLocationRule: EAttachmentRule,
+                                   inRotationRule: EAttachmentRule,
+                                   inScaleRule: EAttachmentRule,
+                                   bInWeldSimulatedBodies: bool): FAttachmentTransformRules {.importcpp: "'0(@)", constructor.}
+
 wclass(FMaterialProxySettings, header: "Engine/EngineTypes.h", bycopy):
   var textureSize: FIntPoint
     ## Size of generated BaseColor map
@@ -844,7 +884,7 @@ wclass(FCollisionResponseContainer, header: "Engine/EngineTypes.h", bycopy):
 
   # in order to use this custom channels
   # we recommend to define in your local file
-  # - i.e. #define COLLISION_WEAPON		ECC_GameTraceChannel1
+  # - i.e. #define COLLISION_WEAPON ECC_GameTraceChannel1
   # and make sure you customize these it in INI file by
   #
   # in DefaultEngine.ini

@@ -513,9 +513,11 @@ wclass(USceneComponent of UActorComponent, header: "Components/SceneComponent.h"
 
   proc attachTo(inParent: ptr USceneComponent; inSocketName: FName = NAME_None;
               attachType: EAttachLocation = EAttachLocation.KeepRelativeOffset;
-              bWeldSimulatedBodies: bool = false)
+              bWeldSimulatedBodies: bool = false) {.deprecated.}
     ## Attach this component to another scene component, optionally at a named socket. It is valid to call this on components whether or not they have been Registered.
     ## @param bMaintainWorldTransform	If true, update the relative location/rotation of the component to keep its world position the same
+
+  proc attachToComponent(inParent: ptr USceneComponent, attachmentRules: FAttachmentTransformRules, inSocketName: FName = NAME_None): bool {.discardable.}
 
   proc k2_AttachTo(inParent: ptr USceneComponent; inSocketName: FName = NAME_None;
                   attachType: EAttachLocation = EAttachLocation.KeepRelativeOffset;
