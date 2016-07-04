@@ -312,9 +312,10 @@ macro wclass*(className, opts: expr, body: stmt): stmt {.immediate.} =
                   var cppName = removeStrPragma(varNameNode, "cppname")
                   if cppName == nil:
                     cppName = if ty.toStrLit.strVal == "bool": $varNameIdent else: ($varNameIdent).capitalize
+                  if varNameNode.kind != nnkPostfix:
+                    varNameNode = postfix(varNameNode, "*") # export all fields
                   if cppName != $varNameIdent:
                     varNameNode = addVarPragma(varNameNode, makeStrPragma("importcpp", cppName))
-
                   recList.add newIdentDefs(varNameNode, ty)
                 for n,ty in items(statics):
                     result.add buildStaticAccessor(n, ty, opts.className, opts.ns)
