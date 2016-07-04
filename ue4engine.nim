@@ -307,6 +307,7 @@ include modules/components/billboard
 
 include modules/components/pathfollowing
 
+include modules/components/staticmesh
 include modules/components/skeletalmesh
 include modules/components/particlesystem
 

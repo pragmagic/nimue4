@@ -1,3 +1,4 @@
 # Copyright 2016 Xored Software, Inc.
 
-# TODO
+wclass(UStaticMeshComponent of UMeshComponent, header: "Components/StaticMeshComponent.h", notypedef):
+  proc setStaticMesh(mesh: ptr UStaticMesh)
