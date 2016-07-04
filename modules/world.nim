@@ -1770,7 +1770,7 @@ proc spawnActor*[T](world: ptr UWorld, spawnParameters = initFActorSpawnParamete
   ## Templated version of SpawnActor that allows you to specify a class type via the template type
 
 
-proc spawnActor*[T](world: ptr UWorld, location: FVector; rotation: FRotator; spawnParameters = initFActorSpawnParameters()): ptr T {.importcpp: "#.SpawnActor<'*0>(@)", nodecl.}
+proc spawnActor*[T](world: ptr UWorld, location: FVector; rotation = zeroRotator; spawnParameters = initFActorSpawnParameters()): ptr T {.importcpp: "#.SpawnActor<'*0>(@)", nodecl.}
   ## Templated version of SpawnActor that allows you to specify location and rotation in addition to class type via the template type
 
 proc spawnActor*[T](world: ptr UWorld, class: ptr UClass; spawnParameters = initFActorSpawnParameters()): ptr T {.importcpp: "#.SpawnActor<'*0>(@)", nodecl.}
