@@ -109,13 +109,41 @@ wclass(FTimerManager of FNoncopyable, header: "TimerManager.h", bycopy):
     ## Debug command to output info on all timers curently set to the log.
 
 macro setTimer*[T](timerManager: ptr FTimerManager, inOutHandle: var FTimerHandle, objPtr: T, callback: proc(t: T),
-                      inRate: cfloat, bLoop: bool = false, inFirstDelay: cfloat = -1'f32): stmt =
-  ## Binds a delegate function to an Action defined in the project settings.
+                   inRate: cfloat, bLoop: bool = false, inFirstDelay: cfloat = -1'f32): stmt =
+  ## Sets a timer to call the given function with the specified rate
   result = quote do:
     {.emit: "$#->SetTimer($#, `$#`, & $#::$#, $#, $#, $#);".format(
               expandObjReference(astToStr(`timerManager`)), expandObjReference(astToStr(`inOutHandle`)),
               astToStr(`objPtr`), type(`objPtr`).name.split(" ")[^1], astToStr(`callback`).capitalize(),
               toCppSubstitution(`inRate`), repr(`bLoop`), toCppSubstitution(`inFirstDelay`)).}
+
+macro setTimer*[T](timerManager: ptr FTimerManager, inOutHandle: var FTimerHandle, delay: cfloat,
+                   objPtr: T, callback: proc, args: varargs[expr]): stmt =
+  # TODO: callback type safety
+  var invocationStr = ""
+  for arg in args:
+    invocationStr.add(",")
+    invocationStr.add("`" & $arg & "`")
+
+  result = quote do:
+    {.emit: "{FTimerDelegate nim_delegate = FTimerDelegate::CreateUObject(`$#`, & $#::$# $#); $#->SetTimer($#, nim_delegate, $#, false);}".format(
+              astToStr(`objPtr`), type(`objPtr`).name.split(" ")[^1], astToStr(`callback`).capitalize(), `invocationStr`,
+              expandObjReference(astToStr(`timerManager`)), expandObjReference(astToStr(`inOutHandle`)),
+              toCppSubstitution(`delay`)).}
+
+macro setInterval*[T](timerManager: ptr FTimerManager, inOutHandle: var FTimerHandle, initialDelay: cfloat, rate: cfloat,
+                      objPtr: T, callback: proc, args: varargs[expr]): stmt =
+  ## Sets a timer to invoke the given function on periodic interval
+  # TODO: callback type safety
+  var invocationStr = ""
+  for arg in args:
+    invocationStr.add(",")
+    invocationStr.add("`" & $arg & "`")
+  result = quote do:
+    {.emit: "{FTimerDelegate nim_delegate = FTimerDelegate::CreateUObject(`$#`, & $#::$# $#); $#->SetTimer($#, nim_delegate, $#, true, $#);}".format(
+              astToStr(`objPtr`), type(`objPtr`).name.split(" ")[^1], astToStr(`callback`).capitalize(), `invocationStr`,
+              expandObjReference(astToStr(`timerManager`)), expandObjReference(astToStr(`inOutHandle`)),
+              toCppSubstitution(`rate`), toCppSubstitution(`initialDelay`)).}
 
 template setTimerForNextTick*[T](timerManager: ptr FTimerManager, objPtr: T, callback: proc(t: T)) =
   ## Sets a timer to call the given native function on the next tick.

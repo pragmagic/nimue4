@@ -1710,7 +1710,7 @@ wclass(UWorld of UObject, header: "Engine/World.h", notypedef):
     ## Sets NumLightingUnbuiltObjects to the specified value.  Marks the worldsettings package dirty if the value changed.
     ## @param	InNumLightingUnbuiltObjects			The new value.
 
-  proc getTimerManager(): var FTimerManager {.noSideEffect.}
+  proc getTimerManager(): ptr FTimerManager {.noSideEffect, cppname: "(& #.GetTimerManager(@))".}
     ## Returns TimerManager instance for this world.
 
   proc getLatentActionManager(): var FLatentActionManager

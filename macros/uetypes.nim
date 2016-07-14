@@ -138,11 +138,11 @@ proc toCppArgList(args: seq[VarDeclaration], isUeSignature: bool = false, useGen
     let name = if useGenName: args[i].genName else: args[i].name
     result.add(valueType & " " & name)
 
-proc toCppSignature(meth: TypeMethod, methodName: Rope): Rope {.compileTime.} =
+proc toCppSignature(meth: TypeMethod, methodName: Rope, isUeSignature: bool): Rope {.compileTime.} =
   result.add(if meth.isVirtual: "virtual " else: nil)
   result.add(if meth.isStatic: "static " else: nil)
   result.add(if not meth.isConstructor: meth.node.cppReturnType() else: nil)
-  result.add(" " & methodName & "(" & toCppArgList(meth.args, true, false) & ")")
+  result.add(" " & methodName & "(" & toCppArgList(meth.args, isUeSignature, false) & ")")
   result.add(if meth.isConst: " const" else: nil)
   result.add(if meth.isOverride: " override" else: nil)
 
@@ -475,7 +475,7 @@ proc genCppMethod(typeDef: TypeDefinition, meth: TypeMethod): Rope {.compileTime
   friendSignature.add(");\n")
 
   let methNameCapitalized = rope(($meth.name).capitalize())
-  let signature = toCppSignature(meth, methNameCapitalized)
+  let signature = toCppSignature(meth, methNameCapitalized, isUeSignature = meth.isUFunction)
 
   if meth.isImplementationNeeded():
     # friend declaration is needed so that Nim procs have access to
@@ -530,7 +530,7 @@ proc genCppImplementationCode(typeDef: TypeDefinition): string {.compileTime.} =
         code.add(meth.node.cppReturnType())
         code.add(" ")
       code.add(typeDef.name & "::" & methNameCapitalized)
-      code.add("(" & toCppArgList(meth.args, true, false) & ")")
+      code.add("(" & toCppArgList(meth.args, isUeSignature = meth.isUFunction, false) & ")")
 
       let invocationArgs = meth.args.mapIt($(it.name)).join(", ")
       var superInvocation = if meth.isConstructor: rope("Super") & "(" & invocationArgs & ")"
