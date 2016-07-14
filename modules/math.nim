@@ -95,7 +95,7 @@ wclass(FVector, header: "Math/Vector.h", bycopy):
     ## Checks whether all components of the vector are exactly zero.
   proc containsNaN(): bool {.noSideEffect.}
 
-  proc normalize(tolerance: cfloat): bool
+  proc normalize(tolerance: cfloat = smallNumber): bool
     ## Normalize this vector in-place if it is large enough, set it to (0,0,0) otherwise.
   proc isNormalized(): bool {.noSideEffect.}
 
