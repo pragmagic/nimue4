@@ -695,6 +695,9 @@ wclass(FTransform, header: "Math/ScalarRegister.h", notypedef):
   proc transformVector(v: FVector): FVector {.noSideEffect.}
   proc transformVectorNoScale(v: FVector): FVector {.noSideEffect.}
 
+  proc getRelativeTransform(other: FTransform): FTransform {.noSideEffect.}
+
+  proc getLocation(): FVector {.noSideEffect.}
   proc getTranslation(): FVector {.noSideEffect.}
   proc getRotation(): FQuat {.noSideEffect.}
   proc getScale3D(): FVector {.noSideEffect.}

@@ -519,6 +519,13 @@ wclass(USceneComponent of UActorComponent, header: "Components/SceneComponent.h"
 
   proc attachToComponent(inParent: ptr USceneComponent, attachmentRules: FAttachmentTransformRules, inSocketName: FName = NAME_None): bool {.discardable.}
 
+  proc setupAttachment(inParent: ptr USceneComponent, inSocketName: FName = NAME_None)
+    ## Initializes desired Attach Parent and SocketName to be attached to when the component is registered.
+    ## Generally intended to be called from its Owning Actor's constructor and should be preferred over AttachToComponent when
+    ## a component is not registered.
+    ## @param  InParent				Parent to attach to.
+    ## @param  InSocketName			Optional socket to attach to on the parent.
+
   proc k2_AttachTo(inParent: ptr USceneComponent; inSocketName: FName = NAME_None;
                   attachType: EAttachLocation = EAttachLocation.KeepRelativeOffset;
                   bWeldSimulatedBodies: bool = true)

@@ -389,10 +389,11 @@ wclass(FName, header: "UObject/NameTypes.h", bycopy):
 
 proc `<`*[T: FString|FName](x, y: T): bool {.noSideEffect, importcpp: "(# < #)", nodecl.}
 proc `<=`*[T: FString|FName](x, y: T): bool {.noSideEffect, importcpp: "(# <= #)", nodecl.}
-proc `==`*[T: FString|FName](x, y: T): bool {.noSideEffect, importcpp: "(# == #)", nodecl.}
+proc `==`*(x, y: FString): bool {.noSideEffect, importcpp: "(# == #)", nodecl.}
+proc `==`*(x, y: FName): bool {.noSideEffect, importcpp: "(# == #)", nodecl.}
 
 proc `==`*(x: FName, y: cstring or wstring): bool {.noSideEffect, importcpp: "(# == #)", nodecl.}
-proc `==`*(x: FName, y: string): bool {.noSideEffect, importcpp: "(# == #->data)", nodecl.}
+proc `==`*(x: FName, y: string not nil): bool {.noSideEffect, importcpp: "(# == #->data)", nodecl.}
 
 converter toFName*(s: wstring): FName {.
   header: "UObject/NameTypes.h", importcpp: "'0(@)", nodecl.}
