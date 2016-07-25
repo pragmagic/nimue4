@@ -6,3 +6,5 @@ tools/uebuild/uebuild\.exe
 
 *.ilk
 *.pdb
+
+.vscode/.browse*
