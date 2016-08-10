@@ -1919,16 +1919,6 @@ wclass(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
   proc isNetStartupActor(): bool {.noSideEffect.}
     ## Returns true if this is a replicated actor that was placed in the map
 
-  method getComponentByClass(componentClass: typedesc[UActorComponent]): ptr UActorComponent
-    ## Script exposed version of FindComponentByClass
-    ## UFUNCTION()
-
-  proc getComponentsByClass(componentClass: typedesc[UActorComponent]): TArray[ptr UActorComponent] {.noSideEffect.}
-    ## Gets all the components that inherit from the given class.
-    ## Currently returns an array of UActorComponent which must be cast to the correct type.
-    ## UFUNCTION(BlueprintCallable, Category = "Actor", meta = (ComponentClass = "ActorComponent"), meta=(DeterminesOutputType="ComponentClass"))
-
-
   proc getComponents[T](outComponents: var TArray[ptr T])
     ## Get all components derived from class 'T' and fill in the OutComponents array with the result.
     ## It's recommended to use TArrays with a TInlineAllocator to potentially avoid memory allocation costs.
@@ -2039,6 +2029,16 @@ wclass(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
 proc getDebugName*(actor: ptr AActor): FString {.importcpp: "AActor::GetDebugName(#)", nodecl.}
 
 proc findComponentByClass*[T: UActorComponent](this: ptr AActor): ptr T {.importcpp: "#.FindComponentByClass<'*0>()", nodecl, noSideEffect.}
+proc getComponentByClass*(this: ptr AActor, class: TSubclassOf[UActorComponent]): ptr UActorComponent {.importcpp: "#.GetComponentByClass(@)", nodecl, noSideEffect.}
+
+proc getComponentsByClass*[T: UActorComponent](this: ptr AActor): TArray[ptr UActorComponent] {.importcpp: "#.GetComponentsByClass('*0::StaticClass())", nodecl, noSideEffect.}
+  ## Gets all the components that inherit from the given class.
+  ## Currently returns an array of UActorComponent which must be cast to the correct type.
+  ## UFUNCTION(BlueprintCallable, Category = "Actor", meta = (ComponentClass = "ActorComponent"), meta=(DeterminesOutputType="ComponentClass"))
+proc getComponentsByClass*(this: ptr AActor, class: TSubclassOf[UActorComponent]): TArray[ptr UActorComponent] {.importcpp: "#.GetComponentsByClass(@)", nodecl, noSideEffect.}
+  ## Gets all the components that inherit from the given class.
+  ## Currently returns an array of UActorComponent which must be cast to the correct type.
+  ## UFUNCTION(BlueprintCallable, Category = "Actor", meta = (ComponentClass = "ActorComponent"), meta=(DeterminesOutputType="ComponentClass"))
 
 # proc getComponentsByTag(actor: ptr AActor, class: ptr UClass, tag: FName): TArray[ptr UActorComponent] {.importcpp: "#.GetComponentsByTag(@)", nodecl, noSideEffect.}
 
