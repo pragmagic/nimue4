@@ -320,6 +320,7 @@ include modules/components/particlesystem
 include modules/engine/brush
 include modules/engine/volume
 include modules/engine/physicsvolume
+include modules/engine/material
 
 include modules/components/charactermovement
 
