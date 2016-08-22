@@ -108,7 +108,7 @@ type
     frameNumber {.importcpp: "FrameNumber".}: uint32
     index {.importcpp: "FrameNumber".}: uint32
 
-  FOverlapDatum* {.header: "WorldCollision.h", importcpp.} = object
+  FOverlapDatum* {.header: "WorldCollision.h", importcpp, bycopy.} = object
     pos {.importcpp: "Pos".}: FVector
     rot {.importcpp: "Rot".}: FQuat
     outOverlaps {.importcpp: "OutOverlaps".}: TArray[FOverlapResult]
@@ -130,7 +130,7 @@ type
     userData {.importcpp: "UserData".}: uint32
       ## User data
 
-  FTraceDatum* {.header: "WorldCollision.h", importcpp.} = object of FBaseTraceDatum
+  FTraceDatum* {.header: "WorldCollision.h", importcpp, bycopy.} = object of FBaseTraceDatum
     ## Trace/Sweep Data structure for async trace
     ##
     ## This saves request information by main thread and result will be filled up by worker thread

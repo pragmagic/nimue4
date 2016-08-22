@@ -1,6 +1,6 @@
-declareBuiltinDelegate(FOnMenuGoBack, dkSimple, "GameMenuBuilder.h")
-declareBuiltinDelegate(FOnMenuHidden, dkSimple, "GameMenuBuilder.h")
-declareBuiltinDelegate(FOnMenuOpening, dkSimple, "GameMenuBuilder.h")
+declareBuiltinDelegateWithNs(FOnMenuGoBack, dkSimple, "GameMenuBuilder.h", "FGameMenuPage")
+declareBuiltinDelegateWithNs(FOnMenuHidden, dkSimple, "GameMenuBuilder.h", "FGameMenuPage")
+declareBuiltinDelegateWithNs(FOnMenuOpening, dkSimple, "GameMenuBuilder.h", "FGameMenuPage")
 
 # Copyright 2016 Xored Software, Inc.
 
@@ -15,7 +15,7 @@ type
   SGameMenuItemWidget* {.header: "SGameMenuItemWidget.h", importcpp, bycopy, inheritable.} = object
   SWeakWidget* {.header: "SWeakWidget.h", importcpp, inheritable.} = object
 
-declareBuiltinDelegate(FOnConfirmMenuItem, dkSimple, "GameMenuBuilder.h")
+declareBuiltinDelegateWithNs(FOnConfirmMenuItem, dkSimple, "GameMenuBuilder.h", "FGameMenuItem")
 # multi-choice option changed, parameters are menu item itself and new multi-choice index
 
 
@@ -56,8 +56,8 @@ wclass(FGameMenuItem, header: "GameMenuBuilder.h", bycopy):
   proc confirmPressed(): bool
 
 
-declareBuiltinDelegate(FOnOptionChanged, dkSimple, "GameMenuBuilder.h",
-                       item: TSharedPtr[FGameMenuItem], idx: int32)
+declareBuiltinDelegateWithNs(FOnOptionChanged, dkSimple, "GameMenuBuilder.h", "FGameMenuItem",
+                             item: TSharedPtr[FGameMenuItem], idx: int32)
 
 wclass(FGameMenuItem, header: "GameMenuBuilder.h", notypedef):
   var onOptionChanged: FOnOptionChanged

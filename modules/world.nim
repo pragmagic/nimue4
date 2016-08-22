@@ -63,10 +63,10 @@ type
 proc initWorldInitializationValues*(): WorldInitializationValues {.importcpp: "'0()", constructor, nodecl.}
 proc initFActorSpawnParameters*(): FActorSpawnParameters {.importcpp: "'0()", constructor, nodecl.}
 
-declareBuiltinDelegate(FOnLevelsChangedEvent, dkMulticast, "Engine/World.h")
-declareBuiltinDelegate(FOnSelectedLevelsChangedEvent, dkMulticast, "Engine/World.h")
-declareBuiltinDelegate(FOnNetTickEvent, dkMulticast, "Engine/World.h")
-declareBuiltinDelegate(FOnTickFlushEvent, dkMulticast, "Engine/World.h")
+declareBuiltinDelegateWithNs(FOnLevelsChangedEvent, dkMulticast, "Engine/World.h", "UWorld")
+declareBuiltinDelegateWithNs(FOnSelectedLevelsChangedEvent, dkMulticast, "Engine/World.h", "UWorld")
+declareBuiltinDelegateWithNs(FOnNetTickEvent, dkMulticast, "Engine/World.h", "UWorld")
+declareBuiltinDelegateWithNs(FOnTickFlushEvent, dkMulticast, "Engine/World.h", "UWorld")
 
 wclass(UWorld of UObject, header: "Engine/World.h", notypedef):
 # when WITH_EDITORONLY_DATA:

@@ -171,20 +171,20 @@ proc initFParticleEventBurstData(): FParticleEventBurstData {.importcpp: "'0(@)"
 # Called when the particle system is done
 declareBuiltinDelegate(FOnSystemFinished, dkDynamicMulticast, "Particles/ParticleSystemComponent.h", pSystem: ptr UParticleSystemComponent)
 
-declareBuiltinDelegate(FParticleSpawnSignature, dkDynamicMulticast, "Particles/Emitter.h", eventName:FName, emitterTime: float, location: FVector, velocity: FVector)
+declareBuiltinDelegate(FParticleSpawnSignature, dkDynamicMulticast, "Particles/Emitter.h", eventName:FName, emitterTime: float32, location: FVector, velocity: FVector)
 # Fires when a particle is spawned
 # @param EventName - Custom event name for the Spawn Event.
 # @param EmitterTime - The emitter time when the event occured.
 # @param Location - Location at which the particle was spawned.
 # @param Velocity - Initial velocity of the spawned particle.
 
-declareBuiltinDelegate(FParticleBurstSignature, dkDynamicMulticast, "Particles/Emitter.h", eventName: FName, emitterTime: float, particleCount: int32)
+declareBuiltinDelegate(FParticleBurstSignature, dkDynamicMulticast, "Particles/Emitter.h", eventName: FName, emitterTime: float32, particleCount: int32)
 # Fires when a particle system bursts
 # @param EventName - Custom event name for the Burst Event
 # @param EmitterTime - The emitter time when the event occured.
 # @param ParticleCount - The number of particles spawned in the burst.
 
-declareBuiltinDelegate(FParticleDeathSignature, dkDynamicMulticast, "Particles/Emitter.h", eventName: FName, emitterTime: float, particleTime: int32, location: FVector, velocity: FVector, direction: FVector)
+declareBuiltinDelegate(FParticleDeathSignature, dkDynamicMulticast, "Particles/Emitter.h", eventName: FName, emitterTime: float32, particleTime: int32, location: FVector, velocity: FVector, direction: FVector)
 # Fires when a particle dies
 # @param EventName - Custom event name for the Death Event.
 # @param EmitterTime - The emitter time when the event occured.

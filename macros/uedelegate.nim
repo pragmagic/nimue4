@@ -1,4 +1,5 @@
 # Copyright 2016 Xored Software, Inc.
+import sets
 
 type
   DelegateKind* = enum
@@ -29,7 +30,8 @@ proc declareDelegate(name: NimNode,
                      kind: DelegateKind,
                      header: NimNode,
                      procParams: seq[NimNode] = @[],
-                     retType: NimNode = newEmptyNode()): NimNode =
+                     retType: NimNode = newEmptyNode(),
+                     namespace: string = nil): NimNode =
   let callbackParams = newNimNode(nnkFormalParams).add(retType, newIdentDefs(ident("t"), ident("T"))).add(procParams)
   let callbackType = newIdentDefs(ident("callback"), newNimNode(nnkProcTy).add(callbackParams, newEmptyNode()))
 
@@ -78,11 +80,13 @@ proc declareDelegate(name: NimNode,
     ident("importcpp"), newStrLitNode("#.ExecuteIfBound(@)"))
   executeIfBoundProc.pragma.add(importcppExecuteIfBoundPragma)
 
+  let cppName = if namespace != nil: namespace & "::" & $name.ident
+                else: $name.ident
   result = parseStmt("""
-type $1* {.importcpp: "$1", header: $2.} = object
-proc isBound*(delegate: $1): bool {.importcpp: "#.IsBound(@)", header: $2.}
-proc clear*(delegate: $1) {.importcpp: "#.Clear(@)", header: $2.}
-""".format($(name.ident), header.toStrLit.strVal))
+type $2* {.importcpp: "$1", header: $3.} = object
+proc isBound*(delegate: $2): bool {.importcpp: "#.IsBound(@)", header: $3.}
+proc clear*(delegate: $2) {.importcpp: "#.Clear(@)", header: $3.}
+""".format(cppName, $name.ident, header.toStrLit.strVal))
 
   if DynamicDelegates.contains(kind):
     result.add(removeDynamicTemplate)
@@ -106,6 +110,61 @@ proc clear*(delegate: $1) {.importcpp: "#.Clear(@)", header: $2.}
 proc removeAll*(delegate: $1, obj: ptr UObject) {.importcpp: "RemoveAll", header: $2.}
 """.format($(name.ident), header.toStrLit.strVal))
     result.add(multicastProcs)
+
+  if not DynamicDelegates.contains(kind) and namespace == nil:
+    # make bind proc that accepts Nim closure
+    # if namespace is not nil, delegates are often declared as private, so they cannot be used in our signatures
+    var argsStr = ""
+    var lambdaSignature = ""
+    for identDefs in procParams:
+      let argType = toCppType(identDefs[^2])
+      for i in 0..<(identDefs.len - 2):
+        let argName = $identDefs[i].ident
+        argsStr.add(argName & ',')
+        if lambdaSignature.len > 0: lambdaSignature.add(',')
+        lambdaSignature.add($argType & ' ' & argName)
+    lambdaSignature = "(" & lambdaSignature & ")"
+    var resultAssignment = ""
+    var returnStatement = ""
+    if retType.kind != nnkEmpty:
+      lambdaSignature.add(" -> " & $toCppType(retType))
+      resultAssignment = "auto result = "
+      returnStatement = "return result;"
+
+    let bindLambdaName = if MulticastDelegates.contains(kind): "AddLambda" else: "BindLambda"
+
+    let emitBody = """
+      if (`cb`.ClEnv != 0) nimGCref(`cb`.ClEnv);
+      `delegate`.$#([=]$# {
+        $#`cb`.ClPrc($#`cb`.ClEnv);
+        if (`cb`.ClEnv != 0) nimGCunref(`cb`.ClEnv);
+        $#
+      });""".format(bindLambdaName, lambdaSignature, resultAssignment, argsStr, returnStatement)
+    let callbackType = newNimNode(nnkProcTy).add(newNimNode(nnkFormalParams).add(retType).add(procParams), newEmptyNode())
+    let bindProcBody = newStmtList().add(
+                        newNimNode(nnkPragma).add(
+                          newNimNode(nnkExprColonExpr).add(
+                            ident("emit"),
+                            newStrLitNode(emitBody))))
+    let bindProcName = if MulticastDelegates.contains(kind): "addProc" else: "bindProc"
+    let bindProc = newProc(
+      name = postfix(ident(bindProcName), "*"),
+      body = bindProcBody,
+      params = @[newEmptyNode(), newIdentDefs(ident("delegate"), name), newIdentDefs(ident("cb"), callbackType)]
+    )
+
+    var hackProcBody = newStmtList()
+    hackProcBody.add(newNimNode(nnkVarSection).add(newIdentDefs(ident("s"), newEmptyNode(), newStrLitNode(""))))
+    hackProcBody.add(newCall("GC_ref", ident("s")))
+    hackProcBody.add(newCall("GC_unref", ident("s")))
+    let hackSym = genSym(nskProc, "hackProcToImportGCRefUnref")
+    let hackProc = newProc(
+      name = hackSym,
+      body = hackProcBody
+    )
+    # hackProc.pragma = newNimNode(nnkPragma).add(ident("exportc"))
+    result.add(hackProc)
+    result.add(bindProc)
 
 proc exprListToParamList(callParams: NimNode, start: Natural, to: Natural): seq[NimNode] =
   ## Converts nnkExprColonExpr nodes to nnkIdentDefs
@@ -159,6 +218,16 @@ $#$#($#$#$#);
   result = declareDelegate(name, kind, newStrLitNode(headerName), procParams, if isRetVal: callsite()[3] else: newEmptyNode())
   result.add(newNimNode(nnkPragma).add(
               newNimNode(nnkExprColonExpr).add(ident("emit"), newStrLitNode(codeToEmit))))
+
+macro declareBuiltinDelegateWithNs(name: expr, kindNode: DelegateKind, header: expr, namespace: string): stmt {.immediate.} =
+  assert(name.kind == nnkIdent)
+  let kind = fromStr[DelegateKind]($(kindNode.ident))
+
+  let isRetVal = RetValDelegates.contains(kind)
+  let retValType = (if isRetVal: $(callsite()[5]) & ", " else: "")
+  let procParams = exprListToParamList(callsite(), if isRetVal: 6 else: 5, len(callsite()) - 1)
+
+  result = declareDelegate(name, kind, header, procParams, if isRetVal: callsite()[5] else: newEmptyNode(), $namespace)
 
 macro declareBuiltinDelegate(name: expr, kindNode: DelegateKind, header: expr): stmt {.immediate.} =
   assert(name.kind == nnkIdent)

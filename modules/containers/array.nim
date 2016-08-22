@@ -72,8 +72,7 @@ proc delete*[T](arr: var TArray[T], i: Natural) {.inline.} =
 proc delete*[T](arr: var TArray[T], first, last: Natural) {.inline.} =
   arr.deleteInternal(first, last - first + 1)
 
-proc del*[T](arr: var TArray[T], i: Natural) {.inline.} =
-  arr.delInternal(i)
+proc del*[T](arr: var TArray[T], i: Natural) {.importcpp: "RemoveAtSwap", header: "Containers/Array.h".}
 
 proc del*[T](arr: var TArray[T], first, last: Natural) {.inline.} =
   arr.delInternal(first, last - first + 1)

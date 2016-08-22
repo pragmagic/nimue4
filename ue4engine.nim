@@ -413,7 +413,7 @@ type
 type
   SWidget* {.header: "Widgets/SWidget.h", importcpp, inheritable.} = object
   SCompoundWidget* {.header: "Widgets/SCompoundWidget.h", importcpp.} = object of SWidget
-  SGameMenuPageWidget* {.header: "SGameMenuPageWidget.h", importcpp.} = object of SCompoundWidget
+  SGameMenuPageWidget* {.header: "GameMenuBuilder.h", importcpp.} = object of SCompoundWidget
 
 include modules/components/scene
 include modules/components/springarm

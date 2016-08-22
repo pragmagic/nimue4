@@ -10,4 +10,7 @@ wclass(UEngine of UObject, header: "Engine/Engine.h", notypedef):
 
   proc setClientTravel(inWorld: ptr UWorld, nextURL: wstring, travelType: ETravelType)
 
+  proc addOnScreenDebugMessage(key: uint64, timeToDisplay: float32, displayColor: FColor,
+                               debugMessage: FString, bNewerOnTop: bool = true, textScale: FVector2D = unitVector2D)
+
 # TODO: interface the rest

@@ -1,7 +1,7 @@
 # Copyright 2016 Xored Software, Inc.
 
 type
-  EPanelState {.importcpp: "EPanelState::Type", header: "SGameMenuPageWidget.h".} = enum
+  EPanelState {.importcpp: "EPanelState::Type", header: "GameMenuBuilder.h".} = enum
     Opening,
       ## Menu is opening.
     Open,
@@ -11,9 +11,9 @@ type
     Closed
       ## Menu is closed.
 
-declareBuiltinDelegate(FPanelStateChanged, dkSimple, "SGameMenuPageWidget.h", state: bool)
+declareBuiltinDelegate(FPanelStateChanged, dkSimple, "GameMenuBuilder.h", state: bool)
 
-wclass(FMenuPanel, header: "SGameMenuPageWidget.h", bycopy):
+wclass(FMenuPanel, header: "GameMenuBuilder.h", bycopy):
   ## Simple class to contain the menu panels/animations
   proc initFMenuPanel(): FMenuPanel {.constructor.}
 
@@ -42,7 +42,7 @@ wclass(FMenuPanel, header: "SGameMenuPageWidget.h", bycopy):
   var currentState: EPanelState
     ## The current state of the panel.
 
-wclass(SGameMenuPageWidget, header: "SGameMenuPageWidget.h", notypedef):
+wclass(SGameMenuPageWidget, header: "GameMenuBuilder.h", notypedef):
   proc onMainPanelStateChange(bWasOpened: bool)
     ## Callback handler for when the state of the main panel changes.
     ##
@@ -98,7 +98,7 @@ wclass(SGameMenuPageWidget, header: "SGameMenuPageWidget.h", notypedef):
     ##
     ## @param InSelection	The index of the item to select
     ## @returns true if selection changed.
-  
+
   proc resetMenu()
 
   var myGameViewport: TWeakObjectPtr[UGameViewportClient]

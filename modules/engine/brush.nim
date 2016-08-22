@@ -101,7 +101,7 @@ type
 proc makeFGeomSelection(): FGeomSelection {.header: "Engine/Brush.h", importcpp: "'0(@)", constructor.}
 proc makeFBuilderPoly(): FBuilderPoly {.header: "Engine/BrushBuilder.h", importcpp: "'0(@)", constructor.}
 
-declareBuiltinDelegate(FOnBrushRegistered, dkMulticast, "Engine/Brush.h", brush: ptr ABrush)
+declareBuiltinDelegateWithNs(FOnBrushRegistered, dkMulticast, "Engine/Brush.h", "ABrush", brush: ptr ABrush)
 
 wclass(ABrush of AActor, header: "Engine/Brush.h", notypedef):
 #if WITH_EDITOR:

@@ -49,8 +49,8 @@ type
     originalRadius* {.importcpp: "OriginalRadius".}: cfloat
       ## Original bounding sphere radius, at the time the TexelFactor was calculated originally.
 
-declareBuiltinDelegate(FLevelBoundsActorUpdatedEvent, dkMulticast, "Engine/Level.h")
-declareBuiltinDelegate(FLevelTransformEvent, dkMulticast, "Engine/Level.h", transform: FTransform)
+declareBuiltinDelegateWithNs(FLevelBoundsActorUpdatedEvent, dkMulticast, "Engine/Level.h", "ULevel")
+declareBuiltinDelegateWithNs(FLevelTransformEvent, dkMulticast, "Engine/Level.h", "ULevel", transform: FTransform)
 
 wclass(FPrecomputedVisibilityHandler, header: "Engine/Level.h"):
   ## Handles operations on precomputed visibility data for a level.

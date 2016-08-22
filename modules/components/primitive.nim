@@ -100,10 +100,10 @@ declareBuiltinDelegate(FComponentBeginTouchOverSignature, dkDynamicMulticast, "C
 declareBuiltinDelegate(FComponentEndTouchOverSignature, dkDynamicMulticast, "Components/PrimitiveComponent.h",
                        fingerIndex: ETouchIndex, touchedComponent: ptr UPrimitiveComponent)
 
-#if WITH_EDITOR
-declareBuiltinDelegate(FSelectionOverride, dkSimpleRetVal, "Components/PrimitiveComponent.h",
-                       bool, comp: ptr UPrimitiveComponent)
-#endif
+# if WITH_EDITOR
+declareBuiltinDelegateWithNs(FSelectionOverride, dkSimpleRetVal, "Components/PrimitiveComponent.h", "UPrimitiveComponent",
+                             bool, comp: ptr UPrimitiveComponent)
+# endif
 
 wclass(UPrimitiveComponent of USceneComponent, header: "Components/PrimitiveComponent.h", notypedef):
   ## PrimitiveComponents are SceneComponents that contain or generate some sort of geometry, generally to be rendered or used as collision data.

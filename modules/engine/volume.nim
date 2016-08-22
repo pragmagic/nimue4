@@ -5,7 +5,7 @@ type
 
 #if WITH_EDITOR
 ## Delegate used for notifications when a volumes initial shape changes
-declareBuiltinDelegate(FOnVolumeShapeChanged, dkMulticast, "GameFramework/Volume.h", volume: var AVolume)
+declareBuiltinDelegateWithNs(FOnVolumeShapeChanged, dkMulticast, "GameFramework/Volume.h", "AVolume", volume: var AVolume)
 #endif
 
 wclass(AVolume of ABrush, header: "GameFramework/Volume.h", notypedef):

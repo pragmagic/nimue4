@@ -134,6 +134,8 @@ proc toCppType*(typeNode: NimNode; isUeSignature, dontGenReferences: bool = fals
         "avoid using types of undefined size - use size-specific alternative instead (e.g. float32, int32)")
     of "bool", "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64":
       result = rope($(typeNode.ident))
+    of "pointer":
+      result = rope("void*")
     else:
       let typeName = $(typeNode.ident)
       if isUeSignature and not dontGenReferences and

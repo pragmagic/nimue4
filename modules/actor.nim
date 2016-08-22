@@ -32,7 +32,7 @@ declareBuiltinDelegate(FMakeNoiseDelegate, dkDynamicMulticast, "GameFramework/Ac
   actor: ptr AActor, loudness: cfloat, pawn: ptr APawn, vec: FVector, maxRange: cfloat, tag: FName)
 
 when not defined(UE_BUILD_SHIPPING):
-  declareBuiltinDelegate(FOnProcessEvent, dkDynamicMulticastRetVal, "GameFramework/Actor.h", bool, actor: ptr AActor, f: ptr UFunction, obj: ptr)
+  declareBuiltinDelegate(FOnProcessEvent, dkDynamicMulticastRetVal, "GameFramework/Actor.h", bool, actor: ptr AActor, f: ptr UFunction, obj: pointer)
 
 wclass(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
   # AWARE
