@@ -265,7 +265,7 @@ proc createNimCfg(outDir: string; moduleDir, nimcacheDir, rootFile: string;
   contents.add("--define:CPP\n") # for nimsuggest
   contents.add("--noMain\n")
   contents.add("--experimental\n")
-  if hostOS == "windows":
+  if hostOS == "windows" and platform != "android":
     contents.add("cc=vcc\n")
   contents.add("--define:noSignalHandler\n")
   contents.add("--define:useRealtimeGC\n")
@@ -378,6 +378,8 @@ proc build(command: CommandType, engineDir, projectDir, projectName, target, mod
     (os, cpu) = uePlatformToNimOSCPU(platform)
   if command == ctPreCook and hostOS == "windows":
     cpu = "amd64" # editor builds do not support Win32
+    if platform == "android":
+      os = "windows"
 
   buildNim(projectDir, projectName, os, cpu, platform, isEditorBuild = (command == ctPreCook or target.endsWith("Editor")))
   runUnrealBuildTool(engineDir, command, target, platform, mode, projectDir / projectName & ".uproject", extraOptions)

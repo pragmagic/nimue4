@@ -3,6 +3,7 @@
 wclass(USkeletalMeshComponent of USkinnedMeshComponent, header: "Components/SkeletalMeshComponent.h", notypedef):
   var bounds: FBoxSphereBounds
   var animScriptInstance: ptr UAnimInstance
+  var globalAnimRateScale: float32
 
   method setSkeletalMesh(newMesh: ptr USkeletalMesh, bReinitPose:bool)
     ## Change the SkeletalMesh that is rendered for this Component. Will re-initialize the animation tree etc.
@@ -15,4 +16,6 @@ wclass(USkeletalMeshComponent of USkinnedMeshComponent, header: "Components/Skel
   method play(bLooping: bool)
   method stop()
 
+  method getPlayRate(): float32
+  method setPlayRate(rate: float32)
 # TODO
