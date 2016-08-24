@@ -18,9 +18,13 @@ const withEditor* = defined(editor)
 {.hints: off.}
 
 # {.hint[XDeclaredButNotUsed]: off.} <- didn't work
-include macros/uetypes
-include macros/uedelegate
+import macros/uetypes
+import macros/uedelegate
+import modules/core/coremodule
 
-include ue4engine
+export uetypes
+export uedelegate
+export coremodule
+export clibpp
 # {.hint[XDeclaredButNotUsed]: on.}
 {.hints: on.}

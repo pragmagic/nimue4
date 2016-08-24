@@ -174,6 +174,9 @@ macro toCppSubstitution*(n: typed): expr =
   else:
     result = newCall("expandObjReference", newCall("astToStr", n))
 
+proc wrapIntoWhen*(condition: NimNode, body: NimNode): NimNode =
+  newNimNode(nnkWhenStmt).add(newNimNode(nnkElifBranch).add(condition).add(body))
+
 var identIdxPerFile {.compileTime.} = initTable[string, int]()
 proc genIdent*(ctx: NimNode): NimNode {.compileTime.} =
   let filename = fileNameNoExt(ctx)

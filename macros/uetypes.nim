@@ -1,5 +1,7 @@
 # Copyright 2016 Xored Software, Inc.
-import ropes, hashes
+import ropes, hashes, macros, strutils, sequtils
+
+import "../lib/macroutils"
 
 type
   MacroOptKind = enum
@@ -43,6 +45,7 @@ type
     isBpExtendable: bool
     isConst: bool
     isObjInitializer: bool
+    isEditorOnly: bool
     extendableName: Rope
     args: seq[VarDeclaration]
     uFunctionParamStr: Rope
@@ -310,6 +313,7 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
   let isConst = removePragma(node, "thisConst")
   let isStatic = removePragma(node, "isStatic")
   let isObjInitializer = removePragma(node, "objInitializer")
+  let isEditorOnly = removePragma(node, "editorOnly")
   # TODO: more checks for objInitializer
 
   var isUFunction = removePragma(node, "ue")
@@ -388,6 +392,7 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
     isStatic: isStatic,
     uFunctionParamStr: uFunctionParamStr,
     isBpExtendable: isBpExtendable,
+    isEditorOnly: isEditorOnly,
     extendableName: extendableName,
     args: parseArgs(node[3]),
     node: procNode
@@ -434,9 +439,12 @@ proc extractNames(kind: TypeKind, definition: NimNode): tuple[name: string, pare
     of tkClass:
       macroCheck(definition, name.startsWith("F") or name.startsWith("A") or name.startsWith("U"),
                  "Class name must start with A, U or F letter, depending on parent class") # TODO: check parent class
-    of tkStruct, tkPlainClass:
+    of tkStruct:
       macroCheck(definition, name.startsWith("F"),
                  "Struct name must start with an F")
+    of tkPlainClass:
+      macroCheck(definition, name.startsWith("F") or name.startsWith("S"),
+                 "Plain class name must start with an F or an S (for Slate widgets)")
     of tkInterface:
       macroCheck(definition, name.startsWith("I"),
                  "Interface name must start with an I")
@@ -464,6 +472,8 @@ proc genCppFields(typeDef: TypeDefinition): Rope {.compileTime.} =
       result.add(";\n")
 
 proc genCppMethod(typeDef: TypeDefinition, meth: TypeMethod): Rope {.compileTime.} =
+  if meth.isEditorOnly:
+    result.add("#if WITH_EDITOR\n")
   var friendArgList = toCppArgList(meth.args)
   let returnType = if meth.isConstructor: rope("void") else: meth.node.cppReturnType()
   var friendSignature = rope("friend ") & returnType & " `" & meth.genName & "`("
@@ -497,6 +507,9 @@ proc genCppMethod(typeDef: TypeDefinition, meth: TypeMethod): Rope {.compileTime
   else:
     result.add(";\n")
 
+  if meth.isEditorOnly:
+    result.add("#endif //WITH_EDITOR\n")
+
 proc genCppMethods(typeDef: TypeDefinition): Rope {.compileTime.} =
   for meth in typeDef.methods:
     if meth.isNimOnly(): continue
@@ -519,6 +532,7 @@ proc genCppImplementationCode(typeDef: TypeDefinition): string {.compileTime.} =
   var code: Rope
   for meth in typeDef.methods:
     if meth.isNimOnly(): continue
+    if meth.isEditorOnly: code.add("#if WITH_EDITOR\n")
     let methNameCapitalized = ($meth.name).capitalize()
     if meth.isBlueprintNative:
       code.add(meth.node.cppReturnType())
@@ -581,6 +595,7 @@ proc genCppImplementationCode(typeDef: TypeDefinition): string {.compileTime.} =
         code.add(superInvocation)
 
       code.add("}\n\n")
+      if meth.isEditorOnly: code.add("#endif //WITH_EDITOR\n")
 
   if code.len != 0:
     code = rope("/*VARSECTION*/") & code
@@ -669,6 +684,8 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
       let cppPattern = if typeDef.isUtilityType: $typeDef.name & "::" & cppName & "(@)"
                        else: "#." & cppName & "(@)"
       decl.pragma = parseExpr("{.header: \"$1\", importcpp: \"$2\", nodecl.}".format(typeDef.headerName, cppPattern))
+      if meth.isEditorOnly:
+        decl = wrapIntoWhen(ident("withEditor"), decl)
       methDecls.add(decl)
 
     nodeCopy[0] = ident($meth.genName)
@@ -684,7 +701,9 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
                 newNimNode(nnkExceptBranch).
                   add(exceptionHandlingStmt.copyNimTree())))
 
-        methDefs.add(nodeCopy)
+        let methDef = if meth.isEditorOnly: wrapIntoWhen(ident("withEditor"), nodeCopy)
+                      else: nodeCopy
+        methDefs.add(methDef)
 
   if typeDef.kind != tkEnum and not typeDef.isUtilityType:
     let staticClassMeth = parseStmt("""

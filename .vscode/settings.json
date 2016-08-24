@@ -3,9 +3,10 @@
   "editor.tabSize": 2,
   "editor.rulers": [120],
   "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
   "files.eol": "\n",
   "files.trimTrailingWhitespace": true,
-  "nim.project": "ue4.nim",
+  "nim.project": ["ue4.nim", "ue4umg.nim", "ue4gamemenubuilder"],
   "nim.buildCommand": "cpp",
   "nim.licenseString": "# Copyright 2016 Xored Software, Inc.\n\n"
 }

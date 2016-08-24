@@ -1,5 +1,8 @@
 # Copyright 2016 Xored Software, Inc.
 
+import macros, strutils, ropes
+import "../lib/macroutils"
+
 type
   DelegateKind* = enum
     dkSimple,
@@ -29,7 +32,8 @@ proc declareDelegate(name: NimNode,
                      kind: DelegateKind,
                      header: NimNode,
                      procParams: seq[NimNode] = @[],
-                     retType: NimNode = newEmptyNode()): NimNode =
+                     retType: NimNode = newEmptyNode(),
+                     namespace: NimNode = newEmptyNode()): NimNode =
   let callbackParams = newNimNode(nnkFormalParams).add(retType, newIdentDefs(ident("t"), ident("T"))).add(procParams)
   let callbackType = newIdentDefs(ident("callback"), newNimNode(nnkProcTy).add(callbackParams, newEmptyNode()))
 
@@ -78,11 +82,13 @@ proc declareDelegate(name: NimNode,
     ident("importcpp"), newStrLitNode("#.ExecuteIfBound(@)"))
   executeIfBoundProc.pragma.add(importcppExecuteIfBoundPragma)
 
+  let cppName = if namespace == nil or namespace.kind == nnkEmpty: $(name.ident)
+                else: $namespace & "::" & $(name.ident)
   result = parseStmt("""
-type $1* {.importcpp: "$1", header: $2.} = object
-proc isBound*(delegate: $1): bool {.importcpp: "#.IsBound(@)", header: $2.}
-proc clear*(delegate: $1) {.importcpp: "#.Clear(@)", header: $2.}
-""".format($(name.ident), header.toStrLit.strVal))
+type $1* {.importcpp: "$2", header: $3.} = object
+proc isBound*(delegate: $1): bool {.importcpp: "#.IsBound(@)", header: $3.}
+proc clear*(delegate: $1) {.importcpp: "#.Clear(@)", header: $3.}
+""".format($(name.ident), cppName, header.toStrLit.strVal))
 
   if DynamicDelegates.contains(kind):
     result.add(removeDynamicTemplate)
@@ -123,7 +129,7 @@ macro udelegate*(name: expr, kindNode: DelegateKind): stmt {.immediate.} =
   let kind = fromStr[DelegateKind]($(kindNode.ident))
 
   let isRetVal = RetValDelegates.contains(kind)
-  let retValType = (if isRetVal: $(callsite()[3]) & ", " else: "")
+  let retValType = (if isRetVal: $toCppType(callsite()[3]) & ", " else: "")
   let procParams = exprListToParamList(callsite(), if isRetVal: 4 else: 3, len(callsite()) - 1)
   let headerName = cppHeaderName(name)
 
@@ -160,12 +166,20 @@ $#$#($#$#$#);
   result.add(newNimNode(nnkPragma).add(
               newNimNode(nnkExprColonExpr).add(ident("emit"), newStrLitNode(codeToEmit))))
 
-macro declareBuiltinDelegate(name: expr, kindNode: DelegateKind, header: expr): stmt {.immediate.} =
+macro declareBuiltinDelegate*(name: expr, kindNode: DelegateKind, header: expr): stmt {.immediate.} =
   assert(name.kind == nnkIdent)
   let kind = fromStr[DelegateKind]($(kindNode.ident))
 
   let isRetVal = RetValDelegates.contains(kind)
-  let retValType = (if isRetVal: $(callsite()[4]) & ", " else: "")
   let procParams = exprListToParamList(callsite(), if isRetVal: 5 else: 4, len(callsite()) - 1)
 
   result = declareDelegate(name, kind, header, procParams, if isRetVal: callsite()[4] else: newEmptyNode())
+
+macro declareBuiltinDelegateWithNs*(name: expr, kindNode: DelegateKind, header: expr, namespace: expr): stmt {.immediate.} =
+  assert(name.kind == nnkIdent)
+  let kind = fromStr[DelegateKind]($(kindNode.ident))
+
+  let isRetVal = RetValDelegates.contains(kind)
+  let procParams = exprListToParamList(callsite(), if isRetVal: 6 else: 5, len(callsite()) - 1)
+
+  result = declareDelegate(name, kind, header, procParams, if isRetVal: callsite()[5] else: newEmptyNode(), namespace)
