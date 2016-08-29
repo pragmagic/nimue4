@@ -187,12 +187,9 @@ proc orthogonal*(normal1, normal2: FVector): bool {.header: "Math/Vector.h", imp
 proc coplanar*(base1, normal1, base2, normal2: FVector): bool {.header: "Math/Vector.h", importcpp: "'1::Coplanar(@)", noSideEffect.}
   ## See if two planes are coplanar. They are coplanar if the normals are nearly parallel and the planes include the same set of points.
 
-type
-  FBox* {.header: "Math/Box.h", importcpp.} = object
-    min* {.importcpp: "Min".}: FVector
-    max* {.importcpp: "Max".}: FVector
-    isValid* {.importcpp: "IsValid".}: bool
+include box
 
+type
   FSphere* {.header: "Math/Sphere.h", importcpp.} = object
     center* {.importcpp: "Center".}: FVector
     w* {.importcpp: "W".}: cfloat
@@ -392,6 +389,8 @@ var zeroVector2D* {.importc: "FVector2D::ZeroVector", header: "Math/Vector2D.h".
   ## A zero vector (0,0)
 var unitVector2D* {.importc: "FVector2D::UnitVector", header: "Math/Vector2D.h".}: FVector2D
   ## A unit vector (1,1)
+
+include box2d
 
 wclass(FQuat, header: "Math/Quat.h", notypedef):
   proc initFQuat(inX, inY, inZ, inW: cfloat): FQuat {.constructor.}
