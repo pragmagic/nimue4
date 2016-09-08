@@ -114,18 +114,20 @@ proc uePlatformToNimOSCPU(platform: string): tuple[os, cpu: string] {.noSideEffe
     of "win64", "mac", "xboxone", "ps4": "amd64"
     else: "arm"
 
-proc extractByPeg(str: var string, peg: Peg): Rope =
+proc extractByPeg(str: var string, peg: Peg, separator = ""): Rope =
   var matches = newSeq[string](1)
   var (beginPos, endPos) = str.findBounds(peg, matches, 0)
   result = rope("")
   while beginPos != -1:
     let sliceToExtract = beginPos..endPos
+    if result.len > 0 and separator.len > 0:
+      result.add(separator)
     result = result & str[sliceToExtract]
     str[sliceToExtract] = ""
     (beginPos, endPos) = str.findBounds(peg, matches, beginPos)
 
 proc extractTypeDefinitions(contents: var string): Rope =
-  result = extractByPeg(contents, peg("'$#' @ '$#'" % [beginTypeMarker, endTypeMarker]))
+  result = extractByPeg(contents, peg("'$#' @ '$#'" % [beginTypeMarker, endTypeMarker]), "\n")
 
 proc extractIncludes(contents: var string, filename: string): Rope =
   let includePeg = peg("""s <- wsNoEol '#include' ws '"' !'$#.h' [^"]+ '"' wsWithEol
