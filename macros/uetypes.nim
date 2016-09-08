@@ -133,19 +133,19 @@ proc toCppLiteral(nimLiteral: NimNode): Rope =
     else:
       parseError(nimLiteral, "literal type expected, but got " & $(nimLiteral.kind))
 
-proc toCppArgList(args: seq[VarDeclaration], isUeSignature: bool = false, useGenName: bool = true): Rope {.compileTime.} =
+proc toCppArgList(args: seq[VarDeclaration], isUeSignature, isUFunction: bool = false, useGenName: bool = true): Rope {.compileTime.} =
   for i in 0 .. < args.len:
     if result.len != 0:
       result.add(", ")
-    let valueType = toCppType(args[i].typeNode, isUeSignature)
+    let valueType = toCppType(args[i].typeNode, isUeSignature, isUFunction)
     let name = if useGenName: args[i].genName else: args[i].name
     result.add(valueType & " " & name)
 
-proc toCppSignature(meth: TypeMethod, methodName: Rope, isUeSignature: bool): Rope {.compileTime.} =
+proc toCppSignature(meth: TypeMethod, methodName: Rope, isUeSignature, isUFunction: bool): Rope {.compileTime.} =
   result.add(if meth.isVirtual: "virtual " else: nil)
   result.add(if meth.isStatic: "static " else: nil)
   result.add(if not meth.isConstructor: meth.node.cppReturnType() else: nil)
-  result.add(" " & methodName & "(" & toCppArgList(meth.args, isUeSignature, false) & ")")
+  result.add(" " & methodName & "(" & toCppArgList(meth.args, isUeSignature, isUFunction, false) & ")")
   result.add(if meth.isConst: " const" else: nil)
   result.add(if meth.isOverride: " override" else: nil)
 
@@ -474,7 +474,7 @@ proc genCppFields(typeDef: TypeDefinition): Rope {.compileTime.} =
 proc genCppMethod(typeDef: TypeDefinition, meth: TypeMethod): Rope {.compileTime.} =
   if meth.isEditorOnly:
     result.add("#if WITH_EDITOR\n")
-  var friendArgList = toCppArgList(meth.args)
+  var friendArgList = toCppArgList(meth.args, isUeSignature = false)
   let returnType = if meth.isConstructor: rope("void") else: meth.node.cppReturnType()
   var friendSignature = rope("friend ") & returnType & " `" & meth.genName & "`("
   if not typeDef.isUtilityType:
@@ -485,7 +485,7 @@ proc genCppMethod(typeDef: TypeDefinition, meth: TypeMethod): Rope {.compileTime
   friendSignature.add(");\n")
 
   let methNameCapitalized = rope(($meth.name).capitalize())
-  let signature = toCppSignature(meth, methNameCapitalized, isUeSignature = meth.isUFunction)
+  let signature = toCppSignature(meth, methNameCapitalized, isUeSignature = true, isUFunction = meth.isUFunction)
 
   if meth.isImplementationNeeded():
     # friend declaration is needed so that Nim procs have access to
@@ -538,13 +538,13 @@ proc genCppImplementationCode(typeDef: TypeDefinition): string {.compileTime.} =
       code.add(meth.node.cppReturnType())
       code.add(" ")
       code.add(typeDef.name & "::" & methNameCapitalized & "_Implementation")
-      code.add("(" & toCppArgList(meth.args, true, false) & ") {}\n\n")
+      code.add("(" & toCppArgList(meth.args, isUeSignature = true, isUFunction = false, false) & ") {}\n\n")
     elif meth.isImplementationNeeded():
       if not meth.isConstructor:
         code.add(meth.node.cppReturnType())
         code.add(" ")
       code.add(typeDef.name & "::" & methNameCapitalized)
-      code.add("(" & toCppArgList(meth.args, isUeSignature = meth.isUFunction, false) & ")")
+      code.add("(" & toCppArgList(meth.args, isUeSignature = true, isUFunction = meth.isUFunction, false) & ")")
 
       let invocationArgs = meth.args.mapIt($(it.name)).join(", ")
       var superInvocation = if meth.isConstructor: rope("Super") & "(" & invocationArgs & ")"

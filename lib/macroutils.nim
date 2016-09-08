@@ -107,7 +107,7 @@ proc fromStr*[Enum](val: string): Enum {.compileTime.} =
       return item
   raise newException(ValueError, "Unknown enum value: " & val)
 
-proc toCppType*(typeNode: NimNode; isUeSignature, dontGenReferences: bool = false): Rope =
+proc toCppType*(typeNode: NimNode; isUeSignature, isUFunction, dontGenReferences: bool = false): Rope =
   ## Returns string representing C++ type corresponding to the specified Nim type
   ## Wraps non-primitive types in backtricks (`) for further use with .emit pragma
 
@@ -120,9 +120,9 @@ proc toCppType*(typeNode: NimNode; isUeSignature, dontGenReferences: bool = fals
       templateParams.add(toCppType(typeNode[i]))
     result = rope($typeNode[0].ident) & "<" & templateParams & ">"
   of nnkVarTy:
-    result = toCppType(typeNode[0], isUeSignature, true) & "&"
+    result = toCppType(typeNode[0], isUeSignature, isUFunction, true) & "&"
   of nnkPtrTy:
-    result = toCppType(typeNode[0], isUeSignature, true) & "*"
+    result = toCppType(typeNode[0], isUeSignature, isUFunction, true) & "*"
   of nnkIdent:
     case $(typeNode.ident):
     of "float32", "cfloat":
@@ -136,16 +136,27 @@ proc toCppType*(typeNode: NimNode; isUeSignature, dontGenReferences: bool = fals
       result = rope($(typeNode.ident))
     else:
       let typeName = $(typeNode.ident)
-      if isUeSignature and not dontGenReferences and
+      if isUFunction and not dontGenReferences and
          typeName.len > 1 and typeName[0] == 'F' and typeName[1].isUpper:
         # sometimes UHT forcefully converts structure values to const references in signatures
         result = rope("const `") & typeName & "`&"
       else:
         result = rope("`") & $(typeNode.ident) & "`"
   of nnkCommand:
-    if typeNode[0].kind != nnkIdent or typeNode[0].ident != !"bycopy":
+    var validModifier = typeNode[0].kind == nnkIdent
+    if validModifier:
+      case $typeNode[0].ident:
+      of "bycopy":
+        result = toCppType(typeNode[1], isUeSignature, isUFunction, true)
+      of "constref":
+        if isUeSignature:
+          result = rope("const ") & toCppType(typeNode[1], isUeSignature, isUFunction, true) & "&"
+        else:
+          result = toCppType(typeNode[1], isUeSignature, isUFunction, true)
+      else:
+        validModifier = false
+    if not validModifier:
       parseError(typeNode, "unknown type modifier: " & repr(typeNode[0]))
-    result = toCppType(typeNode[1], isUeSignature, true)
   else:
     parseError(typeNode, "type expected")
 
