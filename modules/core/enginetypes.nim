@@ -97,11 +97,9 @@ type
     TG_StartPhysics,  ## Special tick group that starts physics simulation.
     TG_DuringPhysics, ## Any item that can be run in parallel with our physics simulation work.
     TG_EndPhysics,    ## Special tick group that ends physics simulation.
-    TG_PreCloth,      ## Any item that needs physics to be complete before being executed.
-    TG_StartCloth,    ## Any item that needs to be updated after rigid body simulation is done, but before cloth is simulation is done.
     TG_PostPhysics,   ## Any item that needs rigid body and cloth simulation to be complete before being executed.
     TG_PostUpdateWork,## Any item that needs the update work to be done before being ticked.
-    TG_EndCloth,      ## Special tick group that ends cloth simulation.
+    TG_LastDemotable, ## Catchall for anything demoted to the end.
     TG_NewlySpawned,  ## Special tick group that is not actually a tick group. After every tick group this is repeatedly re-run until there are no more newly spawned items to run.
     TG_MAX
 
@@ -442,6 +440,11 @@ type
     tickInterval* {.importcpp: "TickInterval".}: cfloat
       ## The frequency in seconds at which this tick function will be executed.
       ## If less than or equal to 0 then it will tick every frame
+    tickGroup* {.importcpp: "TickGroup".}: ETickingGroup
+      ## Defines the minimum tick group for this tick function. These groups determine the relative order of when objects tick during a frame update.
+      ## Given prerequisites, the tick may be delayed.
+    endTickGroup* {.importcpp: "EndTickGroup".}: ETickingGroup
+      ## Defines the tick group that this tick function must finish in. These groups determine the relative order of when objects tick during a frame update.
 
   FActorComponentTickFunction* {.header: "Engine/EngineTypes.h", importcpp.} = object of FTickFunction
   FActorTickFunction* {.header: "Engine/EngineTypes.h", importcpp.} = object of FTickFunction
