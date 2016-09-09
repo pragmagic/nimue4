@@ -778,6 +778,12 @@ template setDefaultSubobjectClass*(this: var FObjectInitializer, T: typedesc, su
   # TODO: cannot yet wrap this properly
   {.emit: "`$#`.SetDefaultSubobjectClass<$#>(`$#`);".format(astToStr(this), T.name, astToStr(subobjName)).}
 
+proc isValid*(obj: ptr UObject): bool {.importcpp: "IsValid(@)", header: "ObjectBase.h".}
+  ## Test validity of object
+  ##
+  ## @param	Test			The object to test
+  ## @return	Return true if the object is usable: non-null and not pending kill
+
 proc loadObject*[T: UObject](path: wstring): ptr T {.
   header: "UObject/UObjectGlobals.h", importcpp: "(Cast<'*0>(StaticLoadObject('*0::StaticClass(), NULL, #)))".}
 proc loadObject*[T: UObject](path: FString): ptr T =
