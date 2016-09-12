@@ -487,7 +487,7 @@ proc genCppMethod(typeDef: TypeDefinition, meth: TypeMethod): Rope {.compileTime
   let methNameCapitalized = rope(($meth.name).capitalize())
   let signature = toCppSignature(meth, methNameCapitalized, isUeSignature = true, isUFunction = meth.isUFunction)
 
-  if meth.isImplementationNeeded():
+  if meth.isImplementationNeeded() or meth.isBlueprintNative():
     # friend declaration is needed so that Nim procs have access to
     # private/protected fields
     result.add(friendSignature)
@@ -538,7 +538,7 @@ proc genCppImplementationCode(typeDef: TypeDefinition): string {.compileTime.} =
       code.add(meth.node.cppReturnType())
       code.add(" ")
       code.add(typeDef.name & "::" & methNameCapitalized & "_Implementation")
-      code.add("(" & toCppArgList(meth.args, isUeSignature = true, isUFunction = false, false) & ") {}\n\n")
+      code.add("(" & toCppArgList(meth.args, isUeSignature = true, isUFunction = false, false) & ")")
     elif meth.isImplementationNeeded():
       if not meth.isConstructor:
         code.add(meth.node.cppReturnType())
@@ -546,6 +546,7 @@ proc genCppImplementationCode(typeDef: TypeDefinition): string {.compileTime.} =
       code.add(typeDef.name & "::" & methNameCapitalized)
       code.add("(" & toCppArgList(meth.args, isUeSignature = true, isUFunction = meth.isUFunction, false) & ")")
 
+    if meth.isBlueprintNative or meth.isImplementationNeeded:
       let invocationArgs = meth.args.mapIt($(it.name)).join(", ")
       var superInvocation = if meth.isConstructor: rope("Super") & "(" & invocationArgs & ")"
                             else: rope("Super::") & methNameCapitalized & "(" & invocationArgs & ");\n"
@@ -595,7 +596,7 @@ proc genCppImplementationCode(typeDef: TypeDefinition): string {.compileTime.} =
         code.add(superInvocation)
 
       code.add("}\n\n")
-      if meth.isEditorOnly: code.add("#endif //WITH_EDITOR\n")
+    if meth.isEditorOnly: code.add("#endif //WITH_EDITOR\n")
 
   if code.len != 0:
     code = rope("/*VARSECTION*/") & code
@@ -690,8 +691,8 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
 
     nodeCopy[0] = ident($meth.genName)
 
-    if meth.isImplementationNeeded():
-      if not meth.isBpExtendable or nodeCopy.body.kind != nnkEmpty:
+    if meth.isImplementationNeeded() or meth.isBlueprintNative():
+      if not (meth.isBpExtendable or meth.isBlueprintNative()) or nodeCopy.body.kind != nnkEmpty:
         when not defined(dontWrapNimExceptions):
           if not hasPragma(nodeCopy, "noSideEffect"):
             nodeCopy.body = newStmtList(
