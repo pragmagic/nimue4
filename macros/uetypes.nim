@@ -30,6 +30,7 @@ type
   TypeOpt = enum
     coExported
 
+  # TODO: turn all these bools into set[enum] already...
   TypeMethod = ref object
     name: Rope
     genName: Rope
@@ -46,6 +47,8 @@ type
     isConst: bool
     isObjInitializer: bool
     isEditorOnly: bool
+    isNoExceptionWrap: bool
+    isRetConst: bool
     extendableName: Rope
     args: seq[VarDeclaration]
     uFunctionParamStr: Rope
@@ -144,6 +147,7 @@ proc toCppArgList(args: seq[VarDeclaration], isUeSignature, isUFunction: bool = 
 proc toCppSignature(meth: TypeMethod, methodName: Rope, isUeSignature, isUFunction: bool): Rope {.compileTime.} =
   result.add(if meth.isVirtual: "virtual " else: nil)
   result.add(if meth.isStatic: "static " else: nil)
+  result.add(if meth.isRetConst: "const " else: nil)
   result.add(if not meth.isConstructor: meth.node.cppReturnType() else: nil)
   result.add(" " & methodName & "(" & toCppArgList(meth.args, isUeSignature, isUFunction, false) & ")")
   result.add(if meth.isConst: " const" else: nil)
@@ -314,6 +318,8 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
   let isStatic = removePragma(node, "isStatic")
   let isObjInitializer = removePragma(node, "objInitializer")
   let isEditorOnly = removePragma(node, "editorOnly")
+  let isNoExceptionWrap = removePragma(node, "noExceptionWrap")
+  let isRetConst = removePragma(node, "retConst")
   # TODO: more checks for objInitializer
 
   var isUFunction = removePragma(node, "ue")
@@ -393,6 +399,8 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
     uFunctionParamStr: uFunctionParamStr,
     isBpExtendable: isBpExtendable,
     isEditorOnly: isEditorOnly,
+    isNoExceptionWrap: isNoExceptionWrap,
+    isRetConst: isRetConst,
     extendableName: extendableName,
     args: parseArgs(node[3]),
     node: procNode
@@ -534,15 +542,16 @@ proc genCppImplementationCode(typeDef: TypeDefinition): string {.compileTime.} =
     if meth.isNimOnly(): continue
     if meth.isEditorOnly: code.add("#if WITH_EDITOR\n")
     let methNameCapitalized = ($meth.name).capitalize()
-    if meth.isBlueprintNative:
+    if (meth.isBlueprintNative or meth.isImplementationNeeded) and not meth.isConstructor:
+      if meth.isRetConst:
+        code.add("const ")
       code.add(meth.node.cppReturnType())
       code.add(" ")
+
+    if meth.isBlueprintNative:
       code.add(typeDef.name & "::" & methNameCapitalized & "_Implementation")
       code.add("(" & toCppArgList(meth.args, isUeSignature = true, isUFunction = false, false) & ")")
     elif meth.isImplementationNeeded():
-      if not meth.isConstructor:
-        code.add(meth.node.cppReturnType())
-        code.add(" ")
       code.add(typeDef.name & "::" & methNameCapitalized)
       code.add("(" & toCppArgList(meth.args, isUeSignature = true, isUFunction = meth.isUFunction, false) & ")")
 
@@ -694,7 +703,7 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
     if meth.isImplementationNeeded() or meth.isBlueprintNative():
       if not (meth.isBpExtendable or meth.isBlueprintNative()) or nodeCopy.body.kind != nnkEmpty:
         when not defined(dontWrapNimExceptions):
-          if not hasPragma(nodeCopy, "noSideEffect"):
+          if not hasPragma(nodeCopy, "noSideEffect") and not meth.isNoExceptionWrap:
             nodeCopy.body = newStmtList(
               newNimNode(nnkTryStmt).
                 add(nodeCopy.body).
