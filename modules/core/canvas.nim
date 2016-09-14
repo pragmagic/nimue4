@@ -420,20 +420,20 @@ type
   FCanvasBorderItem* {.importcpp, header: "CanvasItem.h".} = object of FCanvasItem
     ## Resizable 3x3 border item.
     size* {.importcpp: "Size".}: FVector2D            ##  Scale of the border
-    borderScale {.importcpp: "BorderScale".}: FVector2D     ##  Scale of the border
-    backgroundScale {.importcpp: "BackgroundScale".}: FVector2D ## used to calculate depth.
-    z {.importcpp: "Z".}: cfloat                  ## Border UV Coordinates 0 (Left/Top).
-    borderUV0 {.importcpp: "BorderUV0".}: FVector2D       ## Border UV Coordinates 1 (Right/Bottom).
-    borderUV1 {.importcpp: "BorderUV1".}: FVector2D       ## Corners texture.
-    borderTexture {.importcpp: "BorderTexture".}: ptr FTexture ## Background tiling texture.
-    backgroundTexture {.importcpp: "BackgroundTexture".}: ptr FTexture ## Border left tiling texture.
-    borderLeftTexture {.importcpp: "BorderLeftTexture".}: ptr FTexture ## Border right tiling texture.
-    borderRightTexture {.importcpp: "BorderRightTexture".}: ptr FTexture ## Border top tiling texture.
-    borderTopTexture {.importcpp: "BorderTopTexture".}: ptr FTexture ## Border bottom tiling texture.
-    borderBottomTexture {.importcpp: "BorderBottomTexture".}: ptr FTexture ## Rotation.
-    rotation {.importcpp: "Rotation".}: FRotator         ## Pivot point.
-    pivotPoint {.importcpp: "PivotPoint".}: FVector2D      ##  Frame corner size in percent of frame texture (should be < 0.5f)
-    cornerSize {.importcpp: "CornerSize".}: FVector2D
+    borderScale* {.importcpp: "BorderScale".}: FVector2D     ##  Scale of the border
+    backgroundScale* {.importcpp: "BackgroundScale".}: FVector2D ## used to calculate depth.
+    z* {.importcpp: "Z".}: cfloat                  ## Border UV Coordinates 0 (Left/Top).
+    borderUV0* {.importcpp: "BorderUV0".}: FVector2D       ## Border UV Coordinates 1 (Right/Bottom).
+    borderUV1* {.importcpp: "BorderUV1".}: FVector2D       ## Corners texture.
+    borderTexture* {.importcpp: "BorderTexture".}: ptr FTexture ## Background tiling texture.
+    backgroundTexture* {.importcpp: "BackgroundTexture".}: ptr FTexture ## Border left tiling texture.
+    borderLeftTexture* {.importcpp: "BorderLeftTexture".}: ptr FTexture ## Border right tiling texture.
+    borderRightTexture* {.importcpp: "BorderRightTexture".}: ptr FTexture ## Border top tiling texture.
+    borderTopTexture* {.importcpp: "BorderTopTexture".}: ptr FTexture ## Border bottom tiling texture.
+    borderBottomTexture* {.importcpp: "BorderBottomTexture".}: ptr FTexture ## Rotation.
+    rotation* {.importcpp: "Rotation".}: FRotator         ## Pivot point.
+    pivotPoint* {.importcpp: "PivotPoint".}: FVector2D      ##  Frame corner size in percent of frame texture (should be < 0.5f)
+    cornerSize* {.importcpp: "CornerSize".}: FVector2D
 
 proc initFCanvasBorderItem*(inPosition: FVector2D;
                             inBorderTexture: ptr FTexture;
