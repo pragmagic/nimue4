@@ -43,11 +43,12 @@ See the repo's [wiki](https://github.com/pragmagic/nimue4/wiki/) for nimue4 docu
 See the Nim website's [documentation section](http://nim-lang.org/documentation.html) for the Nim language documentation.
 
 ## Community
+[![Join Nim Gitter channel](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/nim-lang/Nim)
 
 If you have any questions or feedback for nimue4, feel free to submit an issue on GitHub.
 
-* The [Nim forum](http://forum.nim-lang.org/) - the best place to ask questions and to discuss Nim.
-* [IRC (Freenode#nim)](https://webchat.freenode.net/?channels=nim) - the best place to discuss Nim in real-time.
+* [Gitter](https://gitter.im/nim-lang/Nim) - you can discuss Nim and nimue4 here in real-time.
+* The [Nim forum](http://forum.nim-lang.org/) - a place where you can ask questions and discuss Nim.
 
 ## Roadmap
 
