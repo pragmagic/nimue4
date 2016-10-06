@@ -170,9 +170,14 @@ wclass(FText, header: "Internationalization/Text.h", bycopy):
   proc isCultureInvariant(): bool {.noSideEffect.}
   proc shouldGatherForLocalization(): bool {.noSideEffect.}
 
-proc findTextInternal(namespace: FString, key: FString, outText: var FText) {.importcpp: "FText::FindText(@)", nodecl.}
-proc nsLocText*(ns, key: wstring): FText {.inline.} =
-  findTextInternal(ns, key, result)
+proc findText*(namespace: FString, key: FString, outText: var FText): bool {.importcpp: "FText::FindText(@)", nodecl.}
+
+proc findText*(ns, key: string, outText: var FText): bool {.inline.} =
+  findText(ns.toFString(), key.toFString(), outText)
+
+proc findText*(ns, key: string): FText {.inline.} =
+  if not findText(ns, key, result):
+    result = initFText()
 
 converter toFText*(s: wstring): FText {.
   header: "Internationalization/Text.h", importcpp: "'0::FromString(@)", nodecl.}
@@ -180,7 +185,10 @@ converter toFText*(s: wstring): FText {.
 proc toText*(num: int8 or int16 or int32 or uint8 or uint16 or uint32): FText {.
   noSideEffect, header: "Internationalization/Text.h", importcpp: "'0::AsNumber(@)".}
 
-proc nsLocText*(ns, key, text: cstring{lit}): FText {.noSideEffect, importc: "NSLOCTEXT", nodecl.}
+proc nsLocText*(ns, key, text: cstring{lit}): FText {.deprecated, noSideEffect, importc: "NSLOCTEXT", nodecl.}
+  ## Deprecated. Use NSLOCTEXT instead.
+
+proc NSLOCTEXT*(ns, key, text: cstring{lit}): FText {.noSideEffect, importc: "NSLOCTEXT", nodecl.}
 
 # TODO: this can be made as macro that accepts and implicitly converts non-text types
 proc textFormat*(formatString: FText): FText {.
