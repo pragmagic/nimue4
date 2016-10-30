@@ -320,6 +320,9 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string, isEditorBuil
 
     var rootFileContent = rope("")
     var nimbleFile: string = nil
+    var nimsFile = moduleDir / "config.nims"
+    if not existsFile(moduleDir / "config.nims"):
+      nimsFile = nil
     for file in walkDirRec(moduleDir):
       if file.endsWith(".nim") and not file.endsWith(".inc.nim"):
         if file.extractFilename().cmpIgnoreCase(moduleName & ".nim") == 0:
@@ -349,6 +352,9 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string, isEditorBuil
       if nimbleFile != nil:
         copyFile(nimbleFile, nimOutDir / extractFilename(nimbleFile))
         nimblePackageName = splitFile(nimbleFile).name
+
+      if nimsFile != nil:
+        copyFile(nimsFile, nimOutDir / extractFilename(nimsFile))
 
       let platform = uePlatform.toLower()
       createNimCfg(nimOutDir, moduleDir, nimcacheDir, rootFile, isEditorBuild, platform, os, cpu)
