@@ -48,7 +48,7 @@ proc pair[K, V](it: TMapIterator[K, V]): TPair[K, V] {.noSideEffect, importcpp: 
 proc isValid[K, V](it: TMapIterator[K, V]): bool {.noSideEffect, importcpp: "((bool)(#))", header: "Containers/Map.h".}
 proc next[K, V](it: var TMapIterator[K, V]) {.importcpp: "(++#)", header: "Containers/Map.h".}
 
-proc makeIterator[K, V](map: TMap[K, V]): TMapIterator[K, V] {.importcpp:"#.CreateIterator(@)", header: "Containers/Map.h".}
+proc initIterator[K, V](map: TMap[K, V]): TMapIterator[K, V] {.importcpp:"#.CreateIterator(@)", header: "Containers/Map.h".}
 
 proc keysInternal[K, V](map: TMap[K, V], outArr: var TArray[K]) {.importcpp:"#.GetKeys(@)", header: "Containers/Map.h".}
 proc keys*[K, V](map: TMap[K, V]): TArray[K] =
@@ -56,29 +56,29 @@ proc keys*[K, V](map: TMap[K, V]): TArray[K] =
   keysInternal(map, result)
 
 iterator keys*[K, V](map: TMap[K, V]): K =
-  var it = map.makeIterator()
+  var it = map.initIterator()
   while it.isValid:
     yield it.key()
     it.next()
 
 iterator pairs*[K, V](map: TMap[K, V]): (K, V) =
-  var it = map.makeIterator()
+  var it = map.initIterator()
   while it.isValid:
     let pair = it.pair()
     yield (pair.key, pair.value)
     it.next()
 
 iterator values*[K, V](map: TMap[K, V]): V =
-  var it = map.makeIterator()
+  var it = map.initIterator()
   while it.isValid:
     yield it.value()
     it.next()
 
 # TODO: mpairs, mvalues?
 
-proc makeMap*[K, V](): TMap[K, V] {.importcpp: "TMap", constructor, header: "Containers/Map.h".}
-proc makeMap*[K, V](initialCapacity: Natural): TMap[K, V] =
-  result = makeMap()
+proc initMap*[K, V](): TMap[K, V] {.importcpp: "'0(@)", constructor, header: "Containers/Map.h".}
+proc initMap*[K, V](initialCapacity: Natural): TMap[K, V] =
+  result = initMap[K, V]()
   result.reserve(initialCapacity)
 
 # TODO: TMultiMap, FScriptMap
