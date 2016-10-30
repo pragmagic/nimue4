@@ -285,11 +285,11 @@ proc createNimCfg(outDir: string; moduleDir, nimcacheDir, rootFile: string;
     contents.add("--define:android4\n")
   if isEditorBuild:
     contents.add("--define:editor\n")
+  else:
+    contents.add("--define:release") # TODO: should be conditionally
   contents.add("--path:\"" & moduleDir.replace("\\", "/") & "\"\n")
   contents.add("--path:\"" & getCurrentDir().replace("\\", "/") & "\"\n")
   contents.add("--nimcache:\"" & nimcacheDir.replace("\\", "/") & "\"\n")
-
-  # TODO: use -d:release --deadCodeElim:on for release builds
   writeFile(outDir / "nim.cfg", contents)
 
 proc copyNimFilesAddingImports(dir: string, rootFileContent: var Rope) =
