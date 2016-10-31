@@ -112,7 +112,6 @@ proc uePlatformToNimOSCPU(platform: string): tuple[os, cpu: string] {.noSideEffe
   result.cpu = case platform.toLower():
     of "win32", "winrt", "uwp", "linux", "alldesktop", "html5": "i386"
     of "win64", "mac", "xboxone", "ps4": "amd64"
-    of "ios": "arm64"
     else: "arm"
 
 proc extractByPeg(str: var string, peg: Peg, separator = ""): Rope =
@@ -401,6 +400,9 @@ proc build(command: CommandType, engineDir, projectDir, projectName, target, mod
     cleanModules(projectDir)
 
     (os, cpu) = uePlatformToNimOSCPU(platform)
+    if platform == "ios":
+      cpu = if mode == "Shipping": "arm64"
+            else: "arm"
     buildNim(projectDir, projectName, os, cpu, platform, isEditorBuild = false)
 
 proc clean(engineDir, projectDir, projectName, target, mode, platform, extraOptions: string) =
