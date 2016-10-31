@@ -400,7 +400,7 @@ proc build(command: CommandType, engineDir, projectDir, projectName, target, mod
     cleanModules(projectDir)
 
     (os, cpu) = uePlatformToNimOSCPU(platform)
-    if platform == "ios":
+    if platform.toLower() == "ios":
       cpu = if mode == "Shipping": "arm64"
             else: "arm"
     buildNim(projectDir, projectName, os, cpu, platform, isEditorBuild = false)
