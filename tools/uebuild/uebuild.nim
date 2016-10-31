@@ -384,13 +384,15 @@ proc build(command: CommandType, engineDir, projectDir, projectName, target, mod
   var os, cpu: string = nil
   if command != ctPreCook:
     (os, cpu) = uePlatformToNimOSCPU(platform)
+  var actualMode = if command != ctPreCook: mode
+                   else: "Development"
   if command == ctPreCook and hostOS == "windows":
     cpu = "amd64" # editor builds do not support Win32
     if platform == "android":
       os = "windows"
 
   buildNim(projectDir, projectName, os, cpu, platform, isEditorBuild = (command == ctPreCook or target.endsWith("Editor")))
-  runUnrealBuildTool(engineDir, command, target, platform, mode, projectDir / projectName & ".uproject", extraOptions)
+  runUnrealBuildTool(engineDir, command, target, platform, actualMode, projectDir / projectName & ".uproject", extraOptions)
 
   if command == ctPreCook:
     # When precooking, we have to compile editor for the current platform first,
