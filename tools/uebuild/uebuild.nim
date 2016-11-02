@@ -157,7 +157,8 @@ proc processFile(file, moduleName: string; outDir: string; nimblePackageName: st
     outName = outName[nimblePackageName.len+1..^1] # +1 to account for `_`
   let outFile = outCppDir / outName & ".cpp"
 
-  if outFile != file and fileExists(outFile) and file.getLastModificationTime() < outFile.getLastModificationTime():
+  if outFile != file and fileExists(outFile) and
+     file.getLastModificationTime() <= outFile.getLastModificationTime():
     # no changes - no need to process
     return
 
