@@ -59,3 +59,7 @@ wclass(UAnimInstance of UObject, header: "Animation/AnimInstance.h", notypedef):
     ## Called when a montage has ended, whether interrupted or finished
 
 # TODO
+
+wclass(UAnimSequenceBase of UAnimationAsset, header: "Animation/AnimSequenceBase.h", notypedef):
+  method getPlayLength(): cfloat
+  #Returns the total play length of the montage, if played back with a speed of 1.0.
