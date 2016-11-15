@@ -431,6 +431,7 @@ include components/pawnmovement
 include components/pawnnoiseemitter
 
 include components/audio
+include components/timeline
 
 include "core/object"
 
