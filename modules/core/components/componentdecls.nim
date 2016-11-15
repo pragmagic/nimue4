@@ -10,6 +10,16 @@ type
     OnlyTickPoseWhenRendered
       ## Tick only when rendered, and it will only RefreshBoneTransforms when rendered.
 
+  ETimelineLengthMode* {.header: "Components/TimelineComponent.h", importcpp, pure, size: sizeof(cint).} = enum
+    ## Whether or not the timeline should be finished after the specified length, or the last keyframe in the tracks.
+    TL_TimelineLength,
+    TL_LastKeyFrame
+
+  ETimelineDirection* {.header: "Components/TimelineComponent.h", importcpp:"ETimelineDirection::Type", pure, size: sizeof(cint).} = enum
+    ## Does timeline play or reverse ?
+    Forward,
+    Backward
+
 type
   USkeletalMesh* {.header: "Engine/SkeletalMesh.h", importcpp.} = object of UObject
     bounds* {.importcpp: "Bounds".}: FBoxSphereBounds
@@ -69,6 +79,12 @@ type
   ULightComponent* {.header: "Components/LightComponent.h", importcpp.} = object of ULightComponentBase
 
   UArrowComponent* {.header: "Components/ArrowComponent.h", importcpp.} = object of UPrimitiveComponent
-  
+
   UMaterialBillboardComponent* {.header: "Components/MaterialBillboardComponent.h", importcpp.} = object of UPrimitiveComponent
 
+  UTimelineComponent* {.header: "Components/TimelineComponent.h", importcpp.} = object of UActorComponent
+
+  UCurveBase* {.header: "Curves/CurveBase.h", importcpp, inheritable.} = object of UObject
+  UCurveFloat* {.header: "Curves/CurveFloat.h", importcpp.} = object of UCurveBase
+  UCurveLinearColor* {.header: "Curves/CurveLinearColor.h", importcpp.} = object of UCurveBase
+  UCurveVector* {.header: "Curves/CurveVector.h", importcpp.} = object of UCurveBase
