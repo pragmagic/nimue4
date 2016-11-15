@@ -736,6 +736,9 @@ proc sqr*(f: float32): float32 {.
 
 proc lerp*[T, U](a, b: T; alpha: U): T {.
   importc: "FMath::Lerp", header: "Math/UnrealMathUtility.h".}
+  
+proc frand*(): cfloat {.
+  importc: "FMath::FRand", header: "Math/UnrealMathUtility.h".}
 
 # Special-case interpolation
 

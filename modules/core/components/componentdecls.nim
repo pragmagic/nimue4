@@ -69,4 +69,6 @@ type
   ULightComponent* {.header: "Components/LightComponent.h", importcpp.} = object of ULightComponentBase
 
   UArrowComponent* {.header: "Components/ArrowComponent.h", importcpp.} = object of UPrimitiveComponent
+  
+  UMaterialBillboardComponent* {.header: "Components/MaterialBillboardComponent.h", importcpp.} = object of UPrimitiveComponent
 
