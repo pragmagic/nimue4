@@ -1,16 +1,16 @@
 # Copyright 2016 Xored Software, Inc.
 
 type
-  ECastCheckedType* {.header: "UObject/UObject.h", importcpp: "ECastCheckedType::Type", nodecl, pure.} = enum
+  ECastCheckedType* {.header: "CoreUObject.h", importcpp: "ECastCheckedType::Type", nodecl, pure.} = enum
     NullAllowed,
     NullChecked
 
-  EResourceSizeMode* {.header: "UObject/UObject.h", importcpp: "EResourceSizeMode::Type", nodecl, pure.} = enum
+  EResourceSizeMode* {.header: "CoreUObject.h", importcpp: "EResourceSizeMode::Type", nodecl, pure.} = enum
     ## Passed to GetResourceSize() to indicate which resource size should be returned.
     Exclusive, ## Only exclusive resource size
     Inclusive  ## Resource size of the object and all of its references
 
-  EObjectFlags* {.size: sizeof(cint), importcpp: "EObjectFlags", header: "UObject/ObjectBase.h".} = enum
+  EObjectFlags* {.size: sizeof(cint), importcpp: "EObjectFlags", header: "CoreUObject.h".} = enum
     ## Flags describing an object instance
     RF_NoFlags = 0x00000000, ## No flags, used to avoid a cast
 
@@ -52,7 +52,7 @@ type
 
   ELoadConfigPropagationFlags* {.size: sizeof(cint),
                                  importcpp: "UE4::ELoadConfigPropagationFlags",
-                                 header: "UObject/ObjectBase.h".} = enum
+                                 header: "CoreUObject.h".} = enum
     LCPF_None = 0x0,
     LCPF_ReadParentSections = 0x1,
       ## Indicates that the object should read ini values from each section up its class's hierarchy chain;
@@ -70,7 +70,7 @@ type
 
   ERenameFlags = uint32
 
-  FObjectInstancingGraph* {.header: "UObject/Class.h", importcpp.} = object
+  FObjectInstancingGraph* {.header: "CoreUObject.h", importcpp.} = object
 
 converter toUInt32(flags: ELoadConfigPropagationFlags): uint32 =
   result = ord(flags)
@@ -91,7 +91,7 @@ const REN_ForceGlobalUnique = 0x0040
 const REN_SkipGeneratedClasses = 0x0080
   ## Prevent renaming of any child generated classes and CDO's in blueprints
 
-wclass(FObjectInitializer, header: "UObject/UObjectGlobals.h", bycopy):
+wclass(FObjectInitializer, header: "CoreUObject.h", bycopy):
   proc initFObjectInitializer(): FObjectInitializer {.constructor.}
     ## Default Constructor, used when you are using the C++ "new" syntax. UObject::UObject will set the object pointer
 
@@ -192,10 +192,10 @@ wclass(FObjectInitializer, header: "UObject/UObjectGlobals.h", bycopy):
     ## Asserts with the specified message if code is executed inside UObject constructor
   proc finalizeSubobjectClassInitialization()
 
-proc getObjectInitializer*(): var FObjectInitializer {.importcpp: "FObjectInitializer::Get", header: "UObject/UObjectGlobals.h".}
+proc getObjectInitializer*(): var FObjectInitializer {.importcpp: "FObjectInitializer::Get", header: "CoreUObject.h".}
   ## Gets ObjectInitializer for the currently constructed object. Can only be used inside of a constructor of UObject-derived class.
 
-wclass(UObjectBase, header: "UObject/UObjectBase.h", notypedef):
+wclass(UObjectBase, header: "CoreUObject.h", notypedef):
   proc getUniqueID(): uint32 {.noSideEffect.}
     ## Returns the unique ID of the object...these are reused so it is only unique while the object is alive.
     ## Useful as a tag.
@@ -203,7 +203,7 @@ wclass(UObjectBase, header: "UObject/UObjectBase.h", notypedef):
   proc getOuter(): ptr UObject {.noSideEffect.}
   proc getFName(): FName {.noSideEffect.}
 
-wclass(UObjectBaseUtility of UObjectBase, header: "UObject/UObjectBaseUtility.h", notypedef):
+wclass(UObjectBaseUtility of UObjectBase, header: "CoreUObject.h", notypedef):
   proc isPendingKill(): bool {.noSideEffect.}
   proc addToRoot()
     ## Add an object to the root set. This prevents the object and all
@@ -218,7 +218,7 @@ proc createOptionalDefaultSubobject*[T](obj: ptr UObject, subobjectName: wstring
 proc createAbstractDefaultSubobject*[T](obj: ptr UObject, subobjectName: FName; bTransient: bool = false): ptr T {.importcpp: "#.CreateAbstractDefaultSubobject<'*0>(@)", nodecl.}
 proc createAbstractDefaultSubobject*[T](obj: ptr UObject, subobjectName: wstring; bTransient: bool = false): ptr T {.importcpp: "#.CreateAbstractDefaultSubobject<'*0>(@)", nodecl.}
 
-wclass(UObject of UObjectBaseUtility, header: "UObject/UObject.h", notypedef):
+wclass(UObject of UObjectBaseUtility, header: "CoreUObject.h", notypedef):
   method postInitProperties()
     ## Called after the C++ constructor and after the properties have been initialized, including those loaded from config.
     ## mainly this is to emulate some behavior of when the constructor was called after the properties were intialized.
@@ -755,19 +755,19 @@ wclass(UObject of UObjectBaseUtility, header: "UObject/UObject.h", notypedef):
 
 
 proc getNameSafe*(obj: ptr UObjectBaseUtility): FString {.
-  importc: "GetNameSafe", header: "UObject/UObjectBaseUtility.h".}
+  importc: "GetNameSafe", header: "CoreUObject.h".}
   ## Returns the name of this object (with no path information)
   ## @param Object object to retrieve the name for; NULL gives "None"
   ## @return Name of the object.
 
 proc getPathNameSafe*(obj: ptr UObjectBaseUtility): FString {.
-  importc: "GetPathNameSafe", header: "UObject/UObjectBaseUtility.h".}
+  importc: "GetPathNameSafe", header: "CoreUObject.h".}
   ## Returns the path name of this object
   ## @param Object object to retrieve the path name for; NULL gives "None"
   ## @return path name of the object.
 
 proc getFullNameSafe*(obj: ptr UObjectBaseUtility): FString {.
-  importc: "GetFullNameSafe", header: "UObject/UObjectBaseUtility.h".}
+  importc: "GetFullNameSafe", header: "CoreUObject.h".}
   ## Returns the full name of this object
   ## @param Object object to retrieve the full name for; NULL (or a null class!) gives "None"
   ## @return full name of the object.
@@ -778,14 +778,14 @@ template setDefaultSubobjectClass*(this: var FObjectInitializer, T: typedesc, su
   # TODO: cannot yet wrap this properly
   {.emit: "`$#`.SetDefaultSubobjectClass<$#>(`$#`);".format(astToStr(this), T.name, astToStr(subobjName)).}
 
-proc isValid*(obj: ptr UObject): bool {.importcpp: "IsValid(@)", header: "ObjectBase.h".}
+proc isValid*(obj: ptr UObject): bool {.importcpp: "IsValid(@)", header: "CoreUObject.h".}
   ## Test validity of object
   ##
   ## @param	Test			The object to test
   ## @return	Return true if the object is usable: non-null and not pending kill
 
 proc loadObject*[T: UObject](path: wstring): ptr T {.
-  header: "UObject/UObjectGlobals.h", importcpp: "(Cast<'*0>(StaticLoadObject('*0::StaticClass(), NULL, #)))".}
+  header: "CoreUObject.h", importcpp: "(Cast<'*0>(StaticLoadObject('*0::StaticClass(), NULL, #)))".}
 proc loadObject*[T: UObject](path: FString): ptr T =
   result = loadObject[T](wideString(path))
 proc loadObject*[T: UObject](path: string): ptr T =
@@ -812,7 +812,7 @@ proc ctorLoadClass*(T: typedesc, path: static[string]): TSubclassOf[T] {.inline.
   shallowCopy(thePath, path)
   {.emit: "static ConstructorHelpers::FClassFinder<" & T.name & "> rCont(UTF8_TO_TCHAR((`thePath`)->data));`result`=rCont.Class;".}
 
-wclass(UClass of UObject, header: "UObject/Class.h", notypedef):
+wclass(UClass of UObject, header: "CoreUObject.h", notypedef):
   proc getDefaultObject[T](): ptr T {.cppname: "#.GetDefaultObject<'*0>(@)".}
     ## Get the default object from the class
     ## @param	bCreateIfNeeded if true (default) then the CDO is created if it is NULL.
