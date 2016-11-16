@@ -48,23 +48,23 @@ type
     transientMasterVolume* {.importcpp: "TransientMasterVolume".}: float32
 
   FArchive* {.header: "Serialization/ArchiveBase.h", importcpp.} = object
-  FPropertyTag* {.header: "UObject/PropertyTag.h", importcpp.} = object
+  FPropertyTag* {.header: "CoreUObject.h", importcpp.} = object
   FSceneInterface* {.header: "SceneInterface.h", importcpp.} = object
-  FReferenceCollector* {.header: "UObject/UObjectGlobals.h", importcpp.} = object
+  FReferenceCollector* {.header: "CoreUObject.h", importcpp.} = object
 
 # Have to declare many types here, because Nim doesn't support forward declaration
 # and UE types have lots of inter-dependencies
 type
-  UObjectBase* {.header: "UObject/UObjectBase.h", importcpp, inheritable.} = object
-  UObjectBaseUtility* {.header: "UObject/UObjectBaseUtility.h", importcpp, inheritable.} = object of UObjectBase
-  UObject* {.header: "UObject/UObject.h", importcpp.} = object of UObjectBaseUtility
-  UPackage* {.header: "UObject/CoreObject.h", importcpp.} = object of UObject
+  UObjectBase* {.header: "CoreUObject.h", importcpp, inheritable.} = object
+  UObjectBaseUtility* {.header: "CoreUObject.h", importcpp, inheritable.} = object of UObjectBase
+  UObject* {.header: "CoreUObject.h", importcpp.} = object of UObjectBaseUtility
+  UPackage* {.header: "CoreUObject.h", importcpp.} = object of UObject
 
-  UProperty* {.header: "UObject/UnrealTypes.h", importcpp.} = object of UObject
-  UClass* {.header: "UObject/Class.h", importcpp.} = object of UObject
-  UField* {.header: "UObject/Class.h", importcpp.} = object of UObject
-  UStruct* {.header: "UObject/Class.h", importcpp.} = object of UField
-  UFunction* {.header: "UObject/Class.h", importcpp.} = object of UStruct
+  UProperty* {.header: "CoreUObject.h", importcpp.} = object of UObject
+  UClass* {.header: "CoreUObject.h", importcpp.} = object of UObject
+  UField* {.header: "CoreUObject.h", importcpp.} = object of UObject
+  UStruct* {.header: "CoreUObject.h", importcpp.} = object of UField
+  UFunction* {.header: "CoreUObject.h", importcpp.} = object of UStruct
   UInterface* {.header: "Interface.h", importcpp.} = object of UObject
 
 include containers/subclassof
