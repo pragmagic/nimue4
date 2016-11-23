@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-import parseopt2, pegs, ropes, strutils, os, times, sets, osproc
+import parseopt, pegs, ropes, strutils, os, times, sets, osproc
 
 type
   OptType = enum
@@ -103,13 +103,13 @@ proc uePlatformToNimOSCPU(platform: string): tuple[os, cpu: string] {.noSideEffe
   # Mac, XboxOne, PS4, IOS, Android, HTML5, Linux,
   # AllDesktop, TVOS
 
-  result.os = case platform.toLower():
+  result.os = case platform.toLowerAscii():
     of "win32", "win64", "winrt", "winrt_arm", "uwp", "html5": "windows"
     of "mac", "ios", "tvos": "macosx"
     of "linux", "android": "linux"
     else: "standalone"
 
-  result.cpu = case platform.toLower():
+  result.cpu = case platform.toLowerAscii():
     of "win32", "winrt", "uwp", "linux", "alldesktop", "html5": "i386"
     of "win64", "mac", "xboxone", "ps4": "amd64"
     else: "arm"
@@ -147,7 +147,7 @@ proc writeFileIfNotSame(filename, contents: string) =
 
 proc processFile(file, moduleName: string; outDir: string; nimblePackageName: string) =
   let moduleIncludeString = "#include \"$#.h\"\n" % moduleName
-  let exportMacro = moduleName.toUpper() & "_API"
+  let exportMacro = moduleName.toUpperAscii() & "_API"
   let outCppDir = outDir / "Private"
 
   var (_, outName, _) = splitFile(file)
@@ -249,7 +249,7 @@ proc cleanModules(projectDir: string) =
   for moduleDir in walkDir(projectDir / "Source"):
     if moduleDir.kind != pcDir:
       continue
-    removeDir (moduleDir.path / nimModuleDirName)
+    removeDir(moduleDir.path / nimModuleDirName)
 
 proc getNimOutDir(projectDir: string): string =
   result = projectDir / "Intermediate" / "Nim"
@@ -357,7 +357,7 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string, isEditorBuil
       if nimsFile != nil:
         copyFile(nimsFile, nimOutDir / extractFilename(nimsFile))
 
-      let platform = uePlatform.toLower()
+      let platform = uePlatform.toLowerAscii()
       createNimCfg(nimOutDir, moduleDir, nimcacheDir, rootFile, isEditorBuild, platform, os, cpu)
 
       if nimbleFile == nil:
@@ -369,7 +369,6 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string, isEditorBuil
       for file in walkDirRec(nimcacheDir, {pcFile}):
         if file.endsWith(".h") and not expectedFilenames.contains(extractFilename(file)):
           let cppFile = file.changeFileExt("cpp")
-          let filename = file.extractFilename()
           let cppFilename = cppFile.extractFilename()
           removeFile file
           removeFile cppFile
@@ -403,7 +402,7 @@ proc build(command: CommandType, engineDir, projectDir, projectName, target, mod
     cleanModules(projectDir)
 
     (os, cpu) = uePlatformToNimOSCPU(platform)
-    if platform.toLower() == "ios":
+    if platform.toLowerAscii() == "ios":
       cpu = if mode == "Shipping": "arm64"
             else: "arm"
     buildNim(projectDir, projectName, os, cpu, platform, isEditorBuild = false)
