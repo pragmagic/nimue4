@@ -20,6 +20,17 @@ type
     Forward,
     Backward
 
+  EHorizTextAligment* {.header: "Components/TextRenderComponent.h", importcpp: "EHorizTextAligment".} = enum
+    EHTA_Left,
+    EHTA_Center,
+    EHTA_Right
+
+  EVerticalTextAligment* {.header: "Components/TextRenderComponent.h", importcpp: "EVerticalTextAligment".} = enum
+    EVRTA_TextTop,
+    EVRTA_TextCenter,
+    EVRTA_TextBottom,
+    EVRTA_QuadTop
+
 type
   USkeletalMesh* {.header: "Engine/SkeletalMesh.h", importcpp.} = object of UObject
     bounds* {.importcpp: "Bounds".}: FBoxSphereBounds
@@ -39,6 +50,8 @@ type
   UShapeComponent* {.header: "Components/ShapeComponent.h", importcpp.} = object of UPrimitiveComponent
   UCapsuleComponent* {.header: "Components/CapsuleComponent.h", importcpp.} = object of UShapeComponent
   USphereComponent* {.header: "Components/SphereComponents.h", importcpp.} = object of UShapeComponent
+  UBoxComponent* {.header: "Components/BoxComponent.h", importcpp.} = object of UShapeComponent
+  UTextRenderComponent* {.header: "Components/TextRenderComponent.h", importcpp.} = object of UPrimitiveComponent
 
   UParticleSystemComponent* {.header: "Particles/ParticleSystemComponent.h", importcpp.} = object of UPrimitiveComponent
 

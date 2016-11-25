@@ -547,7 +547,7 @@ var zeroRotator* {.importc: "FRotator::ZeroRotator", header: "Math/Rotator.h".}:
 wclass(FPlane, header: "Math/Plane.h", notypedef):
   proc initFPlane(): FPlane {.constructor.}
 
-  proc initFPlane(x, y, z, w: cfloat) {.constructor.}
+  proc initFPlane(x, y, z, w: cfloat): FPlane {.constructor.}
 
   proc planeDot(p: FVector): float {.noSideEffect.}
     ## Calculates distance between plane and a point.
@@ -736,7 +736,7 @@ proc sqr*(f: float32): float32 {.
 
 proc lerp*[T, U](a, b: T; alpha: U): T {.
   importc: "FMath::Lerp", header: "Math/UnrealMathUtility.h".}
-  
+
 proc frand*(): cfloat {.
   importc: "FMath::FRand", header: "Math/UnrealMathUtility.h".}
 
@@ -792,3 +792,9 @@ proc fInterpTo*(current: FLinearColor; target: FLinearColor; deltaTime: cfloat;
                interpSpeed: cfloat): FLinearColor {.
   importc: "FMath::FInterpTo", header: "Math/UnrealMathUtility.h".}
   ## Interpolate Linear Color from Current to Target. Scaled by distance to Target, so it has a strong start speed and ease out.
+
+proc linePlaneIntersection*(point1:FVector; point2: FVector; plane: FPlane;): FVector {.
+  importc: "FMath::LinePlaneIntersection", header: "Math/UnrealMathUtility.h".}
+  ## Find the intersection of a line and a plane. Assumes that the line and plane do indeed intersect; you must make
+  ## sure they're not parallel before calling.
+  ## @returns The point of intersection between the line and the plane.

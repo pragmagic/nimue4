@@ -432,6 +432,7 @@ include components/pawnnoiseemitter
 
 include components/audio
 include components/timeline
+include components/textrender
 
 include "core/object"
 
