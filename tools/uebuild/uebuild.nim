@@ -364,7 +364,7 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string, isEditorBuil
         exec "nim cpp \"" & rootFile & '"'
       else:
         withDir nimOutDir:
-          exec "nimble cpp \"" & rootFile & '"'
+          exec "nimble -y cpp \"" & rootFile & '"'
 
       for file in walkDirRec(nimcacheDir, {pcFile}):
         if file.endsWith(".h") and not expectedFilenames.contains(extractFilename(file)):
