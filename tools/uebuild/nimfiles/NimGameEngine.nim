@@ -9,14 +9,12 @@ uclass(UNimGameEngine of UGameEngine, Config=Engine):
   var defaultRequiredFps {.config.}: cfloat = 60.0
   var maxFrameTime: cfloat = 0.016
 
-  method preInit()
-
   method init*(loop: ptr IEngineLoop) {.override, callSuperAfter.} =
     var stackTop {.volatile.}: pointer
     when withEditor:
-      {.emit: "setStackBottom((void*)(&`stackTop`));".}
+      {.emit: "check(IsInGameThread()); setStackBottom((void*)(&`stackTop`));".}
     else:
-      {.emit: "NimMain();".}
+      {.emit: "check(IsInGameThread()); NimMain();".}
 
     var requiredFps: cfloat = defaultRequiredFps
     if this.bSmoothFrameRate and this.smoothedFrameRateRange.hasLowerBound():
