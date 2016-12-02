@@ -326,6 +326,7 @@ include components/billboard
 
 include components/pathfollowing
 
+include components/mesh
 include components/staticmesh
 include components/skeletalmesh
 include components/particlesystem

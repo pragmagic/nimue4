@@ -18,7 +18,5 @@ wclass(USkeletalMeshComponent of USkinnedMeshComponent, header: "Components/Skel
 
   method getPlayRate(): float32
   method setPlayRate(rate: float32)
-  
-  method getMaterials(): TArray[ptr UMaterialInterface]
 
 # TODO
