@@ -7,7 +7,7 @@ import macros, typetraits, lib/macroutils, lib/clibpp
 import sequtils, strutils
 
 # these exports are needed for some templates to work
-export strutils.format, strutils.split, strutils.join, strutils.capitalize
+export strutils.format, strutils.split, strutils.join, strutils.capitalizeAscii
 export sequtils.map
 export typetraits.name
 export expandObjReference

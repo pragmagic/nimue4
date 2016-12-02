@@ -14,7 +14,7 @@ proc paramString(): string =
     result &= " " & paramStr(i)
 
 proc getThisDir(): string =
-  (when defined(windows): thisDir().capitalize() else: thisDir())
+  (when defined(windows): thisDir().capitalizeAscii() else: thisDir())
 
 let nimUE4LibDir = getEnvOrRaise("NIMUE_HOME")
 let engineDir = getEnvOrRaise("UE4_HOME")

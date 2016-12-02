@@ -13,7 +13,7 @@ macro invokeSuper*(parentType: typedesc, f: untyped, params: varargs[typed]): st
     if callParams.len > 0:
       callParams.add(",")
     callParams.add("`" & repr(param) & "`")
-  let fName = ($f).capitalize()
+  let fName = ($f).capitalizeAscii()
   result = quote do:
     {.emit: "`this`->`" & `parentType`.name & "`::" & `fName` & "(" & `callParams` & ");".}
 
@@ -26,7 +26,7 @@ macro invokeSuperWithResult*(resType: typedesc, parentType: typedesc, f: untyped
     if callParams.len > 0:
       callParams.add(",")
     callParams.add("`" & repr(param) & "`")
-  let fName = ($f).capitalize()
+  let fName = ($f).capitalizeAscii()
   result = quote do:
     var `sym`: `resType`
     {.emit: "`" & astToStr(`sym`) & "`" & " = `this`->`" & `parentType`.name & "`::" & `fName` & "(" & `callParams` & ");".}

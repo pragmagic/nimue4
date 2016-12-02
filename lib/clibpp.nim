@@ -46,7 +46,7 @@ proc makeProcedure(className, ns: string, statement: NimNode, classNameNode: Nim
     let isStatic = statement.removePragma("isStatic")
     let isConstructor = statement.hasPragma("constructor")
     let userSuppliedName = statement.removeStrPragma("cppname")
-    let cppName = if userSuppliedName == nil: procName.capitalize() else: userSuppliedName
+    let cppName = if userSuppliedName == nil: procName.capitalizeAscii() else: userSuppliedName
     # Check if static is set (and remove static pragma)
     if isStatic:
         assert(not isOperator)
@@ -100,7 +100,7 @@ proc buildProceduresFromVar(className: NimNode; ns, header: string; varNameNode,
   let userSuppliedName = removeStrPragma(varNameNode, "cppname")
   let cppIdent = if userSuppliedName != nil: userSuppliedName
                  elif varType.toStrLit.strVal == "bool": $varIdent
-                 else: ($varIdent).capitalize
+                 else: ($varIdent).capitalizeAscii
   let getterImportCPragma = newNimNode(nnkExprColonExpr).add(
         ident("importcpp"), newStrLitNode("#." & cppIdent))
   let setterImportCPragma = newNimNode(nnkExprColonExpr).add(
@@ -160,7 +160,7 @@ proc buildStaticAccessor(name,ty, className:NimNode; ns:string): NimNode =
         body = newEmptyNode(),
         params = [ty, newIdentDefs(ident"ty", parseExpr("typedesc["& $(className) & "]"))]
     )
-    let cppIdent = if ty.toStrLit.strVal == "bool": $name.basename else: ($name.basename).capitalize
+    let cppIdent = if ty.toStrLit.strVal == "bool": $name.basename else: ($name.basename).capitalizeAscii
     result.pragma = newNimNode(nnkPragma).add(
         ident"noDecl",
         newNimNode(nnkExprColonExpr).add(
@@ -304,7 +304,7 @@ macro wclass*(className, opts: expr, body: stmt): stmt {.immediate.} =
                   let varNameIdent = extractIdent(n)
                   var cppName = removeStrPragma(varNameNode, "cppname")
                   if cppName == nil:
-                    cppName = if ty.toStrLit.strVal == "bool": $varNameIdent else: ($varNameIdent).capitalize
+                    cppName = if ty.toStrLit.strVal == "bool": $varNameIdent else: ($varNameIdent).capitalizeAscii
                   if varNameNode.kind != nnkPostfix:
                     # export all fields
                     if varNameNode.kind == nnkPragmaExpr:

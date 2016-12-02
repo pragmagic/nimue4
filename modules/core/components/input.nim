@@ -97,43 +97,43 @@ template bindAction*[T](inputComp: ptr UInputComponent, action: static[string], 
   ## Binds a delegate function to an Action defined in the project settings.
   {.emit: "$#->BindAction(`$#`, `$#`::$#, `$#`, & $#::$#);".format(
             expandObjReference(astToStr(inputComp)), astToStr(action), type(event).name, astToStr(event),
-            astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalize()).}
+            astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalizeAscii()).}
 
 template bindAxis*[T](inputComp: ptr UInputComponent, axisName: static[string], objPtr: T, callback: proc(t: T, val: cfloat)) =
   ## Binds a delegate function an Axis defined in the project settings.
   {.emit: "$#->BindAxis(`$#`, `$#`, & $#::$#);".format(
             expandObjReference(astToStr(inputComp)), astToStr(axisName),
-            astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalize()).}
+            astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalizeAscii()).}
 
 template bindAxisKey*[T](inputComp: ptr UInputComponent, axisKey: FKey, objPtr: T, callback: proc(t: T, val: cfloat)) =
   ## Binds a delegate function for an axis key (e.g. Mouse X).
   {.emit: "$#->BindAxisKey(`$#`, `$#`, & $#::$#);".format(
             expandObjReference(astToStr(inputComp)), astToStr(axisKey),
-            astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalize()).}
+            astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalizeAscii()).}
 
 template bindVectorAxis*[T](inputComp: ptr UInputComponent, axisKey: FKey, objPtr: T, callback: proc(t: T, val: cfloat)) =
   ## Binds a delegate function to a vector axis key (e.g. Tilt)
   {.emit: "$#->BindVectorAxis(`$#`, `$#`, & $#::$#);".format(
             expandObjReference(astToStr(inputComp)), astToStr(axisKey),
-            astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalize()).}
+            astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalizeAscii()).}
 
 template bindTouch*[T](inputComp: ptr UInputComponent, event: EInputEvent, objPtr: T, callback: proc(t: T, fingerIndex: ETouchIndex, loc: FVector)) =
   {.emit: "$#->BindTouch(`$#`::$#, `$#`, & $#::$#);".format(
             expandObjReference(astToStr(inputComp)), type(event).name, astToStr(event),
-            astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalize()).}
+            astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalizeAscii()).}
 
 template bindKey*[T](inputComp: ptr UInputComponent, key: FKey, event: EInputEvent, objPtr: T, callback: proc(t: T, fingerIndex: ETouchIndex, loc: FVector)) =
   {.emit: "$#->BindKey(`$#`, `$#`::$#, `$#`, & $#::$#);".format(
             expandObjReference(astToStr(inputComp)), astToStr(key), type(event).name, astToStr(event),
-            astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalize()).}
+            astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalizeAscii()).}
 
 template bindChord*[T](inputComp: ptr UInputComponent, chord: FInputChord, event: EInputEvent, objPtr: T, callback: proc(t: T, fingerIndex: ETouchIndex, loc: FVector)) =
   {.emit: "$#->BindKey(`$#`, `$#`::$#, `$#`, & $#::$#);".format(
             expandObjReference(astToStr(inputComp)), astToStr(chord), type(event).name, astToStr(event),
-            astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalize()).}
+            astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalizeAscii()).}
 
 template bindGesture*[T](inputComp: ptr UInputComponent, axisKey: FKey, objPtr: T, callback: proc(t: T, val: cfloat)) =
   ## Binds a gesture event to a delegate function.
   {.emit: "$#->BindAxisKey(`$#`, `$#`, & $#::$#);".format(
             expandObjReference(astToStr(inputComp)), astToStr(axisKey),
-            astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalize()).}
+            astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalizeAscii()).}

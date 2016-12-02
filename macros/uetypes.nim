@@ -157,7 +157,7 @@ proc toCppFieldName(name: string, valueType: string): Rope {.compileTime.} =
   if valueType == "bool":
     result = rope(name)
   else:
-    result = rope(name.capitalize())
+    result = rope(name.capitalizeAscii())
 
 proc genName(name: string, relatedNode: NimNode): Rope {.compileTime.} =
   result = rope(name) & "_nim"
@@ -492,7 +492,7 @@ proc genCppMethod(typeDef: TypeDefinition, meth: TypeMethod): Rope {.compileTime
   friendSignature.add(friendArgList)
   friendSignature.add(");\n")
 
-  let methNameCapitalized = rope(($meth.name).capitalize())
+  let methNameCapitalized = rope(($meth.name).capitalizeAscii())
   let signature = toCppSignature(meth, methNameCapitalized, isUeSignature = true, isUFunction = meth.isUFunction)
 
   if meth.isImplementationNeeded() or meth.isBlueprintNative():
@@ -524,14 +524,14 @@ proc genCppMethods(typeDef: TypeDefinition): Rope {.compileTime.} =
     result.add(genCppMethod(typeDef, meth))
     if meth.isBpExtendable:
       var bpMeth = TypeMethod(
-        name: rope("Receive" & ($meth.name).capitalize()),
+        name: rope("Receive" & ($meth.name).capitalizeAscii()),
         genName: meth.genName,
         args: meth.args,
         node: meth.node,
         isUFunction: true
       )
       let displayName = if meth.extendableName != nil: meth.extendableName
-                        else: rope(($meth.name).capitalize())
+                        else: rope(($meth.name).capitalizeAscii())
       bpMeth.uFunctionParamStr = rope("BlueprintImplementableEvent, meta=(DisplayName=\"") & displayName & "\")"
       bpMeth.uFunctionParamStr.addWithComma(meth.uFunctionParamStr)
       result.add(genCppMethod(typeDef, bpMeth))
@@ -541,7 +541,7 @@ proc genCppImplementationCode(typeDef: TypeDefinition): string {.compileTime.} =
   for meth in typeDef.methods:
     if meth.isNimOnly(): continue
     if meth.isEditorOnly: code.add("#if WITH_EDITOR\n")
-    let methNameCapitalized = ($meth.name).capitalize()
+    let methNameCapitalized = ($meth.name).capitalizeAscii()
     if (meth.isBlueprintNative or meth.isImplementationNeeded) and not meth.isConstructor:
       if meth.isRetConst:
         code.add("const ")
@@ -690,7 +690,7 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
     if not meth.isConstructor:
       var decl = nodeCopy.copy()
       decl[^1] = newEmptyNode() # remove body
-      let cppName = ($meth.name).capitalize()
+      let cppName = ($meth.name).capitalizeAscii()
       let cppPattern = if typeDef.isUtilityType: $typeDef.name & "::" & cppName & "(@)"
                        else: "#." & cppName & "(@)"
       decl.pragma = parseExpr("{.header: \"$1\", importcpp: \"$2\", nodecl.}".format(typeDef.headerName, cppPattern))

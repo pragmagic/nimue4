@@ -145,7 +145,7 @@ macro addMenuItem*[T](menu: ptr FGameMenuPage, inText: FText, objPtr: T, callbac
     var `sym`: TSharedPtr[FGameMenuItem]
     {.emit: "`$#` = $#->AddMenuItem(`$#`, `$#`, & $#::$#);".format(
               astToStr(`sym`), expandObjReference(astToStr(`menu`)), astToStr(`inText`),
-              astToStr(`objPtr`), type(`objPtr`).name.split(" ")[^1], astToStr(`callback`).capitalize()).}
+              astToStr(`objPtr`), type(`objPtr`).name.split(" ")[^1], astToStr(`callback`).capitalizeAscii()).}
     `sym`
 
 macro addMenuItemWithOptions*[T](menu: ptr FGameMenuPage, text: FText, optionsList: TArray[FText],
@@ -162,7 +162,7 @@ macro addMenuItemWithOptions*[T](menu: ptr FGameMenuPage, text: FText, optionsLi
     var `sym`: TSharedPtr[FGameMenuItem]
     {.emit: "`$#` = $#->AddMenuItemWithOptions(`$#`, `$#`, `$#`, & $#::$#);".format(
               astToStr(`sym`), expandObjReference(astToStr(`menu`)), astToStr(`text`), astToStr(`optionsList`),
-              astToStr(`objPtr`), type(`objPtr`).name.split(" ")[^1], astToStr(`callback`).capitalize()).}
+              astToStr(`objPtr`), type(`objPtr`).name.split(" ")[^1], astToStr(`callback`).capitalizeAscii()).}
     `sym`
 
 macro addCustomMenuItem*[T](menu: ptr FGameMenuPage, text: FText, customWidget: TSharedPtr[SGameMenuItemWidget], objPtr: T, callback: proc(t: T)): untyped =
@@ -178,7 +178,7 @@ macro addCustomMenuItem*[T](menu: ptr FGameMenuPage, text: FText, customWidget: 
     var `sym`: TSharedPtr[FGameMenuItem]
     {.emit: "`$#` = $#->AddCustomMenuItem(`$#`, `$#`, `$#`, & $#::$#);".format(
               astToStr(`sym`), expandObjReference(astToStr(`menu`)), astToStr(`text`), astToStr(`customWidget`),
-              astToStr(`objPtr`), type(`objPtr`).name.split(" ")[^1], astToStr(`callback`).capitalize()).}
+              astToStr(`objPtr`), type(`objPtr`).name.split(" ")[^1], astToStr(`callback`).capitalizeAscii()).}
     `sym`
 
 template setCancelHandler*[T](menu: ptr FGameMenuPage, objPtr: T, callback: proc(t: T)) =
@@ -188,7 +188,7 @@ template setCancelHandler*[T](menu: ptr FGameMenuPage, objPtr: T, callback: proc
   ## @param	InMethod	Method to call when selection changes.
   {.emit: "$#->SetCancelHandler(`$#`, & $#::$#);".format(
           expandObjReference(astToStr(menu)),
-          astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalize()).}
+          astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalizeAscii()).}
 
 template setOnHiddenHandler*[T](menu: ptr FGameMenuPage, objPtr: T, callback: proc(t: T)) =
   ## Add a handler for the menu being canceled.
@@ -197,7 +197,7 @@ template setOnHiddenHandler*[T](menu: ptr FGameMenuPage, objPtr: T, callback: pr
   ## @param	InMethod	Method to call when menu has been hidden.
   {.emit: "$#->SetOnHiddenHandler(`$#`, & $#::$#);".format(
           expandObjReference(astToStr(menu)),
-          astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalize()).}
+          astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalizeAscii()).}
 
 template setAcceptHandler*[T](menu: ptr FGameMenuPage, objPtr: T, callback: proc(t: T)) =
   ## Add a handler for the menu being accepted.
@@ -206,7 +206,7 @@ template setAcceptHandler*[T](menu: ptr FGameMenuPage, objPtr: T, callback: proc
   ## @param	InMethod	Method to call when selection changes.
   {.emit: "$#->SetAcceptHandler(`$#`, & $#::$#);".format(
           expandObjReference(astToStr(menu)),
-          astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalize()).}
+          astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalizeAscii()).}
 
 template setOnOpenHandler*[T](menu: ptr FGameMenuPage, objPtr: T, callback: proc(t: T)) =
   ## Add a handler for the menu being opened.
@@ -215,4 +215,4 @@ template setOnOpenHandler*[T](menu: ptr FGameMenuPage, objPtr: T, callback: proc
   ## @param	InMethod	Method to call when menu is about to open.
   {.emit: "$#->SetAcceptHandler(`$#`, & $#::$#);".format(
     expandObjReference(astToStr(menu)),
-    astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalize()).}
+    astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalizeAscii()).}

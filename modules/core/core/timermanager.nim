@@ -114,7 +114,7 @@ macro setTimer*[T](timerManager: ptr FTimerManager, inOutHandle: var FTimerHandl
   result = quote do:
     {.emit: "$#->SetTimer($#, `$#`, & $#::$#, $#, $#, $#);".format(
               expandObjReference(astToStr(`timerManager`)), expandObjReference(astToStr(`inOutHandle`)),
-              astToStr(`objPtr`), type(`objPtr`).name.split(" ")[^1], astToStr(`callback`).capitalize(),
+              astToStr(`objPtr`), type(`objPtr`).name.split(" ")[^1], astToStr(`callback`).capitalizeAscii(),
               toCppSubstitution(`inRate`), repr(`bLoop`), toCppSubstitution(`inFirstDelay`)).}
 
 macro setTimer*[T](timerManager: ptr FTimerManager, inOutHandle: var FTimerHandle, delay: cfloat,
@@ -127,7 +127,7 @@ macro setTimer*[T](timerManager: ptr FTimerManager, inOutHandle: var FTimerHandl
 
   result = quote do:
     {.emit: "{FTimerDelegate nim_delegate = FTimerDelegate::CreateUObject(`$#`, & $#::$# $#); $#->SetTimer($#, nim_delegate, $#, false);}".format(
-              astToStr(`objPtr`), type(`objPtr`).name.split(" ")[^1], astToStr(`callback`).capitalize(), `invocationStr`,
+              astToStr(`objPtr`), type(`objPtr`).name.split(" ")[^1], astToStr(`callback`).capitalizeAscii(), `invocationStr`,
               expandObjReference(astToStr(`timerManager`)), expandObjReference(astToStr(`inOutHandle`)),
               toCppSubstitution(`delay`)).}
 
@@ -141,7 +141,7 @@ macro setInterval*[T](timerManager: ptr FTimerManager, inOutHandle: var FTimerHa
     invocationStr.add("`" & $arg & "`")
   result = quote do:
     {.emit: "{FTimerDelegate nim_delegate = FTimerDelegate::CreateUObject(`$#`, & $#::$# $#); $#->SetTimer($#, nim_delegate, $#, true, $#);}".format(
-              astToStr(`objPtr`), type(`objPtr`).name.split(" ")[^1], astToStr(`callback`).capitalize(), `invocationStr`,
+              astToStr(`objPtr`), type(`objPtr`).name.split(" ")[^1], astToStr(`callback`).capitalizeAscii(), `invocationStr`,
               expandObjReference(astToStr(`timerManager`)), expandObjReference(astToStr(`inOutHandle`)),
               toCppSubstitution(`rate`), toCppSubstitution(`initialDelay`)).}
 
@@ -152,4 +152,4 @@ template setTimerForNextTick*[T](timerManager: ptr FTimerManager, objPtr: T, cal
   ## @param inTimerMethod			Method to call when timer fires.
   {.emit: "$#->SetTimerForNextTick(`$#`, & $#::$#);".format(
             expandObjReference(astToStr(timerManager)),
-            astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalize()).}
+            astToStr(objPtr), type(objPtr).name.split(" ")[^1], astToStr(callback).capitalizeAscii()).}

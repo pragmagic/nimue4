@@ -39,7 +39,7 @@ proc declareDelegate(name: NimNode,
 
   let bindTemplateBodyStr = """{.emit: "$#.Bind(`$#`, & $#::$#);".format(
               expandObjReference(astToStr(delegate)), astToStr(objPtr),
-              type(objPtr[]).name, astToStr(callback).capitalize()).}
+              type(objPtr[]).name, astToStr(callback).capitalizeAscii()).}
 """
   var bindTemplate = newProc(
     name = postfix(ident("bind"), "*"),

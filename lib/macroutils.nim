@@ -90,7 +90,7 @@ template expandObjReference*(r: string): expr =
   const parts = r.split('.')
   const first = '`' & parts[0] & '`'
   # capitalize, because we expect all UE4 names to be uppercase
-  const rest = parts[1..<parts.len].map(capitalize).join("->")
+  const rest = parts[1..<parts.len].map(capitalizeAscii).join("->")
   "(" & first & (if rest.len > 0: "->" else: "") & rest & ")"
 
 proc cppHeaderName*(node: NimNode): string =

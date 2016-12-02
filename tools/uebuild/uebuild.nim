@@ -138,10 +138,6 @@ proc extractIncludes(contents: var string, filename: string): Rope =
                          ws <- (comment / \s+)* """.format(filename))
   result = extractByPeg(contents, includePeg)
 
-proc replaceInFile(filename: string; sub, to: string) =
-  var contents = readFile(filename)
-  writeFile(filename, contents.replace(sub, to))
-
 proc writeFileIfNotSame(filename, contents: string) =
   if not fileExists(filename) or readFile(filename) != contents:
     writeFile(filename, contents)
