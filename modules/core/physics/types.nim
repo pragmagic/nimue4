@@ -166,6 +166,9 @@ proc initFCollisionQueryParams*(inTraceTag: FName, bInTraceComplex: bool = false
 proc addIgnoredActor*(this: var FCollisionQueryParams, inIgnoreActor: ptr AActor) {.
   importcpp: "#.AddIgnoredActor(@)", header: "CollisionQueryParams.h", nodecl.}
 
+proc initFCollisionObjectQueryParams*(queryChannel: ECollisionChannel): FCollisionObjectQueryParams {.
+  importcpp: "'0(@)", header: "CollisionQueryParams.h".}
+
 var defaultComponentQueryParams {.importcpp: "FComponentQueryParams::DefaultComponentQueryParams", nodecl.}: FComponentQueryParams
 var defaultResponseParam {.importcpp: "FCollisionResponseParams::DefaultResponseParam", nodecl.}: FCollisionResponseParams
 var defaultQueryParam {.importcpp: "FCollisionQueryParams::DefaultQueryParam", nodecl.}: FCollisionQueryParams
