@@ -14,3 +14,14 @@ var gGPUFrameTime* {.importcpp: "GGPUFrameTime", header: "EngineGlobals.h".}: ui
 
 var gGameplayTagsManager* {.importcpp: "GGPUFrameTime", header: "EngineGlobals.h".}: ptr UGameplayTagsManager
   ## A reference to the ability system so we do not need to get the module every time we access the tag manager.
+
+declareBuiltinDelegate(FApplicationLifetimeDelegate, dkMulticast, "Misc/CoreDelegates.h")
+
+var gApplicationHasEnteredForegroundDelegate* {.importcpp: "FCoreDelegates::ApplicationHasEnteredForegroundDelegate", header: "Misc/CoreDelegates.h".}: FApplicationLifetimeDelegate
+  ## This is called when the application is being backgrounded (e.g., due to switching
+  ## to another app or closing it via the home button)
+  ## The game should release shared resources, save state, etc..., since it can be
+  ## terminated from the background state without any further warning.
+  
+var gApplicationWillEnterBackgroundDelegate* {.importcpp: "FCoreDelegates::ApplicationWillEnterBackgroundDelegate", header: "Misc/CoreDelegates.h".}: FApplicationLifetimeDelegate
+  ## Called when the application is returning to the foreground (reverse any processing done in the EnterBackground delegate)
