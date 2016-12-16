@@ -2,7 +2,6 @@ import ue4, times
 
 {.emit:"""/*TYPESECTION*/
 N_NOINLINE(void, setStackBottom)(void* thestackbottom);
-void NimMain(void);
 """.}
 
 uclass(UNimGameEngine of UGameEngine, Config=Engine):
@@ -11,10 +10,7 @@ uclass(UNimGameEngine of UGameEngine, Config=Engine):
 
   method init*(loop: ptr IEngineLoop) {.override, callSuperAfter.} =
     var stackTop {.volatile.}: pointer
-    when withEditor:
-      {.emit: "check(IsInGameThread()); setStackBottom((void*)(&`stackTop`));".}
-    else:
-      {.emit: "check(IsInGameThread()); NimMain();".}
+    {.emit: "check(IsInGameThread()); setStackBottom((void*)(&`stackTop`));".}
 
     var requiredFps: cfloat = defaultRequiredFps
     if this.bSmoothFrameRate and this.smoothedFrameRateRange.hasLowerBound():
