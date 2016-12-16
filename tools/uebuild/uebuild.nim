@@ -40,6 +40,7 @@ const nimModuleFileTemplate = """
 #if WITH_EDITOR
   struct NimInitializer {
     NimInitializer() {
+      UE_LOG(LogTemp, Log, TEXT("Invoking NimMain()..."));
       NimMain();
     }
   };
@@ -48,8 +49,17 @@ const nimModuleFileTemplate = """
 
   class $1GameModule: public FDefaultGameModuleImpl {
 #if !WITH_EDITOR
+    bool bIsInitialized;
+    public:
+    $1GameModule() : bIsInitialized(false) {
+    }
+
     virtual void StartupModule() override {
-      NimMain();
+      if (!bIsInitialized) {
+        UE_LOG(LogTemp, Log, TEXT("Invoking NimMain()..."));
+        NimMain();
+        bIsInitialized = true;
+      }
     }
 #endif
   };
