@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-import parseopt, pegs, ropes, strutils, os, times, sets, osproc
+import parseopt, pegs, ropes, strutils, os, times, sets, osproc, json
 
 type
   OptType = enum
@@ -300,8 +300,6 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string, isEditorBuil
   let sourceDir = projectDir / "Source"
   let nimOutDir = getNimOutDir(projectDir)
 
-  # TODO: properly handle deleted files
-
   for sourceDirFile in walkDir(sourceDir):
     if sourceDirFile.kind != pcDir:
       continue
@@ -327,7 +325,7 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string, isEditorBuil
           echo ".nim filename mustn't be equal to module name: " & file.extractFileName()
           quit(-1)
         let importArg = makeRelative(file, moduleDir).replace("\\", "/")
-        rootFileContent = rootFileContent & "import \"" & importArg & "\"\n"
+        rootFileContent.add "import \"" & importArg & "\"\n"
         expectedFilenames.incl(file.changeFileExt("h").extractFilename())
       if file.endsWith(".nimble") and sameFile(file.parentDir(), moduleDir):
         nimbleFile = file
@@ -363,19 +361,28 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string, isEditorBuil
         withDir nimOutDir:
           exec "nimble -y cpp \"" & rootFile & '"'
 
-      for file in walkDirRec(nimcacheDir, {pcFile}):
-        if file.endsWith(".h") and not expectedFilenames.contains(extractFilename(file)):
-          let cppFile = file.changeFileExt("cpp")
-          let cppFilename = cppFile.extractFilename()
-          removeFile file
-          removeFile cppFile
-          removeFile targetDir / file.extractFilename()
-          removeFile targetDir / "Public" / file.extractFilename()
-          removeFile targetDir / "Private" / file.extractFilename()
-          removeFile targetDir / cppFilename
-          removeFile targetDir / "Private" / cppFilename
-        elif file.endsWith(".cpp"):
+      let jsonfile = nimcacheDir / projectName & "Root.json"
+      if fileExists(jsonfile):
+        let data = json.parseFile(jsonfile)
+        for cfileEntry in data["compile"]:
+          let file = cfileEntry[0].str
           processFile(file, moduleName, targetDir, nimblePackageName)
+      else:
+        # for backwards compatibility with older versions of Nim that don't
+        # produce json files:
+        for file in walkDirRec(nimcacheDir, {pcFile}):
+          if file.endsWith(".h") and not expectedFilenames.contains(extractFilename(file)):
+            let cppFile = file.changeFileExt("cpp")
+            let cppFilename = cppFile.extractFilename()
+            removeFile file
+            removeFile cppFile
+            removeFile targetDir / file.extractFilename()
+            removeFile targetDir / "Public" / file.extractFilename()
+            removeFile targetDir / "Private" / file.extractFilename()
+            removeFile targetDir / cppFilename
+            removeFile targetDir / "Private" / cppFilename
+          elif file.endsWith(".cpp"):
+            processFile(file, moduleName, targetDir, nimblePackageName)
 
 proc build(command: CommandType, engineDir, projectDir, projectName, target, mode, platform, extraOptions: string) =
   var os, cpu: string = nil
@@ -420,8 +427,7 @@ proc detectProjectName(projectDir: string): string =
   for file in walkDir(projectDir):
     if file.kind != pcFile: continue
     if file.path.endsWith(".uproject"):
-      let (_, name, _) = splitFile(file.path)
-      return name
+      return splitFile(file.path).name
 
   raise newException(OSError, ".uproject file must be located in the same folder with the build script")
 
