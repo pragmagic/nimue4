@@ -430,3 +430,5 @@ proc `==`*(x: FString, y: string): bool {.noSideEffect, inline.} =
 proc `==`*(x: string, y: FString): bool {.noSideEffect, inline.} =
   result = x.toFString() == y
 
+proc parseValue*(stream, match: wstring, value: var FString, bShouldStopOnComma: bool = true): bool {.
+  importcpp: "FParse::Value(@)", header: "Misc/Parse.h".}

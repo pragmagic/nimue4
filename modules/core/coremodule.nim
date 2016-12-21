@@ -457,6 +457,7 @@ include core/player
 include core/timermanager
 include core/hal/genericplatformfile
 include core/hal/platformfilemanager
+include core/hal/genericplatformmisc
 
 include actor
 
@@ -489,5 +490,6 @@ include gameplayutils
 include engine/engine
 
 include consolemanager
+include commandline
 
 proc simpleMoveToLocation*(navSys: ptr UNavigationSystem, controller: ptr APlayerController, goal: FVector) {.header: "AI/Navigation/NavigationSystem.h", importcpp: "#.SimpleMoveToLocation(@)", nodecl.}
