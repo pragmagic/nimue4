@@ -21,6 +21,7 @@ include widgetnavigation
 include anchors
 
 include panelslot
+include canvaspanelslot
 include widget
 include userwidget
 include panelwidget
