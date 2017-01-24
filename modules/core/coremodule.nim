@@ -422,6 +422,8 @@ type
     interiorLPFTime* {.importcpp: "InteriorLPFTime".}: cfloat
       ## The time over which to interpolate from the current LPF to the desired LPF of sounds inside the volume when the player enters the volume
 
+  UCommandlet* {.header: "Commandlets/Commandlet.h", importcpp.} = object of UObject
+
 include components/scene
 include components/springarm
 
@@ -491,5 +493,6 @@ include engine/engine
 
 include consolemanager
 include commandline
+include commandlet
 
 proc simpleMoveToLocation*(navSys: ptr UNavigationSystem, controller: ptr APlayerController, goal: FVector) {.header: "AI/Navigation/NavigationSystem.h", importcpp: "#.SimpleMoveToLocation(@)", nodecl.}

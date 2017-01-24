@@ -6,7 +6,7 @@
   "editor.detectIndentation": false,
   "files.eol": "\n",
   "files.trimTrailingWhitespace": true,
-  "nim.project": ["ue4.nim", "ue4umg.nim", "ue4gamemenubuilder"],
+  "nim.project": ["ue4.nim", "ue4umg.nim", "ue4gamemenubuilder", "ue4editor"],
   "nim.buildCommand": "cpp",
   "nim.licenseString": "# Copyright 2016 Xored Software, Inc.\n\n"
 }

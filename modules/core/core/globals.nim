@@ -6,6 +6,9 @@ var gLog* {.importcpp: "GLog", header: "CoreGlobals.h".}: ptr FOutputDeviceRedir
 var gEngine* {.importcpp: "GEngine", header: "EngineGlobals.h".}: ptr UEngine
   ## Global engine pointer. Can be 0 so don't use without checking.
 
+var gWorld* {.importcpp: "GWorld", header: "Engine/World.h".}: ptr UWorld
+  ## Global UWorld pointer. Use of this pointer should be avoided whenever possible.
+
 var gDisallowNetworkTravel* {.importcpp: "GDisallowNetworkTravel", header: "EngineGlobals.h".}: bool
   ## when set, disallows all network travel (pending level rejects all client travel attempts)
 
@@ -22,6 +25,6 @@ var gApplicationHasEnteredForegroundDelegate* {.importcpp: "FCoreDelegates::Appl
   ## to another app or closing it via the home button)
   ## The game should release shared resources, save state, etc..., since it can be
   ## terminated from the background state without any further warning.
-  
+
 var gApplicationWillEnterBackgroundDelegate* {.importcpp: "FCoreDelegates::ApplicationWillEnterBackgroundDelegate", header: "Misc/CoreDelegates.h".}: FApplicationLifetimeDelegate
   ## Called when the application is returning to the foreground (reverse any processing done in the EnterBackground delegate)
