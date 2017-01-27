@@ -20,10 +20,12 @@ const withEditor* = defined(editor)
 # {.hint[XDeclaredButNotUsed]: off.} <- didn't work
 import macros/uetypes
 import macros/uedelegate
+import macros/bpasync
 import modules/core/coremodule
 
 export uetypes
 export uedelegate
+export bpasync
 export coremodule
 export clibpp
 # {.hint[XDeclaredButNotUsed]: on.}
