@@ -290,6 +290,9 @@ proc createNimCfg(outDir: string; moduleDir, nimcacheDir, rootFile: string;
   if platform == "android":
     contents.add("--define:android\n")
     contents.add("--define:android4\n")
+  if platform == "ios" or platform == "android":
+    contents.add("--dynlibOverride:ssl\n")
+    contents.add("--dynlibOverride:crypto\n")
   if isEditorBuild:
     contents.add("--define:editor\n")
   contents.add("--path:\"" & moduleDir.replace("\\", "/") & "\"\n")
