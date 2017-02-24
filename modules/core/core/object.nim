@@ -791,6 +791,13 @@ proc loadObject*[T: UObject](path: FString): ptr T =
 proc loadObject*[T: UObject](path: string): ptr T =
   result = loadObject[T](toWideString(path))
 
+proc loadClass*(path: wstring): ptr UClass {.
+  header: "CoreUObject.h", importcpp: "StaticLoadClass(UObject::StaticClass(), NULL, #)".}
+proc loadClass*(path: FString): ptr UClass =
+  result = loadClass(wideString(path))
+proc loadClass*(path: string): ptr UClass =
+  result = loadClass(toWideString(path))
+
 proc ueNew*[T](): ptr T {.importcpp: "(NewObject<'*0>())", nodecl.}
 proc ueNew*[T](outer: ptr UObject): ptr T {.importcpp: "(NewObject<'*0>(@))", nodecl.}
 proc ueNew*[T](outer: ptr UObject, class: ptr UClass): ptr T {.importcpp: "(NewObject<'*0>(@))", nodecl.}
