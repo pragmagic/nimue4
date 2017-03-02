@@ -4,6 +4,7 @@ proc gameContentDir*(): FString {.header: "Misc/Paths.h", importcpp:"FPaths::Gam
 proc gameConfigDir*(): FString {.header: "Misc/Paths.h", importcpp:"FPaths::GameConfigDir()".}
 proc gameLogDir*(): FString {.header: "Misc/Paths.h", importcpp:"FPaths::GameLogDir()".}
 proc gameUserDir*(): FString {.header: "Misc/Paths.h", importcpp:"FPaths::GameUserDir()".}
+proc gameSavedDir*(): FString {.header: "Misc/Paths.h", importcpp:"FPaths::GameSavedDir()".}
 
 # TODO: the rest
 
