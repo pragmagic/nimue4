@@ -76,7 +76,159 @@ type FGuid* {.header: "Misc/Guid.h", importcpp.} = object
 
 type FNoncopyable* {.header: "Templates/UnrealTemplate.h", importcpp, inheritable.} = object
 
-type FDateTime* {.header: "Misc/DateTime.h", importcpp.} = object
+type
+  EDayOfWeek* {.header: "Misc/DateTime.h", importcpp, pure.} = enum
+    Monday = 0,
+    Tuesday,
+    Wednesday,
+    Thursday,
+    Friday,
+    Saturday,
+    Sunday
+
+  EMonthOfYear* {.header: "Misc/DateTime.h", importcpp, pure.} = enum
+    ## Enumerates the months of the year in 12-month calendars.
+    January = 1,
+    February,
+    March,
+    April,
+    May,
+    June,
+    July,
+    August,
+    September,
+    October,
+    November,
+    December
+
+wclass(FTimespan, header: "Misc/Timespan.h"):
+  proc initFTimespan(inTicks: int64): FTimespan {.constructor.}
+    ## Constructs FTimespan from ticks in 100 nanoseconds resolution since
+    ## midnight, January 1, 0001.
+
+  proc initFTimespan(hours, minutes, seconds: int32): FTimespan {.constructor.}
+  proc initFTimespan(days, hours, minutes, seconds: int32): FTimespan {.constructor.}
+  proc initFTimespan(days, hours, minutes, seconds, milliseconds, microseconds: int32): FTimespan {.constructor.}
+
+  proc `==`(other: FTimespan): bool {.noSideEffect.}
+  proc `!=`(other: FTimespan): bool {.noSideEffect.}
+  proc `>`(other: FTimespan): bool {.noSideEffect.}
+  proc `>=`(other: FTimespan): bool {.noSideEffect.}
+  proc `<`(other: FTimespan): bool {.noSideEffect.}
+  proc `<=`(other: FTimespan): bool {.noSideEffect.}
+
+  proc `+`(other: FTimespan): FTimespan {.noSideEffect.}
+  proc `+=`(other: FTimespan)
+  proc `-`(other: FTimespan): FTimespan {.noSideEffect.}
+  proc `-=`(other: FTimespan)
+  proc `%`(other: FTimespan): FTimespan {.noSideEffect.}
+  proc `%=`(other: FTimespan)
+
+  proc `-`(): FTimespan {.noSideEffect.}
+
+  proc `*`(scalar: float32): FTimespan {.noSideEffect.}
+  proc `*=`(scalar: float32)
+
+  proc getDays(): int32 {.noSideEffect.}
+  proc getDuration(): FTimespan {.noSideEffect.}
+    ## Returns a time span with the absolute value of this time span.
+    ##
+    ## This method may overflow the timespan if its value is equal to MinValue.
+
+  proc getHours(): int32 {.noSideEffect.}
+  proc getMicroseconds(): int32 {.noSideEffect.}
+  proc getMilliseconds(): int32 {.noSideEffect.}
+  proc getMinutes(): int32 {.noSideEffect.}
+  proc getSeconds(): int32 {.noSideEffect.}
+  proc getTicks(): int64 {.noSideEffect.}
+
+  proc getTotalDays(): float64 {.noSideEffect.}
+  proc getTotalHours(): float64 {.noSideEffect.}
+  proc getTotalMicroseconds(): float64 {.noSideEffect.}
+  proc getTotalMilliseconds(): float64 {.noSideEffect.}
+  proc getTotalMinutes(): float64 {.noSideEffect.}
+  proc getTotalSeconds(): float64 {.noSideEffect.}
+
+  proc isZero(): bool {.noSideEffect.}
+
+  proc toString(): FString {.noSideEffect.}
+
+  proc toString(format: wstring): FString {.noSideEffect.}
+    ## Converts this time span to its string representation.
+    ##
+    ## The following formatting codes are available:
+    ##    %n - prints the minus sign (for negative time spans only)
+    ##    %N - prints the minus or plus sign (always)
+    ##    %d - prints the time span's days part
+    ##    %h - prints the time span's hours part (0..23)
+    ##    %m - prints the time span's minutes part (0..59)
+    ##    %s - prints the time span's seconds part (0..59)
+    ##    %f - prints the time span's milliseconds part (0..999)
+    ##    %D - prints the total number of days (without minus sign)
+    ##    %H - prints the total number of hours (without minus sign)
+    ##    %M - prints the total number of minutes (without minus sign)
+    ##    %S - prints the total number of seconds (without minus sign)
+    ##    %F - prints the total number of milliseconds (without minus sign)
+
+wclass(FDateTime, header: "Misc/DateTime.h"):
+  proc initFDateTime(ticks: int64): FDateTime {.constructor.}
+    ## Constructs FDateTime from ticks in 100 nanoseconds resolution since
+    ## midnight, January 1, 0001.
+
+  proc initFDateTime(year, month, day: int32; hour, minute, second, millisecond = 0'i32): FDateTime {.constructor.}
+
+  proc `==`(other: FDateTime): bool {.noSideEffect.}
+  proc `!=`(other: FDateTime): bool {.noSideEffect.}
+  proc `>`(other: FDateTime): bool {.noSideEffect.}
+  proc `>=`(other: FDateTime): bool {.noSideEffect.}
+  proc `<`(other: FDateTime): bool {.noSideEffect.}
+  proc `<=`(other: FDateTime): bool {.noSideEffect.}
+
+  proc `+`(timespan: FTimespan): FDateTime {.noSideEffect.}
+  proc `-`(timespan: FTimespan): FDateTime {.noSideEffect.}
+  proc `-`(timespan: FDateTime): FTimespan {.noSideEffect.}
+
+  proc `+=`(timespan: FTimespan)
+  proc `-=`(timespan: FTimespan)
+
+  proc getDay(): int32 {.noSideEffect.}
+  proc getDayOfWeek(): EDayOfWeek {.noSideEffect.}
+  proc getDayOfYear(): int32 {.noSideEffect.}
+  proc getHour(): int32 {.noSideEffect.}
+  proc getHour12(): int32 {.noSideEffect.}
+  proc getMillisecond(): int32 {.noSideEffect.}
+  proc getMinute(): int32 {.noSideEffect.}
+  proc getMonth(): int32 {.noSideEffect.}
+  proc getMonthOfYear(): EMonthOfYear {.noSideEffect.}
+  proc getSecond(): int32 {.noSideEffect.}
+
+  proc getTicks(): int64 {.noSideEffect.}
+    ## Gets this date's representation as number of ticks.
+    ##
+    ## @return Number of ticks in 100 nanoseconds resolution since midnight, January 1, 0001.
+
+  proc toIso8601(): FString {.noSideEffect.}
+  proc toHttpDate(): FString {.noSideEffect.}
+  proc toString(): FString {.noSideEffect.}
+  proc toString(format: wstring): FString {.noSideEffect.}
+  proc toUnixTimestamp(format: wstring): int64 {.noSideEffect.}
+
+  proc fromUnixTimestamp(unixTime: int64): FDateTime {.isStatic, noSideEffect.}
+  proc isLeapYear(year: int32): bool {.isStatic, noSideEffect.}
+  proc maxValue(): FDateTime {.isStatic, noSideEffect.}
+  proc minValue(): FDateTime {.isStatic, noSideEffect.}
+  proc now(): FDateTime {.isStatic, noSideEffect.}
+  proc today(): FDateTime {.isStatic, noSideEffect.}
+  proc utcNow(): FDateTime {.isStatic, noSideEffect.}
+  proc validate(year, month, day, hour, minute, second, millisecond: int32): bool
+
+  proc parse(dateTimeString: FString, outDateTime: var FDateTime): bool
+    ## @return true if the string was converted successfully, false otherwise.
+  proc parseIso8601(dateTimeString: FString, outDateTime: var FDateTime): bool
+    ## @return true if the string was converted successfully, false otherwise.
+  proc parseHttpDate(dateTimeString: FString, outDateTime: var FDateTime): bool
+    ## @return true if the string was converted successfully, false otherwise.
+
 type FThreadSafeCounter* {.header: "HAL/ThreadingBase.h", importcpp.} = object
 type FPrimitiveSceneProxy* {.header: "PrimitiveSceneProxy.h", importcpp.} = object
 type FRenderCommandFence* {.header: "RenderCommandFence.h", importcpp.} = object

@@ -52,7 +52,7 @@ proc makeProcedure(className, ns: string, statement: NimNode, classNameNode: Nim
         assert(not isOperator)
         importCPragma = newNimNode(nnkExprColonExpr)
             .add(newIdentNode("importc"))
-            .add(newStrLitNode(ns & className & "::" & procName))
+            .add(newStrLitNode(ns & className & "::" & procName.capitalizeAscii()))
 
         # If static, insert 'this: typedesc[`className`]' param
         thisNode = newNimNode(nnkIdentDefs)
