@@ -19,3 +19,5 @@ Options:
   -t, --target            UE4 target; "{ProjectName}Editor" by default
   -m, --mode              build mode; "Development" by default; valid values:
                           Debug, DebugGame, Development, Shipping, Test
+  --cpu                   (optional) override cpu architecture; automatically detected from 'platform' by default;
+                          valid value: arm, arm64, i386, amd64

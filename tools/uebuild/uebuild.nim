@@ -107,7 +107,7 @@ proc nimOSToUEPlatform(os: string): string {.noSideEffect.} =
   if result == nil:
     raise newException(OSError, "Unsupported OS: " & os)
 
-proc uePlatformToNimOSCPU(platform: string): tuple[os, cpu: string] {.noSideEffect.} =
+proc uePlatformToNimOSCPU(platform: string, cpu: string = nil): tuple[os, cpu: string] {.noSideEffect.} =
   # UE Platforms:
   # Win32, Win64, WinRT, WinRT_ARM, UWP,
   # Mac, XboxOne, PS4, IOS, Android, HTML5, Linux,
@@ -119,10 +119,13 @@ proc uePlatformToNimOSCPU(platform: string): tuple[os, cpu: string] {.noSideEffe
     of "linux", "android": "linux"
     else: "standalone"
 
-  result.cpu = case platform.toLowerAscii():
-    of "win32", "winrt", "uwp", "linux", "alldesktop", "html5": "i386"
-    of "win64", "mac", "xboxone", "ps4": "amd64"
-    else: "arm"
+  if cpu != nil:
+    result.cpu = cpu
+  else:
+    result.cpu = case platform.toLowerAscii():
+      of "win32", "winrt", "uwp", "linux", "alldesktop", "html5": "i386"
+      of "win64", "mac", "xboxone", "ps4": "amd64"
+      else: "arm"
 
 proc extractByPeg(str: var string, peg: Peg, separator = ""): Rope =
   var matches = newSeq[string](1)
@@ -387,11 +390,11 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string, isEditorBuil
         elif file.endsWith(".cpp"):
           processFile(file, moduleName, targetDir, nimblePackageName)
 
-proc build(command: CommandType, engineDir, projectDir, projectName, target, mode, platform, extraOptions: string) =
+proc build(command: CommandType, engineDir, projectDir, projectName, target, mode, platform, cpuOverride, extraOptions: string) =
   echo "Building with command $#, target \"$#\", mode \"$#\", platform \"$#\"" % [$command, target, mode, platform]
   var os, cpu: string = nil
   if command != ctPreCook:
-    (os, cpu) = uePlatformToNimOSCPU(platform)
+    (os, cpu) = uePlatformToNimOSCPU(platform, cpuOverride)
   var actualMode = if command != ctPreCook: mode
                    else: "Development"
   var actualPlatform = if command != ctPreCook: platform
@@ -409,10 +412,7 @@ proc build(command: CommandType, engineDir, projectDir, projectName, target, mod
     removeDir(getNimOutDir(projectDir) / "nimcache")
     cleanModules(projectDir)
 
-    (os, cpu) = uePlatformToNimOSCPU(platform)
-    if platform.toLowerAscii() == "ios":
-      cpu = if mode == "Shipping": "arm64"
-            else: "arm"
+    (os, cpu) = uePlatformToNimOSCPU(platform, cpuOverride)
     buildNim(projectDir, projectName, os, cpu, platform, isEditorBuild = false)
 
 proc clean(engineDir, projectDir, projectName, target, mode, platform, extraOptions: string) =
@@ -423,8 +423,8 @@ proc clean(engineDir, projectDir, projectName, target, mode, platform, extraOpti
 
   cleanModules(projectDir)
 
-proc compileNim(engineDir, projectDir, projectName, target, mode, platform, extraOptions: string) =
-  let (os, cpu) = uePlatformToNimOSCPU(platform)
+proc compileNim(engineDir, projectDir, projectName, target, mode, platform, cpuOverride, extraOptions: string) =
+  let (os, cpu) = uePlatformToNimOSCPU(platform, cpuOverride)
   buildNim(projectDir, projectName, os, cpu, platform, isEditorBuild = target.endsWith("Editor"))
 
 proc detectProjectName(projectDir: string): string =
@@ -440,6 +440,7 @@ when isMainModule:
   var mode = "Development"
   var target: string = nil
   var platform = nimOSToUEPlatform(hostOS)
+  var cpu: string = nil
   var extraOptions = ""
   var projectDir: string = nil
   var command = ctRecompile
@@ -490,6 +491,8 @@ when isMainModule:
             projectDir = val
           of "platform":
             platform = val
+          of "cpu":
+            cpu = val
           of "target":
             target = val
           of "mode":
@@ -508,6 +511,6 @@ when isMainModule:
   if target == nil:
     target = projectName & "Editor"
   case command:
-    of ctPreCook, ctDeploy, ctRecompile: build(command, engineDir, projectDir, projectName, target, mode, platform, extraOptions)
+    of ctPreCook, ctDeploy, ctRecompile: build(command, engineDir, projectDir, projectName, target, mode, platform, cpu, extraOptions)
     of ctClean: clean(engineDir, projectDir, projectName, target, mode, platform, extraOptions)
-    of ctCompileNim: compileNim(engineDir, projectDir, projectName, target, mode, platform, extraOptions)
+    of ctCompileNim: compileNim(engineDir, projectDir, projectName, target, mode, platform, cpu, extraOptions)
