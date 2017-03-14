@@ -16,7 +16,10 @@ wclass(USkeletalMeshComponent of USkinnedMeshComponent, header: "Components/Skel
   method play(bLooping: bool)
   method stop()
 
-  method getPlayRate(): float32
+  method getPlayRate(): float32 {.noSideEffect.}
   method setPlayRate(rate: float32)
+
+  method setPosition(pos: float32, bFireNotifies: bool = true)
+  method getPosition(): float32 {.noSideEffect.}
 
 # TODO
