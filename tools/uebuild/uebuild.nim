@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-import parseopt, pegs, ropes, strutils, os, times, sets, osproc
+import parseopt, pegs, ropes, strutils, os, times, sets, osproc, json
 
 type
   OptType = enum
@@ -154,7 +154,7 @@ proc writeFileIfNotSame(filename, contents: string) =
   if not fileExists(filename) or readFile(filename) != contents:
     writeFile(filename, contents)
 
-proc processFile(file, moduleName: string; outDir: string; nimblePackageName: string) =
+proc processFile(file, moduleName: string; outDir: string; nimblePackageName: string): string =
   let moduleIncludeString = "#include \"$#.h\"\n" % moduleName
   let exportMacro = moduleName.toUpperAscii() & "_API"
   let outCppDir = outDir / "Private"
@@ -165,6 +165,7 @@ proc processFile(file, moduleName: string; outDir: string; nimblePackageName: st
   if nimblePackageName != nil and outName.startsWith(nimblePackageName & "_"):
     outName = outName[nimblePackageName.len+1..^1] # +1 to account for `_`
   let outFile = outCppDir / outName & ".cpp"
+  result = outFile
 
   if outFile != file and fileExists(outFile) and
      file.getLastModificationTime() <= outFile.getLastModificationTime():
@@ -327,8 +328,6 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string, isEditorBuil
 
     let targetDir = moduleDir / nimModuleDirName
 
-    var expectedFilenames = initSet[string]()
-
     var rootFileContent = rope("")
     var nimbleFile: string = nil
     var nimsFile = moduleDir / "config.nims"
@@ -340,8 +339,7 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string, isEditorBuil
           echo ".nim filename mustn't be equal to module name: " & file.extractFileName()
           quit(-1)
         let importArg = makeRelative(file, moduleDir).replace("\\", "/")
-        rootFileContent = rootFileContent & "import \"" & importArg & "\"\n"
-        expectedFilenames.incl(file.changeFileExt("h").extractFilename())
+        rootFileContent.add("import \"" & importArg & "\"\n")
       if file.endsWith(".nimble") and sameFile(file.parentDir(), moduleDir):
         nimbleFile = file
 
@@ -351,7 +349,6 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string, isEditorBuil
     rootFileContent.add("GC_disable()\n")
 
     createModuleFilesIfNeeded(targetDir, moduleName, isNimModule, isPrimaryModule)
-    expectedFilenames.incl(moduleName & ".h")
 
     if isNimModule:
       let rootFile = nimOutDir / moduleName & "Root.nim"
@@ -376,19 +373,24 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string, isEditorBuil
         withDir nimOutDir:
           exec "nimble -y cpp \"" & rootFile & '"'
 
-      for file in walkDirRec(nimcacheDir, {pcFile}):
-        if file.endsWith(".h") and not expectedFilenames.contains(extractFilename(file)):
-          let cppFile = file.changeFileExt("cpp")
-          let cppFilename = cppFile.extractFilename()
+      let jsonFile = nimcacheDir / projectName & "Root.json"
+      if not fileExists(jsonFile):
+        raise newException(OSError, "JSON project descriptor does not exist. " &
+                                    "Make sure you are using Nim 0.17.0 or newer. Looked for: " & jsonFile)
+
+      let data = json.parseFile(jsonFile)
+      var expectedFiles = initSet[string]()
+      for cfileEntry in data["compile"]:
+        let file = cfileEntry[0].str
+        let outFile = processFile(file, moduleName, targetDir, nimblePackageName)
+        if outFile != nil:
+          expectedFiles.incl(outFile.extractFilename())
+          expectedFiles.incl(outFile.changeFileExt("h").extractFilename())
+
+      for kind, file in walkDir(targetDir / "Private"):
+        if kind == pcFile and (file.endsWith(".cpp") or file.endsWith(".h")) and
+           file.extractFilename() notin expectedFiles:
           removeFile file
-          removeFile cppFile
-          removeFile targetDir / file.extractFilename()
-          removeFile targetDir / "Public" / file.extractFilename()
-          removeFile targetDir / "Private" / file.extractFilename()
-          removeFile targetDir / cppFilename
-          removeFile targetDir / "Private" / cppFilename
-        elif file.endsWith(".cpp"):
-          processFile(file, moduleName, targetDir, nimblePackageName)
 
 proc build(command: CommandType, engineDir, projectDir, projectName, target, mode, platform, cpuOverride, extraOptions: string) =
   echo "Building with command $#, target \"$#\", mode \"$#\", platform \"$#\"" % [$command, target, mode, platform]
