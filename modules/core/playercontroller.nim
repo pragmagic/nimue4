@@ -813,7 +813,7 @@ wclass(APlayerController of AController, header: "GameFramework/PlayerController
     ##
     ## UFUNCTION(BlueprintCallable, Category = "Game|Feedback")
 
-  proc ыetHapticsByValue(frequency: cfloat; amplitude: cfloat;
+  proc getHapticsByValue(frequency: cfloat; amplitude: cfloat;
                          hand: EControllerHand)
     ## Sets the value of the haptics for the specified hand directly, using frequency and amplitude.  NOTE:  If a curve is already
     ## playing for this hand, it will be cancelled in favour of the specified values.
@@ -838,7 +838,7 @@ wclass(APlayerController of AController, header: "GameFramework/PlayerController
     ##
     ## UFUNCTION()
 
-  proc сlientTravelInternal(url: FString; travelType: ETravelType;
+  proc clientTravelInternal(url: FString; travelType: ETravelType;
                             bSeamless: bool = false; mapPackageGuid: FGuid = FGuid())
     ## Internal clientside implementation of ClientTravel - use ClientTravel to call this
     ##

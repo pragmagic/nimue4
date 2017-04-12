@@ -680,7 +680,7 @@ wclass(UObject of UObjectBaseUtility, header: "CoreUObject.h", notypedef):
   proc updateGlobalUserConfigFile()
     ## Saves just the section(s) for this class into the global user ini file for the class (with just the changes from base)
 
-  proc updateSinglePropertyInConfigFile(шnProperty: ptr UProperty; InConfigIniName: FString)
+  proc updateSinglePropertyInConfigFile(inProperty: ptr UProperty; InConfigIniName: FString)
     ## Saves just the property into the global user ini file for the class (with just the changes from base)
 
   proc defaultConfigFilename(): FString {.noSideEffect, cppname: "GetDefaultConfigFilename".}
