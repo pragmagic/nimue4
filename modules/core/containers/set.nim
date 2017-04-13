@@ -18,6 +18,7 @@ wclass(TSet[T], header: "Containers/Set.h", bycopy):
   proc contains(key: T): bool {.noSideEffect.}
 
   proc incl(key: T) {.cppname: "Add".}
+  proc add(key: T)
 
   proc toArray(): TArray[T] {.cppname: "Array".}
 
@@ -53,7 +54,8 @@ proc next[T](it: var TAnySetIterator[T]) {.importcpp: "(++#)", header: "Containe
 proc value[T](it: TSetIterator[T]): var T {.noSideEffect, importcpp: "(*#)", header: "Containers/Set.h".}
 proc value[T](it: TSetConstIterator[T]): T {.noSideEffect, importcpp: "(*#)", header: "Containers/Set.h".}
 
-proc makeSet*[T](): TSet[T] {.importcpp: "TSet", constructor, header: "Containers/Set.h".}
+proc initSet*[T](): TSet[T] {.importcpp: "TSet", constructor, header: "Containers/Set.h".}
+{.deprecated: [makeSet: initSet].}
 
 iterator items*[T](s: TSet[T]): T =
   var it = s.createConstIterator()
