@@ -380,6 +380,8 @@ proc buildNim(projectDir, projectName, os, cpu, uePlatform: string, isEditorBuil
 
       let data = json.parseFile(jsonFile)
       var expectedFiles = initSet[string]()
+      expectedFiles.incl(moduleName & ".cpp")
+      expectedFiles.incl(moduleName & ".h")
       for cfileEntry in data["compile"]:
         let file = cfileEntry[0].str
         let outFile = processFile(file, moduleName, targetDir, nimblePackageName)
