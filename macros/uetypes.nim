@@ -75,14 +75,10 @@ type
     methods: seq[TypeMethod]
     opts: set[TypeOpt]
 
-# let's be a bit more forgiving in release builds and not crash the game on exceptions
 let exceptionHandlingStmt {.compileTime.} = parseStmt("""
 let e = getCurrentException()
-when defined(release):
-  ueError("Unhandled exception: " & $e.name & ": " & e.msg)
-else:
-  ueError("Unhandled exception: " & $e.name & ": " & e.msg & "\n" & e.getStackTrace())
-  ueFatal("Crashing after unhandled exception - see previous error message.")
+ueError("Unhandled exception: " & $e.name & ": " & e.msg & " " & e.getStackTrace())
+ueFatal("Crashing after unhandled exception - see previous error message.")
 """)
 
 proc isBlueprintNative(meth: TypeMethod): bool =

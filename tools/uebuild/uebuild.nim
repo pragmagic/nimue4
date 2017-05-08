@@ -288,7 +288,6 @@ proc createNimCfg(outDir: string; moduleDir, nimcacheDir, rootFile: string;
     contents.add("--cpu:" & cpu & "\n")
   if platform == "android" or platform == "ios":
     contents.add("--noCppExceptions\n")
-    contents.add("--define:dontWrapNimExceptions\n")
   if platform == "ios":
     contents.add("--define:ios\n")
   if platform == "android":
