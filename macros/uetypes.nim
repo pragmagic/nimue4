@@ -78,7 +78,7 @@ type
 let exceptionHandlingStmt {.compileTime.} = parseStmt("""
 let e = getCurrentException()
 ueError("Unhandled exception: " & $e.name & ": " & e.msg & " " & e.getStackTrace())
-ueFatal("Crashing after unhandled exception - see previous error message.")
+requestExit(false)
 """)
 
 proc isBlueprintNative(meth: TypeMethod): bool =
