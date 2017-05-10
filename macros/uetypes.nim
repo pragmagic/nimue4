@@ -77,7 +77,8 @@ type
 
 let exceptionHandlingStmt {.compileTime.} = parseStmt("""
 let e = getCurrentException()
-ueError("Unhandled exception: " & $e.name & ": " & e.msg & " " & e.getStackTrace())
+ueError("Unhandled exception: " & (if e.name.isNil: "nil" else: $e.name) & ": " & (if e.msg.isNil: "" else: e.msg & " ") & e.getStackTrace())
+{.emit: "if (GLog != nullptr) {GLog->Flush();}".}
 requestExit(false)
 """)
 
