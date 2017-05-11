@@ -286,8 +286,7 @@ proc createNimCfg(outDir: string; moduleDir, nimcacheDir, rootFile: string;
     contents.add("--os:" & os & "\n")
   if cpu != nil:
     contents.add("--cpu:" & cpu & "\n")
-  if platform == "android" or platform == "ios":
-    contents.add("--noCppExceptions\n")
+  contents.add("--noCppExceptions\n")
   if platform == "ios":
     contents.add("--define:ios\n")
   if platform == "android":
