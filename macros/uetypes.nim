@@ -699,14 +699,24 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
 
     if meth.isImplementationNeeded() or meth.isBlueprintNative():
       if not (meth.isBpExtendable or meth.isBlueprintNative()) or nodeCopy.body.kind != nnkEmpty:
-        when not defined(dontWrapNimExceptions):
-          if not hasPragma(nodeCopy, "noSideEffect") and not meth.isNoExceptionWrap:
-            nodeCopy.body = newStmtList(
-              newNimNode(nnkTryStmt).
-                add(nodeCopy.body).
-                add(
-                newNimNode(nnkExceptBranch).
-                  add(exceptionHandlingStmt.copyNimTree())))
+        if meth.isConstructor:
+          nodeCopy = newStmtList(
+            newNimNode(nnkPragma).add(
+              ident("push"),
+              newNimNode(nnkExprColonExpr).add(ident("stackTrace"), ident("off"))
+            ),
+            nodeCopy,
+            newNimNode(nnkPragma).add(ident("pop"))
+          )
+        else:
+          when not defined(dontWrapNimExceptions):
+            if not hasPragma(nodeCopy, "noSideEffect") and not meth.isNoExceptionWrap:
+              nodeCopy.body = newStmtList(
+                newNimNode(nnkTryStmt).
+                  add(nodeCopy.body).
+                  add(
+                  newNimNode(nnkExceptBranch).
+                    add(exceptionHandlingStmt.copyNimTree())))
 
         let methDef = if meth.isEditorOnly: wrapIntoWhen(ident("withEditor"), nodeCopy)
                       else: nodeCopy
