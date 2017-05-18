@@ -1,6 +1,11 @@
 # Copyright 2016 Xored Software, Inc.
 
-wclass(TSharedRef[T], header: "Templates/SharedPointer.h", bycopy):
+type
+  TSharedRef* {.importc, header: "Templates/SharedPointer.h", bycopy.} [out T] = object
+  TSharedPtr* {.importc, header: "Templates/SharedPointer.h", bycopy.} [out T] = object
+  TSharedFromThis* {.importc, header: "Templates/SharedPointer.h", bycopy.} [out T] = object {.inheritable.}
+
+wclass(TSharedRef[T], header: "Templates/SharedPointer.h", notypedef):
   proc getSharedReferenceCount(): int32 {.noSideEffect.}
     ## Returns the number of shared references to this object (including this reference.)
     ## IMPORTANT: Not necessarily fast!  Should only be used for debugging purposes!
@@ -16,7 +21,7 @@ wclass(TSharedRef[T], header: "Templates/SharedPointer.h", bycopy):
 
   proc get(): var T
 
-wclass(TSharedPtr[T], header: "Templates/SharedPointer.h", bycopy):
+wclass(TSharedPtr[T], header: "Templates/SharedPointer.h", notypedef):
   proc initTSharedPtr(): TSharedPtr[T] {.constructor.}
     ## initializes nil ptr
 
@@ -45,7 +50,7 @@ converter toSharedPtr*[T](sharedRef: TSharedRef[T]): TSharedPtr[T] {.importcpp: 
 
 proc makeShareable*[T](p: ptr T): TSharedPtr[T] {.importc: "MakeShareable", header: "Templates/SharedPointer.h".}
 
-wclass(TSharedFromThis[T], header: "Templates/SharedPointer.h", bycopy):
+wclass(TSharedFromThis[T], header: "Templates/SharedPointer.h", notypedef):
   proc asShared(): TSharedRef[T]
 
 # TODO

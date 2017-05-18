@@ -1,6 +1,11 @@
 # Copyright 2016 Xored Software, Inc.
 
-wclass(TWeakObjectPtr[T], header: "UObject/WeakObjectPtrTemplates.h", bycopy):
+type
+  TWeakObjectPtr* {.importc, header: "UObject/WeakObjectPtrTemplates.h", bycopy.} [out T] = object
+  TAutoWeakObjectPtr* {.importc, header: "UObject/WeakObjectPtrTemplates.h", bycopy.} [out T] = object
+  TWeakPtr* {.importc, header: "Templates/SharedPointer.h", bycopy.} [out T] = object
+
+wclass(TWeakObjectPtr[T], header: "UObject/WeakObjectPtrTemplates.h", notypedef):
   proc isValid(bEvenIfPendingKill, bThreadsafeTest: bool  = false): bool {.noSideEffect.}
     ## Test if this points to a live UObject
     ## @param bEvenIfPendingKill, if this is true, pendingkill objects are considered valid
@@ -22,7 +27,7 @@ proc set*[T](weakPtr: var TWeakObjectPtr[T], p: ptr T) {.importcpp: "(# = #)", n
 converter toWeakPtr*[T](p: ptr T): TWeakObjectPtr[T] {.importcpp: "(#)", nodecl.}
 converter toPtr*[T](p: TWeakObjectPtr[T]): ptr T {.importcpp: "(#.Get())", nodecl.}
 
-wclass(TAutoWeakObjectPtr[T], header: "UObject/WeakObjectPtrTemplates.h", bycopy):
+wclass(TAutoWeakObjectPtr[T], header: "UObject/WeakObjectPtrTemplates.h", notypedef):
   proc initTAutoWeakObjectPtr(): TAutoWeakObjectPtr[T] {.constructor.}
   proc initTAutoWeakObjectPtr(p: ptr T): TAutoWeakObjectPtr[T] {.constructor.}
   proc initTAutoWeakObjectPtr(weakPtr: TWeakObjectPtr[T]): TAutoWeakObjectPtr[T] {.constructor.}
@@ -30,7 +35,7 @@ wclass(TAutoWeakObjectPtr[T], header: "UObject/WeakObjectPtrTemplates.h", bycopy
 
 converter toPtr*[T](p: TAutoWeakObjectPtr[T]): ptr T {.importcpp: "(#)", nodecl.}
 
-wclass(TWeakPtr[T], header: "Templates/SharedPointer.h", bycopy):
+wclass(TWeakPtr[T], header: "Templates/SharedPointer.h", notypedef):
   ## TWeakPtr is a non-intrusive reference-counted weak object pointer.  This weak pointer will be
   ## conditionally thread-safe when the optional Mode template argument is set to ThreadSafe.
 
