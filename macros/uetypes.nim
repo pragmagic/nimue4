@@ -49,6 +49,7 @@ type
     isEditorOnly: bool
     isNoExceptionWrap: bool
     isRetConst: bool
+    isNoStackTrace: bool
     extendableName: Rope
     args: seq[VarDeclaration]
     uFunctionParamStr: Rope
@@ -317,6 +318,7 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
   let isEditorOnly = removePragma(node, "editorOnly")
   let isNoExceptionWrap = removePragma(node, "noExceptionWrap")
   let isRetConst = removePragma(node, "retConst")
+  let isNoStackTrace = removePragma(node, "noStackTrace")
   # TODO: more checks for objInitializer
 
   var isUFunction = removePragma(node, "ue")
@@ -398,6 +400,7 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
     isEditorOnly: isEditorOnly,
     isNoExceptionWrap: isNoExceptionWrap,
     isRetConst: isRetConst,
+    isNoStackTrace: isNoStackTrace,
     extendableName: extendableName,
     args: parseArgs(node[3]),
     node: procNode
@@ -699,16 +702,10 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
 
     if meth.isImplementationNeeded() or meth.isBlueprintNative():
       if not (meth.isBpExtendable or meth.isBlueprintNative()) or nodeCopy.body.kind != nnkEmpty:
-        if meth.isConstructor:
-          nodeCopy = newStmtList(
-            newNimNode(nnkPragma).add(
-              ident("push"),
-              newNimNode(nnkExprColonExpr).add(ident("stackTrace"), ident("off"))
-            ),
-            nodeCopy,
-            newNimNode(nnkPragma).add(ident("pop"))
-          )
-        else:
+        # UE4 may call constructors from non-game threads, so we don't wrap exceptions
+        # there, because it would cause races for Nim's global variables, related to
+        # traces and exceptions
+        if not meth.isConstructor:
           when not defined(dontWrapNimExceptions):
             if not hasPragma(nodeCopy, "noSideEffect") and not meth.isNoExceptionWrap:
               nodeCopy.body = newStmtList(
@@ -717,6 +714,16 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
                   add(
                   newNimNode(nnkExceptBranch).
                     add(exceptionHandlingStmt.copyNimTree())))
+
+        if meth.isNoStackTrace or meth.isConstructor:
+          nodeCopy = newStmtList(
+            newNimNode(nnkPragma).add(
+              ident("push"),
+              newNimNode(nnkExprColonExpr).add(ident("stackTrace"), ident("off"))
+            ),
+            nodeCopy,
+            newNimNode(nnkPragma).add(ident("pop"))
+          )
 
         let methDef = if meth.isEditorOnly: wrapIntoWhen(ident("withEditor"), nodeCopy)
                       else: nodeCopy
