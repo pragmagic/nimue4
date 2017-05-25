@@ -118,7 +118,7 @@ proc toCppType*(typeNode: NimNode; isUeSignature, isUFunction, dontGenReferences
       if templateParams.len != 0:
         templateParams.add(", ")
       templateParams.add(toCppType(typeNode[i]))
-    result = rope($typeNode[0].ident) & "<" & templateParams & ">"
+    result = rope("`") & rope($typeNode[0].ident) & "`" & "<" & templateParams & ">"
   of nnkVarTy:
     result = toCppType(typeNode[0], isUeSignature, isUFunction, true) & "&"
   of nnkPtrTy:
