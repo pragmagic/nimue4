@@ -1458,8 +1458,8 @@ wclass(UWorld of UObject, header: "Engine/World.h", notypedef):
   #   ## Returns the current GameMode instance.
   #   ## This can only return a valid pointer on the server. Will always return null on a client
 
-  proc getGameState[t](): ptr t {.noSideEffect.}
-    ## Returns the current GameState instance cast to the template type.
+  # proc getGameState[T](): ptr T {.noSideEffect.}
+  #   ## Returns the current GameState instance cast to the template type.
 
   proc getGameState(): ptr AGameState {.noSideEffect.}
     ## Returns the current GameState instance.
