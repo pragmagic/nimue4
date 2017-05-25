@@ -485,6 +485,7 @@ include level
 include world
 include worldsettings
 include gameusersettings
+include internationalization
 
 include engine/hud
 
