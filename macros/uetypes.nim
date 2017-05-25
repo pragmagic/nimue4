@@ -50,6 +50,7 @@ type
     isNoExceptionWrap: bool
     isRetConst: bool
     isNoStackTrace: bool
+    isNoUE: bool
     extendableName: Rope
     args: seq[VarDeclaration]
     uFunctionParamStr: Rope
@@ -93,7 +94,7 @@ proc isImplementationNeeded(meth: TypeMethod): bool =
   result = not (meth.isAbstract or meth.isBlueprintNative() or meth.isBlueprintImplementable())
 
 proc isNimOnly(meth: TypeMethod): bool =
-  result = meth.isObjInitializer
+  result = meth.isObjInitializer or meth.isNoUE
 
 template findIt[T](s: seq[T], pred: expr): T =
   var result {.gensym.}: T
@@ -319,6 +320,7 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
   let isNoExceptionWrap = removePragma(node, "noExceptionWrap")
   let isRetConst = removePragma(node, "retConst")
   let isNoStackTrace = removePragma(node, "noStackTrace")
+  let isNoUE = removePragma(node, "noUE")
   # TODO: more checks for objInitializer
 
   var isUFunction = removePragma(node, "ue")
@@ -371,6 +373,10 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
   if isOverride and isAbstract:
     parseError(node, "cannot override and be abstract at the same time")
 
+  if isNoUE and (isStatic or isConst or isConstructor or isOverride or isObjInitializer or
+                 isAbstract or isVirtual or isCallSuper or isCallSuperAfter or isRetConst):
+    parseError(node, ".noUE cannot be combined with UE-specific pragmas")
+
   var procNode = newNimNode(nnkProcDef)
   node.copyChildrenTo(procNode)
 
@@ -401,6 +407,7 @@ proc parseMethod(className: string, node: NimNode): TypeMethod =
     isNoExceptionWrap: isNoExceptionWrap,
     isRetConst: isRetConst,
     isNoStackTrace: isNoStackTrace,
+    isNoUE: isNoUE,
     extendableName: extendableName,
     args: parseArgs(node[3]),
     node: procNode
@@ -690,15 +697,17 @@ proc genType(typeDef: TypeDefinition): NimNode {.compileTime.} =
     if not meth.isConstructor:
       var decl = nodeCopy.copy()
       decl[^1] = newEmptyNode() # remove body
-      let cppName = ($meth.name).capitalizeAscii()
-      let cppPattern = if typeDef.isUtilityType: $typeDef.name & "::" & cppName & "(@)"
-                       else: "#." & cppName & "(@)"
-      decl.pragma = parseExpr("{.header: \"$1\", importcpp: \"$2\", nodecl.}".format(typeDef.headerName, cppPattern))
+      if not meth.isNimOnly:
+        let cppName = ($meth.name).capitalizeAscii()
+        let cppPattern = if typeDef.isUtilityType: $typeDef.name & "::" & cppName & "(@)"
+                        else: "#." & cppName & "(@)"
+        decl.pragma = parseExpr("{.header: \"$1\", importcpp: \"$2\", nodecl.}".format(typeDef.headerName, cppPattern))
       if meth.isEditorOnly:
         decl = wrapIntoWhen(ident("withEditor"), decl)
       methDecls.add(decl)
 
-    nodeCopy[0] = ident($meth.genName)
+    if not meth.isNimOnly:
+      nodeCopy[0] = ident($meth.genName)
 
     if meth.isImplementationNeeded() or meth.isBlueprintNative():
       if not (meth.isBpExtendable or meth.isBlueprintNative()) or nodeCopy.body.kind != nnkEmpty:
