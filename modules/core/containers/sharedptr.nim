@@ -1,9 +1,9 @@
 # Copyright 2016 Xored Software, Inc.
 
 type
-  TSharedRef* {.importc, header: "Templates/SharedPointer.h", bycopy.} [out T] = object
-  TSharedPtr* {.importc, header: "Templates/SharedPointer.h", bycopy.} [out T] = object
-  TSharedFromThis* {.importc, header: "Templates/SharedPointer.h", bycopy.} [out T] = object {.inheritable.}
+  TSharedRef* {.importcpp, header: "Templates/SharedPointer.h", bycopy.} [out T] = object
+  TSharedPtr* {.importcpp, header: "Templates/SharedPointer.h", bycopy.} [out T] = object
+  TSharedFromThis* {.importcpp, header: "Templates/SharedPointer.h", bycopy.} [out T] = object {.inheritable.}
 
 wclass(TSharedRef[T], header: "Templates/SharedPointer.h", notypedef):
   proc getSharedReferenceCount(): int32 {.noSideEffect.}
