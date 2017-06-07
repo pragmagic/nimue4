@@ -2,6 +2,8 @@
 
 import ue4
 
+{.push stackTrace:off.}
+
 wclass(UVisual of UObject, header: "UMG.h"):
   method releaseSlateResources(bReleaseChildren: bool)
 
@@ -29,3 +31,5 @@ include contentwidget
 
 include image
 include button
+
+{.pop.}

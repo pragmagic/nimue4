@@ -6,6 +6,8 @@ import "../../lib/clibpp"
 import "../../lib/macroutils"
 import "../../macros/uedelegate"
 
+{.push stackTrace: off.}
+
 type
   EForceInit {.header: "CoreMiscDefines.h", importcpp: "EForceInit".} = enum
     ForceInit,
@@ -501,3 +503,5 @@ include kismet/blueprintasyncactionbase
 include kismet/gameplaystatics
 
 proc simpleMoveToLocation*(navSys: ptr UNavigationSystem, controller: ptr APlayerController, goal: FVector) {.header: "AI/Navigation/NavigationSystem.h", importcpp: "#.SimpleMoveToLocation(@)", nodecl.}
+
+{.pop.} # stackTrace:off
