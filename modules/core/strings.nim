@@ -410,6 +410,10 @@ proc toFName*(s: cstring): FName {.importcpp: "'0(UTF8_TO_TCHAR(@))", nodecl.}
 proc toFName*(s: string{sym|ident|call|lvalue|param}): FName =
   result = toFName(cstring(s))
 
+proc `$`*(name: FName): string =
+  # We are assuming here that ANSI names are actually ASCII names, which should always be the case.
+  {.emit: "`result` = `cstrToNimstr`(`name`.GetDisplayNameEntry()->IsWide() ? TCHAR_TO_UTF8(`name`.GetPlainWIDEString()) : const_cast<char *>(`name`.GetPlainANSIString()));".}
+
 proc toText*(s: FString): FText {.
   noSideEffect, header: "Internationalization/Text.h", importcpp: "'0::FromString(@)".}
 
