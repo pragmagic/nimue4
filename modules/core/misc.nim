@@ -101,6 +101,15 @@ type
     November,
     December
 
+const
+  timespanTicksPerDay* = 864000000000'i64
+  timespanTicksPerHour* = 36000000000'i64
+  timespanTicksPerMicrosecond* = 10'i64
+  timespanTicksPerMillisecond* = 10000'i64
+  timespanTicksPerMinute* = 600000000'i64
+  timespanTicksPerSecond* = 10000000'i64
+  timespanTicksPerWeek* = 6048000000000'i64
+
 wclass(FTimespan, header: "Misc/Timespan.h"):
   proc initFTimespan(inTicks: int64): FTimespan {.constructor.}
     ## Constructs FTimespan from ticks in 100 nanoseconds resolution since
