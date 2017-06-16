@@ -8,6 +8,8 @@ wclass(TArray[T], header: "Containers/Array.h", bycopy):
   proc len(): int32 {.noSideEffect, cppname: "Num".}
     ## number of items in the array
   proc add(item: T) {.cppname: "Push".}
+  proc add[OtherT](other: TArray[OtherT]) {.cppname: "Append".}
+  proc add(arrPtr: ptr T, count: Natural) {.cppname: "Append".}
 
   proc pop(): T
 
