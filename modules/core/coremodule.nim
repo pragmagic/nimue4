@@ -30,6 +30,7 @@ include "containers/map"
 include "containers/set"
 
 include strings
+include perfstats
 
 include containers/enumasbyte
 include containers/sharedptr

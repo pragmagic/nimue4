@@ -4,6 +4,13 @@ import ue4, times
 N_NOINLINE(void, setStackBottom)(void* thestackbottom);
 """.}
 
+const
+  NIMUE4_GROUP = "nimue4"
+  PERF_NIM_GC = "NimGC"
+
+declarePerfStatGroup(NIMUE4_GROUP)
+declarePerfCycleStat(NIMUE4_GROUP, PERF_NIM_GC)
+
 uclass(UNimGameEngine of UGameEngine, Config=Engine):
   var defaultRequiredFps {.config.}: cfloat = 60.0
   var maxFrameTime: cfloat = 0.016
@@ -26,4 +33,6 @@ uclass(UNimGameEngine of UGameEngine, Config=Engine):
     actualFrameTime = epochTime() - actualFrameTime
 
     var allowedGcTime = max(0.001, min(this.maxFrameTime - actualFrameTime - 0.002, 0.006))
-    GC_step(int(allowedGcTime * 1_000_000), false, 0)
+    block:
+      scopeCycleCounter(PERF_NIM_GC)
+      GC_step(int(allowedGcTime * 1_000_000), false, 0)
