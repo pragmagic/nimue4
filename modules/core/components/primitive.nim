@@ -191,6 +191,10 @@ wclass(UPrimitiveComponent of USceneComponent, header: "Components/PrimitiveComp
     ## true if the primitive has motion blur velocity meshes
     ## UPROPERTY()
 
+  var bVisibleInReflectionCaptures: bool
+    ## If true, this component will be visible in reflection captures.
+    ## UPROPERTY(EditAnywhere, AdvancedDisplay, BlueprintReadOnly, Category = Rendering)
+
   var bRenderInMainPass: bool
     ## If true, this component will be rendered in the main pass (z prepass, basepass, transparency)
     ## UPROPERTY(EditAnywhere, AdvancedDisplay, BlueprintReadOnly, Category = Rendering)

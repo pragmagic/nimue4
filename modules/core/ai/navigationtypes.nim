@@ -71,4 +71,10 @@ wclass(FNavLocation, header: "AI/Navigation/NavigationTypes.h", bycopy):
   proc hasNodeRef(): bool {.noSideEffect.}
     ## checks if location has associated navigation node ref
 
+type
+  ENavDataGatheringMode* {.importcpp, header: "AI/Navigation/NavigationTypes.h", size: sizeof(uint8), pure.} = enum
+    Default,
+    Instant,
+    Lazy
+
 # TODO: the rest

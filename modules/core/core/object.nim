@@ -828,3 +828,10 @@ wclass(UClass of UObject, header: "CoreUObject.h", notypedef):
   proc getDefaultObjectName(): FName
     ## Get the name of the CDO for the this class
     ## @return The name of the CDO
+
+  proc implementsInterface(someInterface: ptr UClass): bool {.noSideEffect.}
+
+  proc isChildOf(someBase: ptr UClass): bool {.noSideEffect.}
+
+proc isChildOf*(class: ptr UClass, T: typedesc): bool {.importcpp: "#->IsChildOf(#::StaticClass())",
+                                                        header: "CoreUObject.h", noSideEffect.}

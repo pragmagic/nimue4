@@ -503,6 +503,8 @@ include commandlet
 include kismet/blueprintasyncactionbase
 include kismet/gameplaystatics
 
+include engine/staticmeshactor
+
 proc simpleMoveToLocation*(navSys: ptr UNavigationSystem, controller: ptr APlayerController, goal: FVector) {.header: "AI/Navigation/NavigationSystem.h", importcpp: "#.SimpleMoveToLocation(@)", nodecl.}
 
 {.pop.} # stackTrace:off
