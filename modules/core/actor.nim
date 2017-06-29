@@ -2031,7 +2031,7 @@ proc getDebugName*(actor: ptr AActor): FString {.importcpp: "AActor::GetDebugNam
 proc findComponentByClass*[T: UActorComponent](this: ptr AActor): ptr T {.importcpp: "#.FindComponentByClass<'*0>()", nodecl, noSideEffect.}
 proc getComponentByClass*(this: ptr AActor, class: TSubclassOf[UActorComponent]): ptr UActorComponent {.importcpp: "#.GetComponentByClass(@)", nodecl, noSideEffect.}
 
-proc getComponentsByClass*[T: UActorComponent](this: ptr AActor): TArray[ptr UActorComponent] {.importcpp: "#.GetComponentsByClass('*0::StaticClass())", nodecl, noSideEffect.}
+proc getComponentsByClass*(this: ptr AActor, T: typedesc[UActorComponent]): TArray[ptr UActorComponent] {.importcpp: "#.GetComponentsByClass('2::StaticClass())", nodecl, noSideEffect.}
   ## Gets all the components that inherit from the given class.
   ## Currently returns an array of UActorComponent which must be cast to the correct type.
   ## UFUNCTION(BlueprintCallable, Category = "Actor", meta = (ComponentClass = "ActorComponent"), meta=(DeterminesOutputType="ComponentClass"))

@@ -690,11 +690,25 @@ wclass(FLinearColor, header: "Math/Color.h", notypedef):
 
 wclass(FTransform, header: "Math/ScalarRegister.h", notypedef):
   proc initFTransform(): FTransform {.constructor.}
+  proc initFTransform(inTransation: FVector): FTransform {.constructor.}
+  proc initFTransform(inRotation: FQuat): FTransform {.constructor.}
+  proc initFTransform(inRotation: FRotator): FTransform {.constructor.}
+  proc initFTransform(inRotation: FQuat, inTranslation: FVector) {.constructor.}
+  proc initFTransform(inRotation: FRotator, inTranslation: FVector) {.constructor.}
+  proc initFTransform(inRotation: FQuat, inTranslation: FVector, inScale3D: FVector): FTransform {.constructor.}
+  proc initFTransform(inRotation: FRotator, inTranslation: FVector, inScale3D: FVector): FTransform {.constructor.}
 
   proc transformVector(v: FVector): FVector {.noSideEffect.}
   proc transformVectorNoScale(v: FVector): FVector {.noSideEffect.}
 
+  proc inverseTransformVector(v: FVector): FVector {.noSideEffect.}
+  proc inverseTransformVectorNoScale(v: FVector): FVector {.noSideEffect.}
+
+  proc transformPosition(v: FVector): FVector {.noSideEffect.}
+  proc transformPositionNoScale(v: FVector): FVector {.noSideEffect.}
+
   proc getRelativeTransform(other: FTransform): FTransform {.noSideEffect.}
+  proc getRelativeTransformReverse(other: FTransform): FTransform {.noSideEffect.}
 
   proc getLocation(): FVector {.noSideEffect.}
   proc getTranslation(): FVector {.noSideEffect.}

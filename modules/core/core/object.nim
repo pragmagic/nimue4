@@ -833,5 +833,5 @@ wclass(UClass of UObject, header: "CoreUObject.h", notypedef):
 
   proc isChildOf(someBase: ptr UClass): bool {.noSideEffect.}
 
-proc isChildOf*(class: ptr UClass, T: typedesc): bool {.importcpp: "#->IsChildOf(#::StaticClass())",
-                                                        header: "CoreUObject.h", noSideEffect.}
+proc isChildOf*(class: ptr UClass, T: typedesc[UObject]): bool {.importcpp: "#->IsChildOf('2::StaticClass())",
+                                                                 header: "CoreUObject.h", noSideEffect.}

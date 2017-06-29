@@ -60,8 +60,8 @@ type
 
   UWorldComposition* {.importcpp, header: "Engine/WorldComposition.h".} = object of UObject
 
-proc initWorldInitializationValues*(): WorldInitializationValues {.importcpp: "'0()", constructor, nodecl.}
-proc initFActorSpawnParameters*(): FActorSpawnParameters {.importcpp: "'0()", constructor, nodecl.}
+proc initWorldInitializationValues*(): WorldInitializationValues {.importcpp: "'0(@)", constructor, nodecl.}
+proc initFActorSpawnParameters*(): FActorSpawnParameters {.importcpp: "'0(@)", constructor, nodecl.}
 
 declareBuiltinDelegate(FOnLevelsChangedEvent, dkMulticast, "Engine/World.h")
 declareBuiltinDelegate(FOnSelectedLevelsChangedEvent, dkMulticast, "Engine/World.h")
