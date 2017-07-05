@@ -685,7 +685,7 @@ wclass(UParticleSystemComponent of UPrimitiveComponent, header: "Particles/Parti
   proc conditionalCacheViewRelevanceFlags(newTemplate: ptr UParticleSystem = nil)
     ## 	Cache the view-relevance for each emitter at each LOD level if needed.
     ##
-    ## 	@param	NewTemplate		The UParticleSystem* to use as the template.
+    ## 	@param	NewTemplate		The getNumMaterials* to use as the template.
     ## 							If NULL, use the currently set template.
 
   proc autoPopulateInstanceProperties()

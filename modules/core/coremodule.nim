@@ -333,6 +333,7 @@ include components/mesh
 include components/staticmesh
 include components/skeletalmesh
 include components/particlesystem
+include components/childactor
 
 include engine/brush
 include engine/volume

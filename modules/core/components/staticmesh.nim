@@ -1,6 +1,6 @@
 # Copyright 2016 Xored Software, Inc.
 
-wclass(UStaticMesh, header: "Engine/StaticMesh.h", notypedef):
+wclass(UStaticMesh of UObject, header: "Engine/StaticMesh.h", notypedef):
   proc getBounds(): FBoxSphereBounds {.noSideEffect.}
     ## UFUNCTION( BlueprintPure, Category="StaticMesh" )
 

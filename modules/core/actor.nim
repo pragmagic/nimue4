@@ -1919,7 +1919,7 @@ wclass(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
   proc isNetStartupActor(): bool {.noSideEffect.}
     ## Returns true if this is a replicated actor that was placed in the map
 
-  proc getComponents[T](outComponents: var TArray[ptr T])
+  proc getComponents[T](outComponents: var TArray[ptr T], bIncludeFromChildActors = false)
     ## Get all components derived from class 'T' and fill in the OutComponents array with the result.
     ## It's recommended to use TArrays with a TInlineAllocator to potentially avoid memory allocation costs.
     ## TInlineComponentArray is defined to make this easier, for example:
@@ -1927,7 +1927,7 @@ wclass(AActor of UObject, header: "GameFramework/Actor.h", notypedef):
     ##     TInlineComponentArray<UPrimitiveComponent*> PrimComponents(Actor);
     ## }
 
-  proc getComponents(outComponents: var TArray[ptr UActorComponent])
+  proc getComponents(outComponents: var TArray[ptr UActorComponent], bIncludeFromChildActors = false)
     ## UActorComponent specialization of GetComponents() to avoid unnecessary casts.
     ## It's recommended to use TArrays with a TInlineAllocator to potentially avoid memory allocation costs.
     ## TInlineComponentArray is defined to make this easier, for example:
