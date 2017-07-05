@@ -20,6 +20,8 @@ wclass(UUserWidget of UWidget, header: "Blueprint/UserWidget.h", notypedef):
     ## Removes the widget from its parent widget.  If this widget was added to the player's screen or the viewport
     ## it will also be removed from those containers.
 
+  method nativeDestruct()
+
   proc setPositionInViewport(position: FVector2D, bRemoveDPIScale: bool = true)
     ## Sets the widgets position in the viewport.
     ## @param Position The 2D position to set the widget to in the viewport.
