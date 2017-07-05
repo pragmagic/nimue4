@@ -72,6 +72,8 @@ type
 
   FObjectInstancingGraph* {.header: "CoreUObject.h", importcpp.} = object
 
+  FPropertyChangedEvent* {.header: "CoreUObject.h", importcpp.} = object
+
 converter toUInt32(flags: ELoadConfigPropagationFlags): uint32 =
   result = ord(flags)
 
@@ -314,9 +316,8 @@ wclass(UObject of UObjectBaseUtility, header: "CoreUObject.h", notypedef):
     ## Intentionally non-virtual as it calls the FPropertyChangedEvent version
     ##
 
-  # AWARE
-  # method postEditChangeProperty(propertyChangedEvent: var FPropertyChangedEvent) # WITH_EDITOR
-  #   ## Called when a property on this object has been modified externally
+  method postEditChangeProperty(propertyChangedEvent: var FPropertyChangedEvent) # WITH_EDITOR
+    ## Called when a property on this object has been modified externally
 
   # method postEditChangeChainProperty(propertyChangedEvent: var FPropertyChangedChainEvent) # WITH_EDITOR
   #   ## This alternate version of PostEditChange is called when properties inside structs are modified.  The property that was actually modified
@@ -752,7 +753,6 @@ wclass(UObject of UObjectBaseUtility, header: "CoreUObject.h", notypedef):
 
   proc implements[T](): bool {.noSideEffect.}
     ## Returns true if this object implements the interface T, false otherwise.
-
 
 proc getNameSafe*(obj: ptr UObjectBaseUtility): FString {.
   importc: "GetNameSafe", header: "CoreUObject.h".}
